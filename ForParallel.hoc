@@ -4,10 +4,10 @@ load_file("BaseCode.hoc")
 objref pc
 pc = new ParallelContext()
 
+{printf("I am %d of %d\n", pc.id, pc.nhost)}
 pc.runworker()
 
-// 
-		run_simulation(PoisSpkHz,TSTOP)
+
 
 objref RANGE_TC_LST
 strdef CELLtxt
@@ -42,7 +42,7 @@ printf("==========================================================\n")
 		PoisSpkHz = 0
 
 		
-		pc.submit("run_simulation", TSTOP, TRIAL_NO, RANGE_TC)
+		pc.submit("run_simulation", TSTOP, TRIAL_NO, RANGE_TC, SPECIFIED_W_TC )
 
 		//rasterplot()
 		CNT = CNT + 1
@@ -54,3 +54,11 @@ printf("=========================End one big Loop ========================\n")
 printf("========================= Finished all ========================\n")
 
 print "Total Runtime :: ", startsw()- t_loop
+
+while( pc.working()) {
+printf("I'm working!=]\n")
+   printf("user id %d\n",pc.userid())
+}
+pc.done()
+print "PC DONE ---- Total Runtime :: ", startsw()- t_loop
+quit()

@@ -186,7 +186,7 @@ proc run_simulation() { ////////////////////// Simulation Function
 	cIDrec = -1
 	//// * Make simulation's name
 	postfixTxt = ""
-	core = "PDfewBurst_GPmVLmd1_0del"
+	core = "PDfewBurst_GPmVLmd1_0del_ss"
 	if(MULT_PULSE){
 	sprint(core,"%s_%gHz_amp%g_dur%g_N%g",core,PulseHz, Input_I_Amp,Input_I_Dur,N_Pulses)
 	}
@@ -545,14 +545,15 @@ print "\n"
 print "Time for everything = ",  startsw() - T_everythng
 */
 
-/*
+SHOW_GUI = 1 
+
 objref RANGE_TC_LST
 strdef CELLtxt
 
-RANGE_TC_LST = new Vector() 
-RANGE_TC_LST.indgen(0,300,50) // 0 50 100
+RANGE_TC_LST = new Vector(2) 
+//RANGE_TC_LST.indgen(0,300,50) // 0 50 100
 RANGE_TC_LST.x(0) = 10
-//RANGE_TC_LST.x(0) = 150 // 120 130 140 150 
+RANGE_TC_LST.x(1) = 50 // 120 130 140 150 
 
 
 Light_Stim_Amp = 0.5
@@ -575,10 +576,10 @@ printf("==========================================================\n")
 		sprint(CELLtxt,"WT")
 		}else{ sprint(CELLtxt,"KO") }
 		printf("\t\t Cell type #%g : %s\n", CELL_TYPE, CELLtxt)
-		TSTOP =  4000 // tstop = 40 -> get TC conn info only
+		TSTOP =  10 // tstop = 40 -> get TC conn info only
 		PoisSpkHz = 0
 
-		run_simulation(PoisSpkHz,TSTOP)
+		run_simulation(TSTOP, TRIAL_NO, RANGE_TC, SPECIFIED_W_TC )
 		//rasterplot()
 		CNT = CNT + 1
 		printf("######################  Simulation#%g : RANGE_TC = %g\t,  W_MULT_TC = %g\t ###################### \n", CNT, RANGE_TC, W_MULT_TC)
@@ -591,4 +592,3 @@ printf("========================= Finished all ========================\n")
 print "Total Runtime :: ", startsw()- t_loop
 print "\n"
 
-*/
