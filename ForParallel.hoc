@@ -1,0 +1,56 @@
+// For parallel 
+load_file("BaseCode.hoc")
+
+objref pc
+pc = new ParallelContext()
+
+pc.runworker()
+
+// 
+		run_simulation(PoisSpkHz,TSTOP)
+
+objref RANGE_TC_LST
+strdef CELLtxt
+
+RANGE_TC_LST = new Vector(2) 
+//RANGE_TC_LST.indgen(0,300,50) // 0 50 100
+RANGE_TC_LST.x(0) = 10
+RANGE_TC_LST.x(1) = 50 // 120 130 140 150 
+
+TRIAL_NO = 1
+Light_Stim_Amp = 0.5
+W_GPm_VL_sigma = 0
+W_GPm_VL_mean = 0.5
+
+SPECIFIED_W_TC = 0.002 /0.1
+//SPECIFIED_W_TC = 0.001454  /////////////////// one spike in VL drive M1 
+//SPECIFIED_W_TC = 0.001453 /////////////////// the weight just before one spike in VL drive M1 
+
+CNT = 0
+t_loop = startsw()
+for r_ii = 0 ,RANGE_TC_LST.size-1 {
+RANGE_TC = RANGE_TC_LST.x(r_ii)
+printf("==========================================================\n")
+printf("RANGE of Thalamocortical connection #%g : %g\n", r_ii, RANGE_TC_LST.x(r_ii))
+printf("==========================================================\n")
+		for CELL_TYPE = 1, 2{
+		if (CELL_TYPE == 1){
+		sprint(CELLtxt,"WT")
+		}else{ sprint(CELLtxt,"KO") }
+		printf("\t\t Cell type #%g : %s\n", CELL_TYPE, CELLtxt)
+		TSTOP =  4000 // tstop = 40 -> get TC conn info only
+		PoisSpkHz = 0
+
+		
+		pc.submit("run_simulation", TSTOP, TRIAL_NO, RANGE_TC)
+
+		//rasterplot()
+		CNT = CNT + 1
+		printf("######################  Simulation#%g : RANGE_TC = %g\t,  W_MULT_TC = %g\t ###################### \n", CNT, RANGE_TC, W_MULT_TC)
+		
+	}
+printf("=========================End one big Loop ========================\n")
+}	
+printf("========================= Finished all ========================\n")
+
+print "Total Runtime :: ", startsw()- t_loop
