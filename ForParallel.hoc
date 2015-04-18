@@ -38,11 +38,11 @@ printf("==========================================================\n")
 		sprint(CELLtxt,"WT")
 		}else{ sprint(CELLtxt,"KO") }
 		printf("\t\t Cell type #%g : %s\n", CELL_TYPE, CELLtxt)
-		TSTOP =  4000 // tstop = 40 -> get TC conn info only
+		TSTOP =  10 // tstop = 40 -> get TC conn info only
 		PoisSpkHz = 0
 
 		
-		pc.submit("run_simulation", TSTOP, TRIAL_NO, RANGE_TC, SPECIFIED_W_TC )
+		pc.submit("run_simulation", CELL_TYPE, TSTOP, TRIAL_NO, RANGE_TC, SPECIFIED_W_TC )
 
 		//rasterplot()
 		CNT = CNT + 1

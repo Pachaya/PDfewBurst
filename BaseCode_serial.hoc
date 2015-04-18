@@ -222,15 +222,18 @@ proc run_simulation() { ////////////////////// Simulation Function
 	sprint(core,"%s_Wsig%g",core,W_POISSPK_VL_sigma ) }
 	
 	Input_spk_avg_fr = 0 // [Hz]
-	tstop = $1  // Have to set tstop here because the random_stream_offset_ setting need the tstop for parameter setting
-	TSTOP = $1
+		
+	// Arguments 
+
+	CELL_TYPE = $1
+	TSTOP = $2
+	TRIAL_NO = $3
+	RANGE_TC = $4
+	SPECIFIED_W_TC =$5
+
+	tstop = TSTOP // Have to set tstop here because the  random_stream_offset_ setting need the tstop for parameter setting
 	steps_per_ms = 1    // -----------> set resolution and then use the variable in all references for unified process
 	v_init = -70
-
-	// Arguments 
-	TRIAL_NO = $2
-	RANGE_TC = $3
-	SPECIFIED_W_TC =$4
 
 
 	sprint(postfixTxt,"%s",core)
@@ -345,7 +348,7 @@ proc run_simulation() { ////////////////////// Simulation Function
 		load_file("M1centerSample.ses")		
 		}
 	}
-	tstop = $1 // Need to set simulation parameters here again because some parameters are change during downloading session file
+	tstop = $2 // Need to set simulation parameters here again because some parameters are change during downloading session file
 	steps_per_ms = 1    // -----------> set resolution and then use the variable in all references for unified process
 	v_init = -70
 	print "Calling run()"
@@ -579,7 +582,7 @@ printf("==========================================================\n")
 		TSTOP =  10 // tstop = 40 -> get TC conn info only
 		PoisSpkHz = 0
 
-		run_simulation(TSTOP, TRIAL_NO, RANGE_TC, SPECIFIED_W_TC )
+		run_simulation(CELL_TYPE, TSTOP, TRIAL_NO, RANGE_TC, SPECIFIED_W_TC )
 		//rasterplot()
 		CNT = CNT + 1
 		printf("######################  Simulation#%g : RANGE_TC = %g\t,  W_MULT_TC = %g\t ###################### \n", CNT, RANGE_TC, W_MULT_TC)
