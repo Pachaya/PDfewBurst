@@ -1,0 +1,175 @@
+//////////////////* Thalamocortical Connection : VL - M1 *///////////////////////
+sigTC = RANGE_TC/sqrt(2)
+nclistSTR = nclist.count //Current connection in nclist  *Realy important parameter or the index will be mess up
+////// Making Distance Matrix (each M1's E cell to all E cells in VL based on cortex distance )
+objref srclist_TC, tarlist_TC, conlist_TC, typelist_TC, ConMat_TC
+ConMat_TC = new List()
+srclist_TC = new Vector()
+tarlist_TC = new Vector()
+conlist_TC = new List()
+
+objref tmpVec2, tmpInd, nConnPerCellVec, nConnPerCellVec_M1
+///////// Connection Probability ///////// 
+//rangeE = 100
+//rangeE = 200
+//sigTC = RANGE_E/sqrt(2)
+//rangeI = 100
+//sigI = RANGE_I/sqrt(2)
+cntCon_TC = 0
+Pmax_TC = PMAX_E//0.85
+
+nConnPerCellVec = new Vector(cellsE.count)
+nConnPerCellVec_M1 = new Vector(cellsE_M1.count)
+//Construct connection matrix
+//objref ran 
+//ran = new Random()
+//ran.uniform(0,1)
+ran = new Random()
+ran.uniform(0,1)
+
+meanSto = 0
+sigSto = 0
+
+objref ranNoise
+ranNoise = new Random()
+ranNoise.normal(meanSto,sigSto)
+
+conn_SigNoise = 0 // define by gaussian? mean = 0, sigma = 5 ?  ---> need to optimize ************************************************************ do this later after finish the basic model
+conn_PmaxNoise = 0 // 
+
+//E cells 
+for i = 0, cellsE.count-1{
+	//Find distance between M1's ith E cell to all E cells in VL based on cortex distance
+		//nConnPerCell = 0
+		tmpVec = new Vector(3)
+		for j =0, cellsE_M1.count-1{
+				dist = dist2cells(cellsE.o(i).cID,cellsE_M1.o(j).cID)  // Distance
+				//Connect cells?
+				p = connectivity(Pmax_TC+conn_PmaxNoise,dist,sigTC+conn_SigNoise)
+				if (ran.repick() < p){ //connect
+					//srclist.append(cellsE.o(i).cID)
+					//tarlist.append(cellsE.o(j).cID)
+					tmpVec.x(0) = cellsE.o(i).cID //source cell ID
+					tmpVec.x(1) = cellsE_M1.o(j).cID //target cell ID
+					tmpVec.x(2) = 0 //Connection Type EE:0
+					conlist_TC.append(tmpVec.c)
+					cntCon_TC = cntCon_TC+1
+					//nConnPerCell =  nConnPerCell+1
+					nConnPerCellVec_M1.x(j) = nConnPerCellVec_M1.x(j) + 1 // Number of conn that each M1 receive from VL ( VL per 1 M1)
+					nConnPerCellVec.x(i) = nConnPerCellVec.x(i) + 1 // Number of conn that each VL make to M1 (M1 per 1VL)
+				}
+			}
+}
+
+srclist_TC= new Vector(cntCon_TC)
+tarlist_TC = new Vector(cntCon_TC)
+typelist_TC = new Vector(cntCon_TC)
+for i = 0, conlist_TC.count-1{
+	srclist_TC.x(i) = conlist_TC.o(i).x(0)
+	tarlist_TC.x(i) = conlist_TC.o(i).x(1)
+	typelist_TC.x(i) = conlist_TC.o(i).x(2)
+}
+//Get src-tar ID lists 
+
+///////// Make Connection ///////// 
+/*
+//delay =1
+for i=0,srclist.size-1{ 
+nc_append(srclist.x(i),   tarlist.x(i), getSynInd (srclist.x(i)),  weightCal (srclist.x(i),tarlist.x(i),1,W_RATIO),delayCal(srclist.x(i),tarlist.x(i)))  //weightCal (srclist.x(i),tarlist.x(i),flag) flag: 0 -> fixed, 1 -> spatial dependent
+}
+*/
+
+objref tmpNConn_TC
+{tmpNConn_TC = new Vector()
+tmpNConn_TC.where(typelist_TC,"==",0)
+nConnEE_TC = tmpNConn_TC.size
+
+}
+printf("Finished wiring thalamocortical connection")
+printf("Number of connection\n\t#TC: %g\n",nConnEE_TC) //Plot average # connection per Cell
+printf("Average M1 connection to one VL's E cell\n\t #M1 per VL: %g\n", nConnPerCellVec.mean()) //Plot average # connection per Cell
+printf("Average VL connection to one M1's E cell\n\t #VL per M1: %g\n", nConnPerCellVec_M1.mean()) //Plot average # connection per Cell
+
+
+
+weight_SigNoise = 0 // define by gaussian? mean = 0, sigma = 5 ?  ---> need to optimize   ************************************************************ do this later after finish the basic model
+weight_PmaxNoise = 0 // 
+
+W_TC = 1*W_MULT_TC*W_SCALE_TC +weight_SigNoise // + noise  
+W_EE = W_TC
+W_EI = W_TC
+W_IE = W_TC 
+W_II = W_TC
+
+//Making the connection 
+for i=0,srclist_TC.size-1{ 
+  nc_append(srclist_TC.x(i),   tarlist_TC.x(i), 0,  weightCal (srclist_TC.x(i),tarlist_TC.x(i),3,W_TC,W_TC,W_TC,W_TC),0)   // Should the TC delay = 0? 
+  // Note : PROP_SPEED_I = 1000 //[um/ms] speed of axonal propagation < 1 m/s >
+  // Note : PROP_SPEED_E = 100  //[um/ms] speed of axonal propagation < 0.1 m/s > 
+  //weightCal (srclist.x(i),tarlist.x(i),flag) flag: 0 -> fixed, 1 -> spatial dependent
+  // flag: 3 -> input weight values : $4 $5 $6 $7 for user specified WEE, WEI, WIE, WII correspondingly
+  
+  //nc_append(srclist_TC.x(i),   tarlist_TC.x(i), getSynInd (srclist_TC.x(i)),  weightCal (srclist_TC.x(i),tarlist_TC.x(i),3,W_TC,W_TC,W_TC,W_TC),delayCal(srclist_TC.x(i),tarlist_TC.x(i)))  //weightCal (srclist.x(i),tarlist.x(i),flag) flag: 0 -> fixed, 1 -> spatial dependent
+}
+//printf("Weight values\n\tWEE: %g\n\tWEI: %g\n\tWIE: %g\n\tWII: %g\n", RUN_WEE*W_EE ,RUN_WEI*W_EI,RUN_WIE*W_IE,RUN_WII*W_II)
+printf("Weight values\n\tW_TC: %g\n", W_TC )
+
+
+
+func GetAvgConnNO_TC(){local i localobj countM1tar, tmpW
+tmpW = new Vector()
+countM1tar = new Vector(cellsE_M1.count)
+for i=0,cellsE_M1.count-1{ 
+countM1tar.x(i) = tmpW.where(tarlist_TC,"==",cellsE_M1.o(i).cID).size
+}
+return countM1tar.mean()
+}
+
+obfunc GetVecConnNO_TC(){local i localobj countM1tar, tmpW
+tmpW = new Vector()
+countM1tar = new Vector(cellsE_M1.count)
+for i=0,cellsE_M1.count-1{ 
+countM1tar.x(i) = tmpW.where(tarlist_TC,"==",cellsE_M1.o(i).cID).size
+}
+return countM1tar
+}
+
+objref TC_Conn_dist
+TC_Conn_dist = GetVecConnNO_TC()
+
+printf("  Average # of thalamocortical connection per cell : %g\n",GetAvgConnNO_TC())
+
+
+
+
+
+/////////  print connection to file ///////// 
+
+
+objref fout, foutWD
+strdef fname
+fout = new File()
+if (POSTFIX){
+sprint(fname,"%sTC_ConnectionParam_%s.txt",dirLoc,postfixTxt) 
+}else{
+sprint(fname,"%sTC_ConnectionParam.txt",dirLoc)
+}
+fout.wopen(fname)
+fout.printf("%d\n",srclist_TC.size) //total number of connection
+
+foutWD = new File()
+if (POSTFIX){
+sprint(fname,"%sTC_ConnectionWDParam_%s.txt",dirLoc,postfixTxt) 
+}else{
+sprint(fname,"%sTC_ConnectionWDParam.txt",dirLoc)
+}
+foutWD.wopen(fname)
+//foutWD.wopen("SpatialConnectionWDParam.txt")
+foutWD.printf("%d\n",srclist_TC.size) //total number of connection
+for i =0,srclist_TC.size-1{
+	fout.printf("%d\t%d\t%d\n",srclist_TC.x(i),tarlist_TC.x(i),typelist_TC.x(i)) // or conlist.o(i).printf(fout,"%g\t") fout.printf("\n")
+	foutWD.printf("%d\t%d\t%d\t%.10f\t%.10f\n",srclist_TC.x(i),tarlist_TC.x(i),typelist_TC.x(i),nclist.o(nclistSTR+i).weight,nclist.o(nclistSTR+i).delay)
+}
+fout.close()
+foutWD.close()
+

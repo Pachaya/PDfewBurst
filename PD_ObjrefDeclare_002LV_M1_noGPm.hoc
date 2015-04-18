@@ -1,0 +1,80 @@
+//////////////////*Objects' reference Declarations*///////////////////////
+// Objects reference Declaration
+//   Declare all objects here then resize them to zero in their original location.  -> vec.resize(0) , list.remove_all()
+//   Doing this to preventing NEURON crashed due to too much objrefs and data
+/////////////////////////////////////////////////////////////////////////
+
+
+
+
+//////////////// From NetGenn.hoc ////////////////
+
+{cells = new List() cellsIN = new List() cellsE = new List() cellsI = new List()  cellsCN = new List()
+ nclist = new List() cellsFFin= new List() }
+
+////BG current noise
+objref rslist, inlist,in 
+rslist = new List()
+inlist = new List()
+
+//// Injected input current 
+objref IClamplist
+IClamplist = new List() 
+
+//// Poisson Generator 
+objref rseed // May put in parameters setting hoc file
+rseed = new Random()
+rseed.negexp(500)
+rseed.Random123() //identifiers = 0
+
+objref seedlist
+seedlist = new Vector()
+
+objref spkvec_list, cellsFFin
+spkvec_list = new List()
+cellsFFin = new List()
+
+objref recordseed
+recordseed = new Vector()
+//////////////// From NetSimRec.hoc ////////////////
+
+//// Add vectors for Recording
+
+objref vVec_List, i_cap_List, injectI_List
+vVec_List = new List() 
+i_cap_List = new List() 
+injectI_List = new List()
+objref vVec, i_capVec, injectI
+vVec= new Vector() 
+i_capVec= new Vector() 
+injectI= new Vector()
+
+////IClamplist
+objref IClampVec_List,IClampVec //Caution: Take it out when do not inject current input//////////////////////////////////////
+IClampVec_List = new List()
+IClampVec = new Vector()
+
+//spike record
+objref tvec, idvec 
+tvec = new Vector()
+idvec  = new Vector()
+objref tvecE, tvecI, idvecE, idvecI // will be Vectors that record all spike times (tvec) 
+// and the corresponding id numbers of the cells that spiked (idvec)
+{tvecE=new Vector() tvecI=new Vector() idvecE=new Vector() idvecI=new Vector()}
+
+//////////////// From LocalConn.hoc ////////////////
+
+objref distMat,  tmpVec
+distMat = new List()
+
+objref srclist, tarlist, conlist, typelist, ConMat
+ConMat = new List()
+srclist = new Vector()
+tarlist = new Vector()
+conlist = new List()
+
+
+
+objref ran 
+ran = new Random()
+ran.uniform(0,1)

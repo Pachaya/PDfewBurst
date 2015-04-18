@@ -1,0 +1,188 @@
+///// Testing InGauss and average firing rate
+
+//////////////////////////////////////////////////////////////////////////
+load_file("nrngui.hoc") //load basics library
+load_file("ranstream.hoc") //for InGauss random seed
+load_file("PD_Parameters.hoc") //Parameters
+
+load_file("PD_CellsTemplate.hoc") //load basics library  Note: Parameters for Cells template are specified inside
+load_file("PD_NetSpecIntf.hoc") // Network specification interface
+load_file("PD_load_position_file.hoc") //Now do not read INpos.txt 
+load_file("PD_load_position_file_M1.hoc") //Read position of M1
+
+load_file("PD_ObjrefDeclare.hoc") // Object declaration 
+
+
+///////////////////////////////// Simulation Setting ////////////////////////////////////////
+
+//////////  parameter & variables with user specified values
+RESOLUTION = 1 //bins = 1 ms
+MEAN = 0 // Noise by InGauss
+STDEV  = 0.4 //0.2 //0.115 // Noise by InGauss
+VARIE_MEAN_InGauss = 1 ////////////////////////// 1 = varies mean of noise current injection in each individual cell
+VARIE_MEAN_InGauss_SIGMA = 0.005  // 
+
+THRESHOLD = -55
+POSTFIX = 1
+
+MAKE_M1_LAYER = 0 // Testing first
+GPM_INPUT_to_VL = 0 // Use GPm for Input
+MULT_TRIAL = 0  
+N_TRIAL = 1
+cntTrial = 1 
+//////////  Simulation Setting
+INDV_NEURON = 0 // If 1: Neuron location are fixed , if 0: use neuron location from file. 
+N_REPEAT = 100
+LOCAL_CONNECT = 1
+INSERT_SPK_INPUT = 0
+INSERT_SPK_INPUT_startT = 2000 // Starting Feed forward input start time
+INSERT_SPK_to_E = 1 //as basal activity for VL
+INSERT_SPK_to_I = 1 //as basal activity for VL
+INSERT_I_INPUT = 0  //to VL; Hyperpolarized (negative current)
+INSERT_I_INPUT_startT = 3000
+INSERT_I_to_E = 1
+INSERT_I_to_I = 1
+ //////////////////////////////////////////////////////////////////////////////////////////////
+INSERT_GPm_SPK_INPUT = 0  //to VL; Inhibition spike to VL
+INSERT_GPm_SPK_INPUT_startT = 500
+INSERT_GPm_SPK_INPUT_Dur = 100
+INSERT_GPm_SPK_to_E = 1
+INSERT_GPm_SPK_to_I = 1
+W_POISSPK_GPm = 0.001
+GPm_SPK_avg_fr = 500
+
+INSERT_I_to_SpecifiedE = 0 // Vector --> injIClamp_SingleVec /  IClamp --> injIClamp_Single
+ID_SPECIFIED_E = 570 //In the center part of Network
+
+ADD_SPONTANEOUS_ACTIVITY = 1 // When both mean and stdev = 0 --> Cells are silent(with zero spontaneous activity)
+ADD_SPONTANEOUS_ACTIVITY_M1 = 0
+MEAN_M1 = 0
+STDEV_M1 = 0
+
+NOISE_POISSONSPK_GPm = 0
+NOISE_POISSONSPK_M1 = 0
+
+SHOW_GUI = 1
+/////////////////////////////////// SET CELL TYPE HERE //////////////////////////////////
+CELL_TYPE = 1 //1 = WT, 2 = KO  /////////////////////////////////// SET CELL TYPE HERE //////////////////////////////////
+////////////1////////////////////// SET CELL TYPE HERE //////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+TRIAL_NO = 1
+RANDOM123_ID1_POISSONSPK = 1  // 1 = FF input poisson spike , 2 = GPm inhibition input spike
+RANDOM123_ID1_GPm_SPK = 2  // 1 = FF input poisson spike , 2 = GPm inhibition input spike
+// Note : RANDOM123_ID2 = cell ID
+RANDOM123_ID3_RUN_POISSONSPK = TRIAL_NO //For  multiple trials (trial#)
+////////////////////////////////////////////////////////////////////////////
+// Setting Threshold Variation
+THRESHOLD_VARIATION = 1 //1 = make variation in threshold 
+THRE_VAR_SIGMA = 5
+
+
+////////////////////////////////////////////////////////////////////////////
+// Setting Local Connection
+SPECIFIED_RATIO = 1
+R_EE = 0
+R_EI = 0
+R_IE = 1 
+R_II = 1
+
+W_MULT = 500 //125 //31.25 // connection weight
+W_SCALE = 0.00001
+W_MULT_TC = 10////////////////////////////// *****
+W_SCALE_TC = W_SCALE
+RANGE_TC = 190 //170 -> 40 VL/M1, 190 -> 50 VL/M1, 210 -> 60 VL/M1, 
+sigTC = RANGE_TC/sqrt(2) /// RANGE_E = 200 , sigTC =  141.4214 ///////////////////// *****
+
+W_POISSPK_VL = W_POISSPK_GPm // 
+// IClamp stimulation at E
+Light_Stim_Amp = 0.25 //Stimulate at GPm 
+Input_I_Amp = -1 //-0.3  // Stimulate at VL
+Input_I_Dur = 50
+MULT_PULSE = 1
+PulseHz = 1 //// Setting Multiple Pulse 
+t_observe_pulse = 1000/ PulseHz 
+N_Pulses = 1
+if(MULT_PULSE == 0 ){
+N_Pulses = 0
+t_observe_pulse = 0
+}
+////////////////////////////////////////////////////////////////////////////
+//////////  Setting Directories 
+//strdef DIRLOC, F_PRE,F_PRENAME 
+strdef postfixTxt, dirLoc, core 
+
+postfixTxt = "" //testingSixtyWIIWEE5s_restart
+//core = "TestWT_slnt_InjI_singleE570_burst_lclConn_Wspecified_1_6_11_41.5" //"TestRunVLnetKO_Setparam_burst_lclConn_Wspecified_1_6_11_41.5" 
+core = "TestNewVL"//"newVL_CombinePulses" //"VL_Basal_Act" //
+
+if(MULT_PULSE){
+sprint(core,"%s%gHz_amp%g_dur%g_N%g",core,PulseHz, Input_I_Amp,Input_I_Dur,N_Pulses)
+}
+
+if(MAKE_M1_LAYER ){
+sprint(core,"%s_rTC%g",core,RANGE_TC )
+sprint(core,"%s_wmTC%g",core,W_MULT_TC)
+}
+
+
+if ( CELL_TYPE == 1){ //WT
+	sprint(core,"%s_WT",core)
+}else { //KO
+	sprint(core,"%s_KO",core)
+}
+if(INSERT_GPm_SPK_INPUT){ //to VL; Hyperpolarized (inhibition spike)
+sprint(core,"%s_GPmSPKinput_Fr%g_dur%g",core, GPm_SPK_avg_fr, INSERT_GPm_SPK_INPUT_Dur)
+}
+
+if (STDEV != 0){
+ sprint(core,"%s_InGauss%g",core,STDEV)
+}
+if(VARIE_MEAN_InGauss){
+sprint(core,"%s_IGmean%g_IGmeanSig%g",core,MEAN,VARIE_MEAN_InGauss_SIGMA)
+}
+
+sprint(core,"%s_W%g",core, W_POISSPK_VL )
+
+dirLoc ="SimResult/ForTesting/"  //"SimResult/InGaussLevel/" 
+/////////////////////////////////////////////////////////////////////////
+
+objref genseedlist
+genseedlist = new Vector()
+cIDrec = -1
+
+////////////// Part of Spont_Act
+
+t0 = startsw()
+
+
+tstop = 1000 // Have to set tsatop here because the random_stream_offset_ setting need the tstop for parameter setting
+steps_per_ms = 1    // -----------> set resolution and then use the variable in all references for unified process
+v_init = -70
+
+
+// For IClamp Testing 
+
+objref  WT, KO, IC_W, IC_K
+WT = new WT_Cell()
+access WT.soma
+IC_W = new IClamp(0.5)
+
+KO = new KO_Cell()
+access KO.soma
+IC_K = new IClamp(0.5)
+
+
+
+if(0){
+// Testing 
+//objref  WT, KO, IG_W, IG_KO
+//WT = new WT_Cell()
+//access WT.soma
+//IG_W = new InGauss(0.5)
+
+//KO = new KO_Cell()
+//access KO.soma
+//IG_K = new InGauss(0.5)
+}
+
+

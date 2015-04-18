@@ -1,0 +1,13 @@
+objref pc
+pc = new ParallelContext()
+{printf("I am %d of %d\n", pc.id, pc.nhost)}
+
+strdef s
+{
+system("hostname", s)
+printf("There are %d processes. My rank is %d and I am on %s\n", pc.nhost, pc.id, s)
+}
+
+{pc.runworker()}
+{pc.done()}
+quit()

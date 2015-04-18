@@ -1,0 +1,27 @@
+///////////////////* Download Poisson input frequency for each cell *//////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+
+//load position files
+
+objref Specified_Spk_Input_Fr
+strdef FRfile
+	
+objref fin
+fin = new File()
+
+
+if( CELL_TYPE == 1) { // WT
+sprint(FRfile, "PoisSpkFr_1150Cells_WT_Trial%g.txt",TRIAL_NO)
+
+} else { // KO
+sprint(FRfile, "PoisSpkFr_1150Cells_KO_Trial%g.txt",TRIAL_NO)
+}
+
+fin.ropen(FRfile) 
+nnFR  = fin.scanvar()
+Specified_Spk_Input_Fr = new Vector(nnFR)
+
+for (i=0;i<nnFR;i=i+1){
+	Specified_Spk_Input_Fr.x(i) = fin.scanvar()
+}
+fin.close() 

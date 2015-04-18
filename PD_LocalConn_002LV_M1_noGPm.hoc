@@ -1,0 +1,294 @@
+//////////////////Local Cortical Connection///////////////
+// ver001 
+//   pmake local connection based on distance between cell assuming Gaussian distribution
+//   before move all objref on top of the hoc file
+// ver002
+//	 add weight control in this function
+// ver003
+//	 before add unity weight
+//
+printf("Start Connection generation")   
+//Case I: Predefined Connection to local cells within range
+// Find distance between all pair of cells and get List of cells within range
+printf(" Case I: Predefined Connection to local cells within range")
+//objref distMat,  tmpVec
+distMat.remove_all()
+
+//objref srclist, tarlist, conlist, typelist, ConMat
+ConMat.remove_all()
+srclist.resize(0)
+tarlist.resize(0)
+conlist.remove_all()
+
+objref tmpVec2, tmpInd
+///////// Connection Probability ///////// 
+//rangeE = 100
+//rangeI = 72
+//rangeE = 200
+sigE = RANGE_E/sqrt(2)
+//rangeI = 100
+sigI = RANGE_I/sqrt(2)
+cntCon = 0
+PmaxE = PMAX_E//0.85
+PmaxI = PMAX_I//0.85
+
+/*
+Axonal arbor of E cells is wider(200 um) than  I(100) but the strength of I cell is stronger than E.  
+Relative synaptic connection strength(X-Y = from type X to Y)  E-E : E-I: I-E: I-I = 10:40:80:10 (Paik, 2010)
+Therefore ranking from strong connection → IE > EI > EE = II
+The ratio that use in Paik, 2010 is  WEE : WEI : WIE : WII = 0.03 : 0.12 : 0.24 : 0.03
+Relative ratio in term of WEE --> WEE : WEI : WIE : WII = WEE: 4*WEE : 8*WEE : WEE
+*The range of reasonable amplitude is in the range of 0.0001-0.001
+*/
+func connectivity(){
+	pmax =$1
+	dist = $2
+	sig =$3
+ return pmax*exp(- (dist*dist)/(2*sig*sig))
+}
+
+//Construct connection matrix
+//objref ran 
+//ran = new Random()
+//ran.uniform(0,1)
+ran = new Random()
+ran.uniform(0,1)
+//E cells 
+for i = 0, cellsE.count-1{
+	//Find distance between cell ith and other cells
+	if (RUN_WEE) {
+		//E-E Connection
+		tmpVec = new Vector(3)
+		for j =0, cellsE.count-1{
+			if (i != j){
+				dist = dist2cells(cellsE.o(i).cID,cellsE.o(j).cID)  // Distance
+				//Connect cells?
+				p = connectivity(PmaxE,dist,sigE)
+				if (ran.repick() < p){ //connect
+					//srclist.append(cellsE.o(i).cID)
+					//tarlist.append(cellsE.o(j).cID)
+					tmpVec.x(0) = cellsE.o(i).cID //source cell ID
+					tmpVec.x(1) = cellsE.o(j).cID //target cell ID
+					tmpVec.x(2) = 0 //Connection Type EE:0
+					conlist.append(tmpVec.c)
+					cntCon = cntCon+1
+				}
+			}
+		}
+	}
+	
+	if(RUN_WEI){
+		//E-I Connection
+		tmpVec = new Vector(3)
+		for j =0, cellsI.count-1{
+			dist = dist2cells(cellsE.o(i).cID,cellsI.o(j).cID) 
+			//Connect cells?
+			p = connectivity(PmaxE,dist,sigE)
+			if (ran.repick() < p){ //connect
+				//srclist.append(cellsE.o(i).cID)
+				//tarlist.append(cellsI.o(j).cID)	
+				tmpVec.x(0) = cellsE.o(i).cID //source cell ID
+				tmpVec.x(1) = cellsI.o(j).cID //target cell ID
+				tmpVec.x(2) = 1 //Connection Type EI:1
+				conlist.append(tmpVec.c)			
+				cntCon = cntCon+1
+			}
+		}
+	}
+}
+
+///I cells 
+for i = 0, cellsI.count-1{
+	//Find distance between cell ith and other cells
+	if(RUN_WIE){
+		//I-E Connection
+		tmpVec = new Vector(3)
+		for j =0, cellsE.count-1{
+			dist = dist2cells(cellsI.o(i).cID,cellsE.o(j).cID) 
+			//Connect cells?
+			p = connectivity(PmaxI,dist,sigI)
+			if (ran.repick() < p){ //connect
+				//srclist.append(cellsI.o(i).cID)
+				//tarlist.append(cellsE.o(j).cID)	
+				tmpVec.x(0) = cellsI.o(i).cID //source cell ID
+				tmpVec.x(1) = cellsE.o(j).cID //target cell ID
+				tmpVec.x(2) = 2 //Connection Type IE:2
+				conlist.append(tmpVec.c)
+				cntCon = cntCon+1
+			}
+		}
+	}
+	if(RUN_WII){
+		//I-I Connection
+		tmpVec = new Vector(3)
+		for j =0, cellsI.count-1{
+			if (i != j){
+				dist = dist2cells(cellsI.o(i).cID,cellsI.o(j).cID) 
+				//Connect cells?
+				p = connectivity(PmaxI,dist,sigI)
+				if (ran.repick() < p){ //connect
+					//srclist.append(cellsI.o(i).cID)
+					//tarlist.append(cellsI.o(j).cID)			
+					tmpVec.x(0) = cellsI.o(i).cID //source cell ID
+					tmpVec.x(1) = cellsI.o(j).cID //target cell ID
+					tmpVec.x(2) = 3 //Connection Type II:3
+					conlist.append(tmpVec.c)
+					cntCon = cntCon+1
+				}
+			}
+		}
+	}
+}
+srclist = new Vector(cntCon)
+tarlist = new Vector(cntCon)
+typelist = new Vector(cntCon)
+for i = 0, conlist.count-1{
+	srclist.x(i) = conlist.o(i).x(0)
+	tarlist.x(i) = conlist.o(i).x(1)
+	typelist.x(i) = conlist.o(i).x(2)
+}
+//Get src-tar ID lists 
+
+///////// Make Connection ///////// 
+/*
+//delay =1
+for i=0,srclist.size-1{ 
+nc_append(srclist.x(i),   tarlist.x(i), getSynInd (srclist.x(i)),  weightCal (srclist.x(i),tarlist.x(i),1,W_RATIO),delayCal(srclist.x(i),tarlist.x(i)))  //weightCal (srclist.x(i),tarlist.x(i),flag) flag: 0 -> fixed, 1 -> spatial dependent
+}
+*/
+
+objref tmpNConn
+{tmpNConn = new Vector()
+tmpNConn.where(typelist,"==",0)
+nConnEE = tmpNConn.size
+tmpNConn.where(typelist,"==",1)
+nConnEI = tmpNConn.size
+tmpNConn.where(typelist,"==",2)
+nConnIE = tmpNConn.size
+tmpNConn.where(typelist,"==",3)
+nConnII = tmpNConn.size
+}
+printf("Finished wiring local connection")
+printf("Number of connection by type\n\t#EE: %g\n\t#EI: %g\n\t#IE: %g\n\t#II: %g\n",nConnEE, nConnEI, nConnIE, nConnII )
+
+unit = 0
+ratio1 = 0
+unity = 0
+reciprocal = 0
+LCM = 0
+specified = 1
+if(unit){
+W_EE = 1
+W_EI = 1
+W_IE = 1
+W_II = 1
+}
+if(ratio1){
+W_EE = 1*1.5*W_SCALE
+W_EI = 1*1.5*W_SCALE
+W_IE = 1*1.5*W_SCALE
+W_II = 1*1.5*W_SCALE
+}
+// unity weight for reference
+if(unity){
+W_EE = 1*W_MULT*W_SCALE 
+W_EI = 1*W_MULT*W_SCALE 
+W_IE = 1*W_MULT*W_SCALE 
+W_II = 1*W_MULT*W_SCALE 
+}
+//Reciprocal method
+if(reciprocal){
+ratio_EE = nConnEE /nConnEE 
+ratio_EI = nConnEE / nConnEI 
+ratio_IE = nConnEE /nConnIE
+ratio_II = nConnEE /nConnII 
+
+W_EE = ratio_EE*W_MULT*W_SCALE 
+W_EI = ratio_EI*W_MULT*W_SCALE 
+W_IE = ratio_IE*W_MULT*W_SCALE
+W_II = ratio_II*W_MULT*W_SCALE
+
+}
+
+// LCM method
+if(LCM){
+ratio_EE = nConnEE /nConnEE *10
+ratio_EI = nConnEI / nConnEE *10
+ratio_IE = nConnIE /nConnEE *10
+ratio_II = nConnII /nConnEE *10
+
+
+rEE = ratio_EI *ratio_IE *ratio_II
+rEI = ratio_EE * ratio_IE * ratio_II
+rIE = ratio_EE * ratio_EI * ratio_II
+rII = ratio_EE * ratio_EI * ratio_IE
+
+W_EE = rEE*W_MULT*W_SCALE 
+W_EI = rEI*W_MULT*W_SCALE 
+W_IE = rIE*W_MULT*W_SCALE
+W_II = rII*W_MULT*W_SCALE
+}
+
+if(specified ){
+rEE = 1
+rEI = 6
+rIE = 11
+rII = 41.5
+
+W_EE = rEE*W_MULT*W_SCALE 
+W_EI = rEI*W_MULT*W_SCALE 
+W_IE = rIE*W_MULT*W_SCALE
+W_II = rII*W_MULT*W_SCALE
+
+}
+
+//for parameter search
+for i=0,srclist.size-1{ 
+nc_append(srclist.x(i),   tarlist.x(i), getSynInd (srclist.x(i)),  weightCal (srclist.x(i),tarlist.x(i),3,RUN_WEE*W_EE ,RUN_WEI*W_EI,RUN_WIE*W_IE,RUN_WII*W_II),delayCal(srclist.x(i),tarlist.x(i)))  //weightCal (srclist.x(i),tarlist.x(i),flag) flag: 0 -> fixed, 1 -> spatial dependent
+}
+printf("Weight values\n\tWEE: %g\n\tWEI: %g\n\tWIE: %g\n\tWII: %g\n", RUN_WEE*W_EE ,RUN_WEI*W_EI,RUN_WIE*W_IE,RUN_WII*W_II)
+
+
+
+
+/////////  print connection to file ///////// 
+if (INSERT_SPK_INPUT){
+	if (INSERT_SPK_to_E && INSERT_SPK_to_I) {
+	nclistSTR = nE+nI
+	}else{
+			if (INSERT_SPK_to_E ) {
+				nclistSTR = nE
+			}
+			if (INSERT_SPK_to_I ) {
+				nclistSTR = nI
+			}
+	}
+} else{
+nclistSTR = 0
+}
+objref fout, foutWD
+strdef fname
+fout = new File()
+if (POSTFIX){
+sprint(fname,"%sSpatialConnectionParam_%s.txt",dirLoc,postfixTxt) 
+}else{
+sprint(fname,"%sSpatialConnectionParam.txt",dirLoc)
+}
+fout.wopen(fname)
+//fout.wopen("SpatialConnectionParam.txt")
+fout.printf("%d\n",srclist.size) //total number of connection
+foutWD = new File()
+if (POSTFIX){
+sprint(fname,"%sSpatialConnectionWDParam_%s.txt",dirLoc,postfixTxt) 
+}else{
+sprint(fname,"%sSpatialConnectionWDParam.txt",dirLoc)
+}
+foutWD.wopen(fname)
+//foutWD.wopen("SpatialConnectionWDParam.txt")
+foutWD.printf("%d\n",srclist.size) //total number of connection
+for i =0,srclist.size-1{
+	fout.printf("%d\t%d\t%d\n",srclist.x(i),tarlist.x(i),typelist.x(i)) // or conlist.o(i).printf(fout,"%g\t") fout.printf("\n")
+	foutWD.printf("%d\t%d\t%d\t%.10f\t%.10f\n",srclist.x(i),tarlist.x(i),typelist.x(i),nclist.o(nclistSTR+i).weight,nclist.o(nclistSTR+i).delay)
+}
+fout.close()
+foutWD.close()

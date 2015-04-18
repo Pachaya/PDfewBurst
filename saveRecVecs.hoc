@@ -1,0 +1,131 @@
+// Save Recorded Vectors 
+
+ // objref recInoise, recV, recIinj, recI_cap
+ 
+strdef saveVecFName 
+saveVecFName = "recordedVectors.txt" //temp name
+
+proc save_all_soma_rec_vec(){   //save all recorded vectors , vVec_List, i_cap_List, injectI_List
+//Voltage
+if (POSTFIX){
+sprint(saveVecFName,"%sSoma_Volt_%s.txt",DIRLOC,F_PRENAME) 
+}else{
+sprint(saveVecFName,"%sSoma_Volt.txt",DIRLOC)
+}
+save_vectors_to_file(recV_List)
+//i_cap
+if (POSTFIX){
+sprint(saveVecFName,"%sSoma_i_cap_%s.txt",DIRLOC,F_PRENAME) 
+}else{
+sprint(saveVecFName,"%sSoma_i_cap.txt",DIRLOC)
+}
+save_vectors_to_file(recI_cap_List)
+//injectI_List
+if (POSTFIX){
+sprint(saveVecFName,"%sSoma_injectI_%s.txt",DIRLOC,F_PRENAME) 
+}else{
+sprint(saveVecFName,"%sSoma_injectI.txt",DIRLOC)
+}
+save_vectors_to_file(recIinj_List)
+//recInoise
+if (POSTFIX){
+sprint(saveVecFName,"%sNoise_current_%s.txt",DIRLOC,F_PRENAME) 
+}else{
+sprint(saveVecFName,"%sNoise_current.txt",DIRLOC)
+}
+save_vectors_to_file(recInoise_List)
+//recSpk_List
+if (POSTFIX){
+sprint(saveVecFName,"%sSpikebins_%s.txt",DIRLOC,F_PRENAME) 
+}else{
+sprint(saveVecFName,"%sSpikebins.txt",DIRLOC)
+}
+save_vectors_to_file(recSpk_List)
+}
+
+proc save_vectors_to_file(){local i,j localobj fout,id
+fout = new File()
+fout.wopen(saveVecFName)
+fout.printf("%g\t%g", N_TRIAL, tstop)
+
+for i = 0,$o1.count-3{
+	fout.printf("\t%g",0)
+}
+fout.printf("\n")
+
+id = new Vector()
+id.indgen(0, $o1.count-1,1)
+id.printf(fout,"%g\t",0,id.size-1)
+//fout.printf("%g\n",id.x(id.size-1))
+
+for i = 0, $o1.o(0).size-1{
+	for j = 0, $o1.count-2 {
+		fout.printf("%g\t",$o1.o(j).x(i))
+	}
+	fout.printf("%g\n",$o1.o($o1.count-1).x(i))
+}
+fout.close()
+}
+
+
+proc create_sim_profile() { localobj fout strdef fname  //Create Simulation Profile
+fout = new File()
+if (POSTFIX){
+sprint(fname,"%ssimProfile_%s.txt",DIRLOC, F_PRENAME) 
+}else{
+sprint(fname,"%ssimProfile.txt",DIRLOC)
+}
+fout.wopen(fname)
+fout.printf("File location : %s\n", fname)
+fout.printf("Postfix : %s\n",F_PRENAME)
+if(CELL_TYPE == 1){ //1 = WT, 2 = KO
+fout.printf("Cell Type : WT\n")
+}else{
+fout.printf("Cell Type : KO\n")
+}
+fout.printf("Soma Info : L = %g, diam = %g, Ra = %g, cm = %g\n", soma.L,soma.diam,soma.Ra,soma.cm)
+if(CELL_TYPE == 1){ //1 = WT, 2 = KO
+fout.printf("Ions info : ENa = %g, EK = %g, ECa = %g\n", soma.ena, soma.ek, soma.eca)
+fout.printf("CaT mechanism : gmax_CaT = %g\n", soma.gmax_CaT)
+}else{
+fout.printf("Ions info : ENa = %g, EK = %g\n", soma.ena, soma.ek)
+}
+fout.printf("HH mechanism : gnabar_hh = %g, gkbar_hh = %g, gl_hh = %g, el_hh = %g\n", soma.gnabar_hh, soma.gkbar_hh, soma.gl_hh, soma.el_hh)
+fout.printf("Noise Current (InGauss mechanism):  del = %g, dur = %g, mean = %g, stdev = %g\n", in.del, in.dur, in.mean, in.stdev)
+fout.printf("Current Injection (IClamp point process): del = %g, dur = %g, amp = %g\n",IClamp[0].del, IClamp[0].dur, IClamp[0].amp)
+fout.printf("Simulation Specific : tstop = %g ms, # of trials = %g, Ethreshold = %g, Einitial = %g, Resolution = %g\n",tstop, N_TRIAL,THRESHOLD, v_init, RESOLUTION )
+fout.close()
+}
+
+/*
+//Save all voltage recorded vectors
+proc saveSomaVolt(){local i,j localobj fout,id strdef fname //$1 = file name
+fout = new File()
+if (POSTFIX){
+sprint(fname,"%sSomaVolt_%s.txt",DIRLOC,F_PRENAME) 
+}else{
+sprint(fname,"%sSomaVolt_paramOpt.txt",DIRLOC)
+}
+fout.wopen(fname)
+//fout.wopen("SomaVolt_paramOpt.txt")
+//fout.printf("v(0.5)\t")
+fout.printf("%g\t%g\t%g",cellsE.count,cellsI.count, tstop) //#E, #I, tstop[ms]  (E cells' ID always go first)
+for i = 0,vVec_List.count-4{
+	fout.printf("\t%g",0)
+}
+fout.printf("\n")
+
+id = new Vector()
+id.indgen(0, vVec_List.count-1,1)
+id.printf(fout,"%g\t",0,id.size-1)
+//fout.printf("%g\n",id.x(id.size-1))
+
+for i = 0, vVec_List.o(0).size-1{
+	for j = 0, vVec_List.count-2 {
+		fout.printf("%g\t",vVec_List.o(j).x(i))
+	}
+	fout.printf("%g\n",vVec_List.o(vVec_List.count-1).x(i))
+}
+fout.close()
+}
+*/

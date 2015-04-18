@@ -1,0 +1,128 @@
+//////////////////*Neural Network Simulation and Recorded for M1 cells *///////////////////////
+
+//////////////// Add vectors for Recording ////////////////////////
+
+
+objref vVec_List_M1, i_cap_List_M1, injectI_List_M1
+vVec_List_M1= new List() 
+i_cap_List_M1 = new List() 
+injectI_List_M1 = new List()
+objref vVec_M1, i_capVec_M1, injectI_M1
+vVec_M1= new Vector() 
+i_capVec_M1= new Vector() 
+injectI_M1= new Vector()
+
+vVec_List_M1.remove_all() 
+i_cap_List_M1.remove_all() 
+injectI_List_M1.remove_all()
+
+
+proc VectorRecord_M1() {local id //localobj vVec, i_capVec, injectI
+//Record all V in all cells 
+for id=0, cellsCN_M1.count-1 {
+	vVec_M1 = new Vector()
+	i_capVec_M1 = new Vector()
+	
+	vVec_M1.record(&cellsCN_M1.o(id).soma.v(0.5),RESOLUTION) //record soma's voltage with the resolution of 1 ms
+	i_capVec_M1.record(&cellsCN_M1.o(id).soma.i_cap(0.5),RESOLUTION)
+	
+	vVec_List_M1.append(vVec_M1)
+	i_cap_List_M1.append(i_capVec_M1)
+	
+	if (ADD_SPONTANEOUS_ACTIVITY_M1){
+		injectI_M1 = new Vector()
+		injectI_M1.record(&inlist_M1.o(id).i,RESOLUTION)
+		injectI_List_M1.append(injectI)
+	}
+}
+}
+
+// Note : spikerecord() in PD_NetSimRec record all the cells (VL /PoisSpk/ M1) so get the rasterplot there if you want, otherwise use SomaVolt for better quality
+
+//////////////// Print Records to file ////////////////////////
+
+//spikes  for raster plot
+proc saveSpikesToFile_VL_M1(){localobj fout,fout2 strdef fname, fname2
+fout = new File()
+fout2 = new File()
+if (POSTFIX){
+sprint(fname,"%sraster_plots_paramOpt_VL_%s.txt",dirLoc,postfixTxt) 
+sprint(fname2,"%sraster_plots_paramOpt_M1_%s.txt",dirLoc,postfixTxt) 
+}else{
+sprint(fname,"%sraster_plots_paramOpt_VL.txt",dirLoc)
+sprint(fname2,"%sraster_plots_paramOpt_M1.txt",dirLoc)
+}
+fout.wopen(fname)
+fout2.wopen(fname2)
+
+fout.printf("%g\t%g\t%g\n",cellsE.count,cellsI.count, tstop) //#E, #I, tstop
+fout2.printf("%g\t%g\t%g\n",cellsE_M1.count,cellsI_M1.count, tstop) //#E, #I, tstop
+for i = 0, tvec.size-1{
+	if (idvec.x(i) < cellsE.count + cellsI.count){
+	fout.printf("%g\t%g\n", tvec.x(i),idvec.x(i))
+	}else{
+	fout2.printf("%g\t%g\n", tvec.x(i),idvec.x(i))
+	}
+}
+fout.close()
+fout2.close()
+}
+
+proc save_all_soma_rec_vec_M1(){   //save all recorded vectors , vVec_List, i_cap_List, injectI_List
+/////Voltage
+if (POSTFIX){
+sprint(saveVecFName,"%sSomaVolt_M1_%s.txt",dirLoc,postfixTxt) 
+}else{
+sprint(saveVecFName,"%sSomaVolt_M1.txt",dirLoc)
+}
+save_vectors_to_file_M1(vVec_List_M1)
+/////i_cap
+if (POSTFIX){
+sprint(saveVecFName,"%sSoma_i_cap_M1_%s.txt",dirLoc,postfixTxt) 
+}else{
+sprint(saveVecFName,"%sSoma_i_cap_M1.txt",dirLoc)
+}
+save_vectors_to_file_M1(i_cap_List_M1)
+
+/////injectI_List   --- Noise current
+if (POSTFIX){
+sprint(saveVecFName,"%sNoise_current_M1_%s.txt",dirLoc,postfixTxt) 
+}else{
+sprint(saveVecFName,"%sNoise_current_M1.txt",dirLoc)
+}
+if (ADD_SPONTANEOUS_ACTIVITY_M1){ 
+save_vectors_to_file_M1(injectI_List_M1)}
+
+}
+
+proc save_vectors_to_file_M1(){local i,j localobj fout,id
+fout = new File()
+fout.wopen(saveVecFName)
+fout.printf("%g\t%g\t%g",cellsE_M1.count,cellsI_M1.count, tstop) //#E, #I, tstop[ms]  (E cells' ID always go first)
+for i = 0,$o1.count-4{
+	fout.printf("\t%g",0)
+}
+fout.printf("\n")
+
+id = new Vector()
+if($o1.count == 1){
+id = new Vector(1)
+id.x(0) = 0
+} else {
+id.indgen(0, $o1.count-1,1)}
+id.printf(fout,"%g\t",0,id.size-1)
+//fout.printf("%g\n",id.x(id.size-1))
+
+for i = 0, $o1.o(0).size-1{
+	for j = 0, $o1.count-2 {
+		fout.printf("%g\t",$o1.o(j).x(i))
+	}
+	fout.printf("%g\n",$o1.o($o1.count-1).x(i))
+}
+fout.close()
+}
+
+
+
+// Varies Current :: VARIE_MEAN_InGauss = 1 // Later when add noise to M1
+// proc saveMeanNoiseCurrentToFile(){localobj fout strdef fname

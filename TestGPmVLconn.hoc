@@ -1,0 +1,243 @@
+//Main Code
+load_file("nrngui.hoc") //load basics library
+load_file("ranstream.hoc") //for InGauss random seed
+load_file("PD_Parameters.hoc") //Parameters
+
+load_file("PD_CellsTemplate.hoc") //load basics library  Note: Parameters for Cells template are specified inside
+load_file("PD_NetSpecIntf.hoc") // Network specification interface
+load_file("PD_load_position_file.hoc") //Now do not read INpos.txt 
+load_file("PD_load_position_file_M1.hoc") //Read position of M1
+
+load_file("PD_ObjrefDeclare.hoc") // Object declaration 
+
+
+///////////////////////////////// Simulation Setting ////////////////////////////////////////
+
+//////////  parameter & variables with user specified values
+RESOLUTION = 1 //bins = 1 ms
+MEAN = 0 // Noise by InGauss
+STDEV  = 0.1 //0.115 // Noise by InGauss
+THRESHOLD = -55
+POSTFIX = 1
+
+MAKE_M1_LAYER = 0
+GPM_INPUT_to_VL = 1 // Use GPm for Input
+MULT_TRIAL = 0 
+N_TRIAL = 1
+cntTrial = 1 
+//////////  Simulation Setting
+INDV_NEURON = 0 // If 1: Neuron location are fixed , if 0: use neuron location from file. 
+N_REPEAT = 100
+LOCAL_CONNECT = 1
+INSERT_SPK_INPUT = 1
+INSERT_SPK_to_E = 1 //as basal activity for VL
+INSERT_SPK_to_I = 1 //as basal activity for VL
+INSERT_I_INPUT = 0  //to VL; Hyperpolarized (negative current)
+INSERT_I_to_E = 1
+INSERT_I_to_I = 1
+
+INSERT_I_to_SpecifiedE = 0 // Vector --> injIClamp_SingleVec /  IClamp --> injIClamp_Single
+ID_SPECIFIED_E = 570 //In the center part of Network
+
+ADD_SPONTANEOUS_ACTIVITY = 1 // When both mean and stdev = 0 --> Cells are silent(with zero spontaneous activity)
+
+NOISE_POISSONSPK_GPm = 0
+NOISE_POISSONSPK_M1 = 0
+
+SHOW_GUI = 0
+/////////////////////////////////// SET CELL TYPE HERE //////////////////////////////////
+CELL_TYPE = 1 //1 = WT, 2 = KO  /////////////////////////////////// SET CELL TYPE HERE //////////////////////////////////
+/////////////////////////////////// SET CELL TYPE HERE //////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+TRIAL_NO = 1
+RANDOM123_ID1_POISSONSPK = 1 
+RANDOM123_ID3_RUN_POISSONSPK = TRIAL_NO //For  multiple trials (trial#)
+
+////////////////////////////////////////////////////////////////////////////
+// Setting Local Connection
+SPECIFIED_RATIO = 1
+R_EE = 0
+R_EI = 2
+R_IE = 3
+R_II = 0
+
+W_MULT = 500 // connection weight
+W_SCALE = 0.00001
+W_MULT_TC = 50
+W_SCALE_TC = W_SCALE
+W_POISSPK_VL = 0.0005
+// IClamp stimulation at E
+Light_Stim_Amp = 2 //Stimulate at GPm 
+Input_I_Amp = -0.3  // Stimulate at VL
+
+////////////////////////////////////////////////////////////////////////////
+//////////  Setting Directories 
+//strdef DIRLOC, F_PRE,F_PRENAME 
+strdef postfixTxt, dirLoc, core 
+
+postfixTxt = "" //testingSixtyWIIWEE5s_restart
+//core = "TestWT_slnt_InjI_singleE570_burst_lclConn_Wspecified_1_6_11_41.5" //"TestRunVLnetKO_Setparam_burst_lclConn_Wspecified_1_6_11_41.5" 
+core = "GPm_VL_" //"VL_Basal_Act" //
+
+dirLoc = "TestGPmVLconn/" //"RunBigNet/VL_LocalConn/" //"RunBigNet/TestSim/" // //"RunBigNet/VL_Basal_Act/"  
+/////////////////////////////////////////////////////////////////////////
+
+objref genseedlist
+genseedlist = new Vector()
+cIDrec = -1
+
+/////////////////////////////////////////////////////////////////////////
+steps_per_ms = 1    // -----------> set resolution and then use the variable in all references for unified process
+v_init = -70
+tstop = 2500
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+objref GPm
+GPm = new GPm_Cell()
+objref WT, KO
+WT = new WT_Cell()
+KO = new KO_Cell()
+
+objref stimTmp
+access GPm.soma 
+stimTmp = new IClamp(0.5)
+stimTmp.amp = Light_Stim_Amp //[nA]    //////// change amplitude via stimTmp.amp
+stimTmp.dur = 500// "forever"
+stimTmp.del = 500
+//LightStimList.append(stimTmp) // can retrieve the stim by LightStimList.o(CID)
+
+// Case 1 : Not adding noise to GPm cell
+W_BGinput = 0.01 // Weight for the connection BG - VL ---------------------------------------------------- Find this
+//Making the connection 
+objref  netconWT, netconKO
+netconWT = GPm.connect2target(WT.synlist.o(1))  // Excitatory and Inhibitory effects define at the synaptic input of target cell (*post* synaptic)
+netconWT.weight = W_BGinput  
+netconWT.delay = 0
+
+netconKO = GPm.connect2target(KO.synlist.o(1))  // Excitatory and Inhibitory effects define at the synaptic input of target cell (*post* synaptic)
+netconKO.weight = W_BGinput  
+netconKO.delay = 0
+
+// Case 2 : Add noise  ---> set in_WT.stdev =0 and in_KO.stdev.stdev = 0
+//The following segment for noise need ("ranstream.hoc") // Done it in MainCode
+random_stream_offset_ = (tstop+1000)*1/dt // assumes dt = 0.025  //////////////////////////////////////////// Check  whether the values is change every dt or point resolution, i.e. 1/dt or steps_per_ms
+inoise_random_low_start_ = 1
+mcell_ran4_init(inoise_random_low_start_)
+
+objref in_WT, in_KO, rs
+
+	access WT.soma 
+
+	in_WT = new InGauss(0.5) // add background noise to the cell 
+	in_WT.mean = MEAN // nA
+	in_WT.stdev = STDEV // nA
+	in_WT.del = 0 // ms
+	in_WT.dur = 1e9 // "forever"
+
+	rs = new RandomStream(1)
+	rs.r.normal(0,1) //uniform(0,1) // mean 0, variance 1
+	rs.start()
+	in_WT.noiseFromRandom(rs.r)
+	
+		access KO.soma 
+
+	in_KO = new InGauss(0.5) // add background noise to the cell 
+	in_KO.mean = MEAN // nA
+	in_KO.stdev = STDEV // nA
+	in_KO.del = 0 // ms
+	in_KO.dur = 1e9 // "forever"
+
+	rs = new RandomStream(1)
+	rs.r.normal(0,1) //uniform(0,1) // mean 0, variance 1
+	rs.start()
+	in_WT.noiseFromRandom(rs.r)
+
+//// Recorded the membrane potential
+objref vVecGPm, i_capVecGPm, stimIGPm, vVecWT, i_capVecWT, noiseWT, vVecKO, i_capVecKO, noiseKO
+{   vVecGPm= new Vector()  i_capVecGPm= new Vector()  stimIGPm= new Vector() vVecWT= new Vector() i_capVecWT= new Vector() noiseWT= new Vector() vVecKO= new Vector() i_capVecKO= new Vector() noiseKO= new Vector() }
+	access GPm.soma
+	vVecGPm.record(&GPm.soma.v(0.5),RESOLUTION)
+	i_capVecGPm.record(&GPm.soma.i_cap(0.5),RESOLUTION)
+	stimIGPm.record(&stimTmp.i,RESOLUTION)
+	
+	access WT.soma
+	vVecWT.record(&WT.soma.v(0.5),RESOLUTION)
+	i_capVecWT.record(&WT.soma.i_cap(0.5),RESOLUTION)
+	noiseWT.record(&in_WT.i,RESOLUTION)
+	
+	access KO.soma
+	vVecKO.record(&KO.soma.v(0.5),RESOLUTION)
+	i_capVecWT.record(&WT.soma.i_cap(0.5),RESOLUTION)
+	noiseWT.record(&in_WT.i,RESOLUTION)
+	
+
+// Shows the GUI	
+load_file("TestGPmVLconnPlot.ses")	
+
+// Setting parameter to Save file
+dirLoc = "TestGPmVLconn/"
+strdef conditionTxt
+conditionTxt = ""
+
+// function to save 
+////// save 
+strdef saveVecFName
+saveVecFName =""
+
+proc save_all_vectors(){
+
+	sprint(postfixTxt,"%sstimAmp%g_NoiseStdev%g_ncWeight%g", core, stimTmp.amp,in_WT.stdev,netconWT.weight, conditionTxt)
+	print "======= postfixTxt: ", postfixTxt, " ======="
+// Gpm
+/////// V	
+print "GPm :"
+	sprint(saveVecFName, "%sSomaVolt_GPm_%s.txt", dirLoc, postfixTxt) 
+	save_vectors_to_file(vVecGPm)
+	print " ",saveVecFName	
+/////// i_cap	
+	sprint(saveVecFName,"%sSoma_i_cap_GPm_%s.txt",dirLoc,postfixTxt) 
+	save_vectors_to_file(i_capVecGPm)
+	print " ",saveVecFName	
+/////// photoactivation 
+	sprint(saveVecFName,"%sPhotoact_stimAmp_GPm_%s.txt",dirLoc,postfixTxt) 
+	save_vectors_to_file(stimIGPm)
+	print " ",saveVecFName	
+// WT
+print "WT :"
+/////// V	
+	sprint(saveVecFName, "%sSomaVolt_WT_%s.txt", dirLoc, postfixTxt) 
+	save_vectors_to_file(vVecWT)
+	print " ",saveVecFName	
+/////// i_cap	
+	sprint(saveVecFName,"%sSoma_i_cap_WT_%s.txt",dirLoc,postfixTxt) 
+	save_vectors_to_file(i_capVecWT)
+	print " ",saveVecFName	
+/////// noise current
+	sprint(saveVecFName,"%sNoise_current_WT_%s.txt",dirLoc,postfixTxt) 
+	save_vectors_to_file(noiseWT)	
+	print " ",saveVecFName	
+// KO
+print "KO :"
+/////// V	
+	sprint(saveVecFName, "%sSomaVolt_KO_%s.txt", dirLoc, postfixTxt) 
+	save_vectors_to_file(vVecKO)
+	print " ",saveVecFName	
+/////// i_cap	
+	sprint(saveVecFName,"%sSoma_i_cap_KO_%s.txt",dirLoc,postfixTxt) 
+	save_vectors_to_file(i_capVecKO)
+	print " ",saveVecFName	
+/////// noise current
+	sprint(saveVecFName,"%sNoise_current_WT_%s.txt",dirLoc,postfixTxt) 
+	save_vectors_to_file(noiseKO)		
+	print " ",saveVecFName	
+}
+
+proc save_vectors_to_file(){local i,j localobj fout,id
+
+fout = new File()
+fout.wopen(saveVecFName)
+
+$o1.printf(fout,"%g\t")
+fout.printf("\n")
+fout.close()
+}

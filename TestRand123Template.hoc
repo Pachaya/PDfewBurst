@@ -1,0 +1,27 @@
+// Testing Random123 
+
+load_file("nrngui.hoc") //load basics library
+load_file("ranstream.hoc") //for InGauss random seed
+
+objref tmp111,tmp111_c, tmp123
+
+tmp111 =  new RandomStream123(1,1,1)
+tmp111_c =  new RandomStream123(1,1,1)
+tmp123 = new RandomStream123(1,2,3)
+print "111 repick()"
+tmp111.repick
+tmp111_c.repick
+print "123 repick()"
+tmp123.repick
+
+tmp111.r.Random123_globalindex(2)
+print "set global index = ", tmp111.r.Random123_globalindex()
+
+print "111 repick()"
+tmp111.repick
+tmp111_c.repick
+print "123 repick()"
+tmp123.repick
+
+objref ListRS
+ListRS = new List("RandomStream123")

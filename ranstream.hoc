@@ -1,0 +1,43 @@
+random_stream_offset_ = 250000
+
+begintemplate RandomStream /// Originally for InGauss
+public r, repick, start, stream
+external random_stream_offset_
+objref r
+proc init() {
+	stream = $1
+	r = new Random()
+	start()
+}
+// to get same results on each run
+// call rs.start() just before run()
+func start() {
+	return r.MCellRan4(stream*random_stream_offset_ + 1)
+}
+func repick() {
+	return r.repick()
+}
+endtemplate RandomStream   //// End
+
+
+begintemplate RandomStream123 //// Unify RandomStream for all random generator
+public r, repick, start, ID1, ID2, ID3, getID
+external random_stream_offset_
+objref r
+proc init() {
+	{ID1 = $1 ID2 = $2 ID3 = $3 }
+	r = new Random()
+	start()
+}
+// to get same results on each run
+// call rs.start() just before run()
+func start() {
+	return r.Random123(ID1,ID2,ID3)
+}
+func repick() {
+	return r.repick()
+}
+proc getID() {
+	print "Random123 : Seed ID #1 = ", ID1, " , #2 = ", ID2,  " , #3 = ", ID3, "\n"
+}
+endtemplate RandomStream123

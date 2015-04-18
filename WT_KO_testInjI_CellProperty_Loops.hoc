@@ -1,0 +1,230 @@
+
+//Main Code
+load_file("nrngui.hoc") //load basics library
+load_file("ranstream.hoc") //for InGauss random seed
+load_file("PD_Parameters.hoc") //Parameters
+////////////////////////////////////////////////////
+MAKE_M1_LAYER = 0  // Testing first
+ADD_I_to_M1 = 0
+ADD_I_to_VL = 0
+////////////////////////////////////////////////////////
+load_file("PD_CellsTemplate_BigCell.hoc") //load basics library  Note: Parameters for Cells template are specified inside
+
+strdef dirLoc, Vdiff_WT, Vdiff_KO
+sprint(dirLoc,"SimResult/CellProperties/")
+objref WT, KO, WT_Inj, KO_Inj
+Mean = 0.25
+Del = 1000
+Dur =  1000
+WT_delV = 0
+KO_delV = 0
+{ WT_T1 = 0 WT_T2 = 0 KO_T1 = 0 KO_T2 = 0 WT_minV = v_init KO_minV = v_init  WT_maxV = v_init KO_maxV = v_init}
+
+T1 = 900
+T2 = 1800
+
+WT = new WT_Cell()
+access WT.soma
+WT_Inj = new InGauss(0.5)
+WT_Inj.stdev = 0
+WT_Inj.mean = -1*Mean
+WT_Inj.del = Del
+WT_Inj.dur = Dur
+
+KO = new KO_Cell()
+access KO.soma
+KO_Inj = new InGauss(0.5)
+KO_Inj.stdev =0
+KO_Inj.mean  = -1*Mean
+KO_Inj.del = Del
+KO_Inj.dur = Dur
+
+objref WT_V, KO_V
+WT_V = new Vector()
+KO_V = new Vector()
+
+WT_V.record(&WT.soma.v(0.5),1)
+KO_V.record(&KO.soma.v(0.5),1)
+
+proc set_injI(){
+WT_Inj.mean = -1*Mean
+WT_Inj.del = Del
+WT_Inj.dur = Dur
+KO_Inj.mean = -1*Mean
+KO_Inj.del = Del
+KO_Inj.dur = Dur
+}
+
+proc set_CellParameters(){
+//WT
+	WT.soma.L = SOMA_SIZE_L 
+	WT.soma.diam = SOMA_SIZE_diam
+	WT.soma.Ra = SOMA_Ra //ohm-cm
+	WT.soma.cm = SOMA_cm // uF/cm2
+    WT.soma.gnabar_hh = GNaBAR_HH  //GNaBAR_HH //0.12s
+    WT.soma.gkbar_hh = GKBAR_HH  //GKBAR_HH //0.036 
+    WT.soma.gl_hh = GL_HH  //GL_HH //0.0001
+    WT.soma.el_hh = EL_HH //EL_HH //-60
+	WT.soma.ena = ENa_HH
+	WT.soma.ek = EK_HH
+	WT.soma.gmax_CaT = GCaMAX_CaT
+	WT.soma.eca = ECa_CaT
+	
+//KO
+	KO.soma.L = SOMA_SIZE_L 
+	KO.soma.diam = SOMA_SIZE_diam
+	KO.soma.Ra = SOMA_Ra //ohm-cm0
+	KO.soma.cm = SOMA_cm // uF/cm2
+    KO.soma.gnabar_hh = GNaBAR_HH  //GNaBAR_HH //0.12
+    KO.soma.gkbar_hh = GKBAR_HH  //GKBAR_HH //0.036 
+    KO.soma.gl_hh = GL_HH  //GL_HH //0.0001
+    KO.soma.el_hh = EL_HH //EL_HH //-60
+	KO.soma.ena = ENa_HH
+	KO.soma.ek = EK_HH
+}
+
+
+proc saveVolt(){localobj fout strdef fname //$1 = file name
+fout = new File()
+sprint(fname,"%sSomaVolt_Imean%g_Idel%g_Idur%g_L%g_diam%g_Ra%g_cm%g_gnabar%g_gkbar%g_gl%g_el%g_ena%g_ek%g_gCaT%g_eca%g_T%g.txt",dirLoc,-1*WT_Inj.mean,WT_Inj.del,WT_Inj.dur,SOMA_SIZE_L, SOMA_SIZE_diam,SOMA_Ra,SOMA_cm,GNaBAR_HH,GKBAR_HH,GL_HH,EL_HH,ENa_HH,EK_HH,GCaMAX_CaT,ECa_CaT,tstop) 
+fout.wopen(fname)
+WT_V.printf(fout,"%g\t",0,WT_V.size-1)
+KO_V.printf(fout,"%g\t",0,KO_V.size-1)
+fout.close()
+printf("Saved file :: %s\n",fname)
+printf("-------------------------------------------------\n\n")
+}
+
+proc show_V_diff(){
+WT_T1 = WT_V.x(T1)
+WT_T2 = WT_V.x(T2)
+KO_T1 = KO_V.x(T1)
+KO_T2 = KO_V.x(T2)
+WT_delV = WT_V.x(T2) - WT_V.x(T1)
+KO_delV = KO_V.x(T2) - KO_V.x(T1)
+WT_minV = WT_V.c(T1,T2).min()
+KO_minV = KO_V.c(T1,T2).min()
+WT_maxV = WT_V.c(T1,T2).max()
+KO_maxV = KO_V.c(T1,T2).max()
+}
+
+
+proc panel_button() { //panel to choose cell's ID to plot
+xpanel("Setting Simulation Parameter")
+xlabel("")
+xlabel("=== Setting current injection parameters ===")
+xvalue("Set current injection value","Mean",1,"{WT_Inj.mean = -1*Mean KO_Inj.mean = -1*Mean}",0,1)
+xvalue("Set current injection delay","Del",1,"{WT_Inj.del = Del KO_Inj.del = Del}",0,1)
+xvalue("Set current injection duration","Dur",1,"{WT_Inj.dur = Dur KO_Inj.dur = Dur}",0,1)
+//xbutton("set injected Current", "set_injI()")
+xlabel("")
+xlabel("=== Set parameters for cell's properties ===")
+xvalue("Set Cell parameter : SOMA_SIZE_L","SOMA_SIZE_L",1,"{WT.soma.L = SOMA_SIZE_L  KO.soma.L = SOMA_SIZE_L }",0,1)
+xvalue("Set Cell parameter : SOMA_SIZE_diam","SOMA_SIZE_diam",1,"{WT.soma.diam = SOMA_SIZE_diam  KO.soma.diam = SOMA_SIZE_diam }",0,1)
+xvalue("Set Cell parameter : SOMA_Ra","SOMA_Ra",1,"{WT.soma.Ra = SOMA_Ra KO.soma.Ra = SOMA_Ra}",0,1)
+xvalue("Set Cell parameter : SOMA_cm","SOMA_cm",1,"{WT.soma.cm = SOMA_cm KO.soma.cm = SOMA_cm}",0,1)
+xvalue("Set Cell parameter : GNaBAR_HH","GNaBAR_HH",1,"{WT.soma.gnabar_hh = GNaBAR_HH  KO.soma.gnabar_hh = GNaBAR_HH}",0,1)
+xvalue("Set Cell parameter : GKBAR_HH","GKBAR_HH",1,"{WT.soma.gkbar_hh = GKBAR_HH  KO.soma.gkbar_hh = GKBAR_HH} ",0,1)
+xvalue("Set Cell parameter : GL_HH","GL_HH",1,"{WT.soma.gl_hh = GL_HH  KO.soma.gl_hh = GL_HH}",0,1)
+xvalue("Set Cell parameter : EL_HH","EL_HH",1,"{WT.soma.el_hh = EL_HH KO.soma.el_hh = EL_HH}",0,1)
+xvalue("Set Cell parameter : ENa_HH","ENa_HH",1,"{WT.soma.ena = ENa_HH KO.soma.ena = ENa_HH}",0,1)
+xvalue("Set Cell parameter : EK_HH","EK_HH",1,"{WT.soma.ek = EK_HH KO.soma.ek = EK_HH}",0,1)
+xvalue("Set Cell parameter : GCaMAX_CaT","GCaMAX_CaT",1,"{WT.soma.gmax_CaT = GCaMAX_CaT}",0,1)
+xvalue("Set Cell parameter : ECa_CaT","ECa_CaT",1,"{WT.soma.eca = ECa_CaT}",0,1)
+xlabel("")
+xlabel("=== Measure difference in voltage ===")
+xvalue("T1","T1",1,"T1",0,1) xvalue("T2","T2",1,"T2",0,1)
+xbutton("Voltage Difference", "show_V_diff()") 
+
+xfixedvalue("WT_T1")  xfixedvalue("WT_T2")  
+xfixedvalue("KO_T1")  xfixedvalue("KO_T2")  
+xlabel("")
+xfixedvalue("WT_delV")
+xfixedvalue("KO_delV")
+xlabel("")
+xfixedvalue("WT_minV")  xfixedvalue("KO_minV")  
+xfixedvalue("WT_maxV")  xfixedvalue("KO_maxV") 
+xfixedvalue("WT_maxV - WT_minV")  xfixedvalue("KO_maxV- KO_minV")  
+//xbutton("set_CellParameters", "set_CellParameters()")
+xbutton("saveVolt", "saveVolt()")
+xpanel()
+}
+
+load_file("WT_KO_injI_showI.ses")
+tstop = 3000
+v_init = -70
+WT_minV = v_init 
+KO_minV = v_init
+
+//panel_button()
+
+objref Soma_size_paramLST, gL_paramLST, eL_paramLST, gCa_paramLST, eCa_paramLST
+//{Soma_size_paramLST = new Vector() gL_paramLST = new Vector() eL_paramLST = new Vector() gCa_paramLST = new Vector() eCa_paramLST = new Vector()}
+
+Soma_size_paramLST = new Vector(3) 
+Soma_size_paramLST.indgen(25,80,25) // 25 50 75
+gL_paramLST = new Vector(3)
+{ gL_paramLST.x(0) = 1E-04  gL_paramLST.x(1) = 3E-04 gL_paramLST.x(2) = 5E-05 }
+
+gCa_paramLST = new Vector(3)
+{ gCa_paramLST.x(0) = 0.001  gCa_paramLST.x(1) = 0.002 gCa_paramLST.x(2) = 0.00065 }
+
+eL_paramLST = new Vector(2)
+{ eL_paramLST.x(0) = -60  eL_paramLST.x(1) = -70}
+
+eCa_paramLST = new Vector(3)
+{ eCa_paramLST.x(0) = 64  eCa_paramLST.x(1) = 126.1 eCa_paramLST.x(2) = 132}
+CNT = 0
+t0 = startsw()
+
+for s_i = 0 ,Soma_size_paramLST.size-1 {
+SOMA_SIZE_L = Soma_size_paramLST.x(s_i) 
+SOMA_SIZE_diam = Soma_size_paramLST.x(s_i) 
+printf("Soma_size_paramLST#%g : %g\n", s_i, Soma_size_paramLST.x(s_i))
+{WT.soma.L = SOMA_SIZE_L  KO.soma.L = SOMA_SIZE_L }
+{WT.soma.diam = SOMA_SIZE_diam  KO.soma.diam = SOMA_SIZE_diam }
+	for  el_i = 0 ,eL_paramLST.size -1{ 
+	EL_HH = eL_paramLST.x(el_i)
+	{WT.soma.el_hh = EL_HH KO.soma.el_hh = EL_HH}
+	printf("\tEL_HH#%g : %g\n", el_i, eL_paramLST.x(el_i))
+		for  gl_i = 0 ,gL_paramLST.size-1{ 
+		GL_HH = gL_paramLST.x(gl_i)
+		{WT.soma.gl_hh = GL_HH KO.soma.gl_hh = GL_HH}
+		printf("\t\tGL_HH#%g : %g\n", gl_i, gL_paramLST.x(gl_i))
+			
+				for  eca_i = 0 ,eCa_paramLST.size-1{ 
+				ECa_CaT = eCa_paramLST.x(eca_i)
+				{WT.soma.eca = ECa_CaT}
+				printf("\t\t\tECa_CaT#%g : %g\n", eca_i, eCa_paramLST.x(eca_i))
+					for  gca_i = 0 ,gCa_paramLST.size-1{ 
+					GCaMAX_CaT = gCa_paramLST.x(gca_i)
+					{WT.soma.gmax_CaT = GCaMAX_CaT}
+					printf("\t\t\t\tGCaMAX_CaT#%g : %g\n", gca_i, gCa_paramLST.x(gca_i))
+					printf("\t\t\t\t\t Called Run ...\n")
+					run()
+					printf("\t\t\t\t\t Finished Run, call saveVolt... \n")
+					saveVolt()
+					printf("\t\t\t\t\t Saved ...\n\n")
+					//printf(" ============= End one Set ============\n")
+					CNT = CNT + 1
+					}
+				}
+			
+					
+		}
+	
+	}
+
+printf("=========================End one big Loop ========================\n")
+}
+printf("========================= Finished all ========================\n CNT = %g\n", CNT)
+
+print "Total Runtime :: ", startsw()-t0
+print "\n"
+
+
+
+
+
+
+

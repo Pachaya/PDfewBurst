@@ -1,0 +1,2 @@
+// Record soma.i_cap, soma.v -> for checking spikes 
+// Another file to init and run everything (including *.ses)

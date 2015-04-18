@@ -1,0 +1,41 @@
+///////////////////* Declare Position *//////////////////
+
+//load position files
+objref posEx_M1, posEy_M1, posIx_M1,posIy_M1
+strdef POSITION_INFO_M1, Efile_M1, Ifile_M1
+	
+		
+objref fin
+fin = new File()
+Efile_M1 = "Epos_E5625_I1892_ssize1500_Regular_sweep5Itr5000_ceil_sorted.txt"
+fin.ropen(Efile_M1) // E always Regular
+
+
+nE_M1 = fin.scanvar()
+posEx_M1 = new Vector(nE_M1)
+posEy_M1 = new Vector(nE_M1)
+
+for (i=0;i<nE_M1;i=i+1){
+	posEx_M1.x(i) = fin.scanvar()
+	posEy_M1.x(i) = fin.scanvar()
+}
+fin.close() 
+
+ADD_I_to_M1 = 0
+if (ADD_I_to_M1){
+//Regular I 
+Ifile_M1 = "Ipos_E5625_I1892_ssize1500_Regular_sweep5Itr5000_ceil_sorted.txt"
+fin.ropen(Ifile_M1)
+POSITION_INFO_M1 = "Regular E & I for M1 layer, use the same neural mosaics with V1, new gen based on control parameters, rep_deg 2, ssize = 1500, #sweep = 5, #Intr = 5000 (ceil, sorted)\n"
+sprint(POSITION_INFO_M1, "%s\t Epos = %s\n\t Ipos = %s\n", POSITION_INFO_M1, Efile_M1, Ifile_M1)
+
+nI_M1=fin.scanvar()
+posIx_M1 = new Vector(nI_M1)
+posIy_M1 = new Vector(nI_M1)
+for (i=0;i<nI_M1;i=i+1){
+	posIx_M1.x(i) = fin.scanvar()
+	posIy_M1.x(i) = fin.scanvar()
+}
+fin.close()
+
+}

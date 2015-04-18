@@ -1,0 +1,29 @@
+//TestCaT
+
+load_file("nrngui.hoc") 
+
+create soma
+access soma
+
+ soma {
+      nseg = 1
+      diam = 18.8
+      L = 18.8
+      Ra = 123.0
+      insert hh
+      ena = 71.5
+      ek = -89.1
+      gnabar_hh=0.25
+      gl_hh = 0.0001666
+      el_hh = -60.0
+      insert CaT
+      eca = 126.1
+	  gmax_CaT = 0.001
+    }
+
+objref stim
+stim = new IClamp(0.5)
+stim.dur = 100
+zstim.del = 100
+stim.amp = -0.1
+tstop = 500

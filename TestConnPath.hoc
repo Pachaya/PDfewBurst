@@ -1,0 +1,183 @@
+// Testing Hoc file with few cells of different type
+
+
+//
+load_file("nrngui.hoc") //load basics library
+load_file("ranstream.hoc") //for InGauss random seed
+load_file("PD_Parameters.hoc") //Parameters
+
+load_file("PD_CellsTemplate.hoc") //load basics library  Note: Parameters for Cells template are specified inside
+load_file("PD_NetSpecIntf.hoc") // Network specification interface
+load_file("PD_load_position_file.hoc") //Now do not read INpos.txt 
+load_file("PD_load_position_file_M1.hoc") //Read position of M1
+
+load_file("PD_ObjrefDeclare.hoc") // Object declaration 
+
+/////////////////////////////////////////////////////////////////////////
+// Setting file name and location 
+strdef DIRLOC, F_PRE,F_PRENAME 
+DIRLOC = "RunSingle_Net/"
+strdef postfixTxt, dirLoc, core 
+postfixTxt = "" //testingSixtyWIIWEE5s_restart
+
+core = "TestWT_slnt_InjI_singleE570_burst_lclConn_Wspecified_1_6_11_41.5" //"TestRunVLnetKO_Setparam_burst_lclConn_Wspecified_1_6_11_41.5" 
+core = "testCode_SimplConn"
+//"TestKOInjectI_specifiedE_"
+dirLoc = DIRLOC //"SimulationResult/SfN_ctrlParamters/" 
+
+/////////////////////////////////////////////////////////////////////////
+
+POSTFIX = 1
+TRIAL_NO = 1		
+CELL_TYPE = 1 //1 = WT, 2 = KO  /////////////////////////////////// SET CELL TYPE HERE //////////////////////////////////
+
+GPM_INPUT_to_LV = 1 // Use GPm for Input
+
+IndvCellRepeats = 1 // one set of WT and KO
+
+// parameter & variables with user specified values
+RESOLUTION = 1 //bins = 1 ms
+MEAN = 0
+STDEV  = 0 //0.115
+THRESHOLD = -55
+/////////////////////////////////////////////////////////////////////////
+LOCAL_CONNECT = 1
+INDV_NEURON = 0
+INSERT_SPK_INPUT = 0
+INSERT_SPK_to_E = 0
+INSERT_SPK_to_I = 0
+INSERT_I_INPUT = 1
+INSERT_I_to_E = 1
+INSERT_I_to_I = 0
+
+INSERT_I_to_SpecifiedE = 1 // Vector --> injIClamp_SingleVec /  IClamp --> injIClamp_Single
+ID_SPECIFIED_E = 570 //In the center part of Network
+
+ADD_SPONTANEOUS_ACTIVITY = 1 // When both mean and stdev = 0 --> Cells are silent(with zero spontaneous activity)
+
+MAKE_M1_LAYER = 1
+
+MULT_TRIAL = 0 
+N_TRIAL = 1
+cntTrial = 1 
+
+N_REPEAT = 100
+////////////////////////////////////////////////////////////////////////////
+RANDOM123_ID1_POISSONSPK = 1 
+RANDOM123_ID3_RUN_POISSONSPK = TRIAL_NO //For  multiple trials (trial#)
+
+////////////////////////////////////////////////////////////////////////////
+objref genseedlist
+genseedlist = new Vector()
+cIDrec = -1
+
+// connection weight
+if(LOCAL_CONNECT){
+RUN_WEE = 1
+RUN_WEI = 1
+RUN_WIE = 1
+RUN_WII = 1
+}else{
+RUN_WEE = 0
+RUN_WEI = 0
+RUN_WIE = 0
+RUN_WII = 0
+}
+W_MULT = 1
+W_SCALE = 0.00001
+W_MULT_TC = 50000
+W_SCALE_TC = W_SCALE
+
+
+////////////////////////////////////////////////////////////////////////////
+///////////////   Start simple connection GPm -> LV -> M1
+///////////////
+////////////////////////////////////////////////////////////////////////////
+
+objref KO_List, WT_List, AllCell_List, M1_List, GPm_List
+{ KO_List = new List() WT_List = new List()	AllCell_List = new List()  M1_List = new List() GPm_List = new List() }
+
+objref KO, WT, M1, GPm
+KO = new KO_Cell()
+WT = new WT_Cell()
+M1 = new M1_Cell()
+GPm = new GPm_Cell()
+
+// Make Cell
+cIDrec = -1
+cIDrec = cIDrec+1
+strGPm = cIDrec
+GPmrec = 0
+cell_append(GPm,50,50, 0,cIDrec, GPmrec,2) // cells type ID : 2 = Inhibitory cells
+GPm_List.append(GPm) AllCell_List.append(GPm)  //#0 GPm cells 
+
+cIDrec = cIDrec+1
+strKO = cIDrec
+KOrec = 0
+cell_append(KO,50,50, 0,cIDrec, KOrec,1) // cells type ID : 1 = Excitatory cells
+KO_List.append(KO) AllCell_List.append(KO)  //#1 KO cells 
+
+cIDrec = cIDrec+1
+strWT = cIDrec
+WTrec = 0
+cell_append(WT,50,50, 0,cIDrec, WTrec,1) // cells type ID : 1 = Excitatory cells
+WT_List.append(WT) AllCell_List.append(WT)  //#2 WT cells 
+
+cIDrec = cIDrec+1
+strM1 = cIDrec
+M1rec = 0
+cell_append(M1,50,50, 0,cIDrec, M1rec,1) // cells type ID : 1 = Excitatory cells
+M1_List.append(M1) AllCell_List.append(M1)  //#3 M1 cells
+
+/*
+objref in
+access WT.soma
+    in = new InGauss(0.5) // add background noise to the cell 
+	in.mean = MEAN // nA
+	in.stdev = STDEV // nA
+	in.del = 0 // ms
+	in.dur = 1e9 // "forever"
+*/
+
+// Add IClamp to GPm
+Input_I_Amp = 0.5
+
+objref stim
+access GPm.soma
+		stim = new IClamp(0.5)
+		stim.del = 500
+		stim.amp = Input_I_Amp //[nA]
+		stim.dur = 500 // 1e9 // "forever" *****************************
+		
+	
+	
+// Make Connection --- GPm -> VL -> M1
+
+W_TC = 1*W_MULT_TC*W_SCALE_TC // + noise 
+W_EE = W_TC
+W_EI = 1*W_MULT_TC*W_SCALE_TC 
+W_IE = 1*W_MULT_TC*W_SCALE_TC 
+W_II = 1*W_MULT_TC*W_SCALE_TC 
+
+//GPm -> KO
+nc_append(strGPm, strKO, getSynInd (strGPm),  weightCal (strGPm,strKO,3,RUN_WEE*W_EE ,RUN_WEI*W_EI,RUN_WIE*W_IE,RUN_WII*W_II),delayCal(strGPm,strKO))  
+
+//GPm -> WT
+nc_append(strGPm, strWT, getSynInd (strGPm),  weightCal (strGPm,strWT,3,RUN_WEE*W_EE ,RUN_WEI*W_EI,RUN_WIE*W_IE,RUN_WII*W_II),delayCal(strGPm,strWT))  
+
+// Load Session
+load_file("TestConnSimpleNet.ses")
+
+//Simulation
+tstop = 2000
+steps_per_ms = 1    // -----------> set resolution and then use the variable in all references for unified process
+v_init = -70
+
+proc DelAddConnAndRun(){
+nclist.remove_all()
+//GPm -> KO
+nc_append(strGPm, strKO, getSynInd (strGPm),  weightCal (strGPm,strKO,3,RUN_WEE*W_EE ,RUN_WEI*W_EI,RUN_WIE*W_IE,RUN_WII*W_II),delayCal(strGPm,strKO))  
+//GPm -> WT
+nc_append(strGPm, strWT, getSynInd (strGPm),  weightCal (strGPm,strWT,3,RUN_WEE*W_EE ,RUN_WEI*W_EI,RUN_WIE*W_IE,RUN_WII*W_II),delayCal(strGPm,strWT))  
+run()
+}

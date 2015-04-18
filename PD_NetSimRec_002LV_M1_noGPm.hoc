@@ -1,0 +1,617 @@
+//////////////////*Neural Network Simulation and Recorded *///////////////////////
+// Ver003  Add functions for FF Poisson spike input, before move all objref on top of the hoc file
+//
+//////////////// Add vectors for Recording ////////////////////////
+
+//objref vVec_List, i_cap_List, injectI_List
+//vVec_List = new List() 
+//i_cap_List = new List() 
+//injectI_List = new List()
+//objref vVec, i_capVec, injectI
+//vVec= new Vector() 
+//i_capVec= new Vector() 
+//injectI= new Vector()
+
+vVec_List.remove_all() 
+i_cap_List.remove_all() 
+injectI_List.remove_all()
+
+vVec.resize(0) 
+i_capVec.resize(0)
+injectI.resize(0)
+
+objref injIsingleE_spkVec
+injIsingleE_spkVec = new Vector()
+
+proc VectorRecord() {local id //localobj vVec, i_capVec, injectI
+//Record all V in all cells 
+for id=0, cellsCN.count-1 {
+	vVec = new Vector()
+	i_capVec = new Vector()
+	injectI = new Vector()
+	vVec.record(&cellsCN.o(id).soma.v(0.5),RESOLUTION) //record soma's voltage with the resolution of 1 ms
+	i_capVec.record(&cellsCN.o(id).soma.i_cap(0.5),RESOLUTION)
+	vVec_List.append(vVec)
+	i_cap_List.append(i_capVec)
+	if (ADD_SPONTANEOUS_ACTIVITY){ 
+	injectI.record(&inlist.o(id).i,RESOLUTION)
+	injectI_List.append(injectI)
+	}
+}
+
+}
+
+objref injIClamp_SingleVec
+
+proc injIClamp_Single_record(){local i
+	injIClamp_SingleVec = new Vector()
+	injIClamp_SingleVec.record(&injIClamp_Single.i,RESOLUTION)
+}
+if (INSERT_I_to_SpecifiedE ){
+	injIClamp_Single_record()
+}
+proc GetSpkBin_of_injSpecifiedE (){
+if(INSERT_I_to_SpecifiedE){
+	injIsingleE_spkVec.spikebin(vVec_List.o(str_E+ID_SPECIFIED_E), THRESHOLD)
+	}
+}	
+
+//IClamplist
+//objref IClampVec_List,IClampVec //Caution: Take it out when do not inject current input//////////////////////////////////////
+//IClampVec_List = new List()
+//IClampVec = new Vector()
+//IClamplist
+
+IClampVec_List.remove_all()
+IClampVec.resize(0)
+
+proc IClamp_record(){local i
+for i = 0, IClamplist.count-1{
+	IClampVec = new Vector()
+	IClampVec.record(&IClamplist.o(i).i,RESOLUTION)
+	IClampVec_List.append(IClampVec)
+}
+}
+IClamp_record()
+
+
+
+	
+//objref tvec, idvec // will be Vectors that record all spike times (tvec) 
+//// and the corresponding id numbers of the cells that spiked (idvec)
+{tvec.resize(0) idvec.resize(0)}
+
+proc spikerecord() {local i localobj nc, nil, tmptvec  //only cortical neurons --> cellsCN 
+tvec = new Vector()
+idvec = new Vector()
+for i=0, cells.count-1 {
+	nc = cells.object(i).connect2target(nil) 
+	nc.record(tvec, idvec, i) //record spike times, if spike happened, time is add in tvec a,d the id of cells that fire are put in the idvec
+	// the Vector will continue to record spike times even after the NetCon has been destroyed
+	//////////// *** Is the idfor idvec is cells's ID or cells CN ? (It's same in this code but it might cause trouble in the future if the cells's ID and cellsCN's ID is different
+}
+}
+
+//objref tvecE, tvecI, idvecE, idvecI // will be Vectors that record all spike times (tvec) 
+//// and the corresponding id numbers of the cells that spiked (idvec)
+{tvecE.resize(0) tvecI.resize(0) idvecE.resize(0) idvecI.resize(0)}
+proc spikerecordEI() {local i localobj nc, nil, tmptvec  //only cortical neurons --> cellsCN 
+tvecE = new Vector()
+idvecE = new Vector()
+tvecI = new Vector()
+idvecI = new Vector()
+for i=0, cellsE.count-1 {
+	nc = cellsE.o(i).connect2target(nil) 
+	nc.record(tvecE, idvecE, i) //record spike times, if spike happened, time is add in tvec a,d the id of cells that fire are put in the idvec
+	// the Vector will continue to record spike times even after the NetCon has been destroyed
+	//////////// *** Is the idfor idvec is cells's ID or cells CN ? (It's same in this code but it might cause trouble in the future if the cells's ID and cellsCN's ID is different
+}
+for i=0, cellsI.count-1 {
+	nc = cellsI.o(i).connect2target(nil) 
+	nc.record(tvecI, idvecI, i) //record spike times, if spike happened, time is add in tvec a,d the id of cells that fire are put in the idvec
+	// the Vector will continue to record spike times even after the NetCon has been destroyed
+	//////////// *** Is the idfor idvec is cells's ID or cells CN ? (It's same in this code but it might cause trouble in the future if the cells's ID and cellsCN's ID is different
+}
+
+}
+
+//////////////// Initiate run ////////////////////////
+proc run_all() {
+finitialize()
+frecord_init()
+print "Called run_all()"
+//print "tstop = ", tstop 
+//print "steps_per_ms = ",steps_per_ms
+//print "v_init = ", v_init
+tstop = $1  // Check all other variable also -> steps_per_ms , dt etc
+steps_per_ms = 1   
+v_init = -70
+//print "Set value for the parameters"
+//print "tstop = ", tstop 
+//print "steps_per_ms = ",steps_per_ms
+//print "v_init = ", v_init
+/*
+//Generate Poissoin in each run by time tstop
+	for i=0, spkvec_list.count-1 {
+		spkvec_list.o(i) = poissonGenerator(seedlist.x(i),1,$1,50)
+		cells.o(2*i+1).pp.play(spkvec_list.o(i)) 
+	}*/
+
+run()
+}
+
+//////////////// Visualization ////////////////////////
+proc spike_out() { local i
+printf("\ntime\t cell\n")
+	for i=0, tvec.size-1 {
+		printf("%g\t %d\n", tvec.x[i], idvec.x[i])
+	}
+}
+
+
+objref g
+proc rasterplot() {localobj tmpidvec
+  g = new Graph()
+  g.size(0,tstop,0,cells.count)
+  tmpidvec = new Vector()
+  tmpidvec = idvec.c
+  tmpidvec.add(1)
+  tmpidvec.mark(g, tvec, "|")
+}
+
+
+objref gE,gI
+proc rasterplotEI() {localobj tmpidvec
+  tmpidvec = new Vector()
+  tmpidvec = idvecE.c
+  tmpidvec.add(1)
+  gE = new Graph()
+  gE.size(0,tstop,0,cellsE.count)
+  tmpidvec.mark(gE, tvecE, "|")
+  gE.label("E cells")
+  
+  tmpidvec = new Vector()
+  tmpidvec = idvecI.c
+  tmpidvec.add(1)
+  gI = new Graph()
+  gI.size(0,tstop,0,cellsI.count)
+  tmpidvec.mark(gI, tvecI, "|")
+  gI.label("I cells")
+}
+
+
+vecID = 0
+proc plot_soma_info() { //panel to choose cell's ID to plot
+xpanel("Setting cell ID for plotting")
+xvalue("Set ID","vecID",1,"vecID",0,1)
+xbutton("plot v(0.5)", "plot_volt(vecID)")
+xbutton("plot v(0.5) on same graph", "plot_volt_same_g(vecID)")
+xbutton("plot i_cap(0.5)", "plot_i_cap(vecID)")
+xbutton("plot i_cap(0.5) on same graph", "plot_i_cap_same_g(vecID)")  
+xbutton("plot injected current ", "plot_injectI(vecID)")
+xbutton("plot injected current on same graph", "plot_injectI_same_g(vecID)")  
+xbutton("plot injected current on last i_cap graph", "plot_injectI_same_g_i_cap(vecID)")  
+xpanel()
+}
+
+objref gV_List
+gV_List = new List()
+proc plot_volt(){localobj gV strdef labell
+gV = new Graph()
+gV.size(0,tstop,-100,50)
+if($1 >= str_I){ 
+vVec_List.o($1).plot(gV,1/steps_per_ms,3,1)  //color ID : 2 = red, 3 = blue 
+}else{vVec_List.o($1).plot(gV,1/steps_per_ms,2,1)  
+}
+sprint(labell,"Cells#%g v(0.5)",$1)
+gV.label(labell)
+gV.exec_menu("View = plot")
+gV_List.append(gV)
+}
+
+proc plot_volt_same_g(){local gVid localobj gV strdef labell
+gVid = gV_List.count-1
+gV = gV_List.o(gVid)
+//gV = new Graph()
+//gV.size(0,tstop,-100,50)
+if($1 >= str_I){ 
+vVec_List.o($1).plot(gV,1/steps_per_ms,3,1)  //color ID : 2 = red, 3 = blue 
+}else{vVec_List.o($1).plot(gV,1/steps_per_ms,2,1)  
+}
+sprint(labell,"Cells#%g v(0.5)",$1)
+gV.label(labell)
+gV.exec_menu("View = plot")
+//gV_List.append(gV)
+}
+
+// i_cap_List, injectI_List
+objref gi_cap_List
+gi_cap_List = new List()
+proc plot_i_cap(){localobj gI strdef labell
+gI = new Graph()
+gI.size(0,tstop,-100,50)
+if($1 >= str_I){ 
+i_cap_List.o($1).plot(gI,1/steps_per_ms,3,1)  //color ID : 2 = red, 3 = blue 
+}else{i_cap_List.o($1).plot(gI,1/steps_per_ms,2,1)  
+}
+sprint(labell,"Cells#%g i_cap(0.5)",$1)
+gI.label(labell)
+gI.exec_menu("View = plot")
+gi_cap_List.append(gI)
+}
+
+proc plot_i_cap_same_g(){local gIid localobj gI strdef labell
+gIid = gi_cap_List.count-1
+gI = gi_cap_List.o(gIid)
+//gV = new Graph()
+//gV.size(0,tstop,-100,50)
+if($1 >= str_I){ 
+i_cap_List.o($1).plot(gI,1/steps_per_ms,3,1)  //color ID : 2 = red, 3 = blue 
+}else{i_cap_List.o($1).plot(gI,1/steps_per_ms,2,1)  
+}
+sprint(labell,"Cells#%g i_cap(0.5)",$1)
+gI.label(labell)
+gI.exec_menu("View = plot")
+//gV_List.append(gV)
+}
+
+// i_cap_List, injectI_List
+objref ginjectI_List
+ginjectI_List = new List()
+proc plot_injectI(){localobj ginjectI strdef labell
+ginjectI = new Graph()
+ginjectI.size(0,tstop,-100,50)
+if($1 >= str_I){ 
+injectI_List.o($1).plot(ginjectI,1/steps_per_ms,3,1)  //color ID : 2 = red, 3 = blue 
+}else{injectI_List.o($1).plot(ginjectI,1/steps_per_ms,2,1)  
+}
+sprint(labell,"Cells#%g injectI(t)",$1)
+ginjectI.label(labell)
+ginjectI.exec_menu("View = plot")
+ginjectI_List.append(ginjectI)
+}
+
+proc plot_injectI_same_g(){local gIid localobj gI strdef labell
+gIid = ginjectI_List.count-1
+gI = ginjectI_List.o(gIid)
+//gV = new Graph()
+//gV.size(0,tstop,-100,50)
+if($1 >= str_I){ 
+injectI_List.o($1).plot(gI,1/steps_per_ms,3,1)  //color ID : 2 = red, 3 = blue 
+}else{injectI_List.o($1).plot(gI,1/steps_per_ms,2,1)  
+}
+sprint(labell,"Cells#%g injectI(t)",$1)
+gI.label(labell)
+gI.exec_menu("View = plot")
+//gV_List.append(gV)
+}
+
+proc plot_injectI_same_g_i_cap(){local gIid localobj gI strdef labell
+gIid = gi_cap_List.count-1
+gI = gi_cap_List.o(gIid)
+//gV = new Graph()
+//gV.size(0,tstop,-100,50)
+if($1 >= str_I){ 
+injectI_List.o($1).plot(gI,1/steps_per_ms,3,1)  //color ID : 2 = red, 3 = blue 
+}else{injectI_List.o($1).plot(gI,1/steps_per_ms,2,1)  
+}
+sprint(labell,"Cells#%g injectI(t)",$1)
+gI.label(labell)
+gI.exec_menu("View = plot")
+//gV_List.append(gV)
+}
+
+//IClampList
+IClampID = 0
+proc plot_input_current_info() { //panel to choose cell's ID to plot
+xpanel("Setting cell ID for plotting")
+xvalue("Set ID","IClampID",1,"IClampID",0,1)
+xbutton("plot input current I_i(t)", "plot_inputI(IClampID)")
+xbutton("plot input current I_i(t)on same graph", "plot_inputI_same_g(IClampID)")
+xpanel()
+}
+
+//IClampVec_List
+objref gIClamp_List
+gIClamp_List = new List()
+proc plot_inputI(){localobj gIClamp strdef labell
+gIClamp = new Graph()
+gIClamp.size(0,tstop,-10,10)
+if($1 >= str_I){ 
+IClampVec_List.o($1).plot(gIClamp,1/steps_per_ms,3,1)  //color ID : 2 = red, 3 = blue 
+}else{IClampVec_List.o($1).plot(gIClamp,1/steps_per_ms,2,1)  
+}
+sprint(labell,"Cells#%g injectI(t)",$1)
+gIClamp.label(labell)
+gIClamp.exec_menu("View = plot")
+gIClamp_List.append(gIClamp)
+}
+
+proc plot_inputI_same_g(){local gIid localobj gI strdef labell
+gIid = gIClamp_List.count-1
+gI = gIClamp_List.o(gIid)
+//gV = new Graph()
+//gV.size(0,tstop,-100,50)
+if($1 >= str_I){ 
+IClampVec_List.o($1).plot(gI,1/steps_per_ms,3,1)  //color ID : 2 = red, 3 = blue 
+}else{IClampVec_List.o($1).plot(gI,1/steps_per_ms,2,1)  
+}
+sprint(labell,"Cells#%g injectI(t)",$1)
+gI.label(labell)
+gI.exec_menu("View = plot")
+//gV_List.append(gV)
+}
+
+
+//////////////// Print Records to file ////////////////////////
+
+//spikes  for raster plot
+proc saveSpikesToFile(){localobj fout strdef fname
+fout = new File()
+if (POSTFIX){
+sprint(fname,"%sraster_plots_paramOpt_%s.txt",dirLoc,postfixTxt) 
+}else{
+sprint(fname,"%sraster_plots_paramOpt.txt",dirLoc)
+}
+fout.wopen(fname)
+
+//fout.wopen("raster_plots_paramOpt.txt")
+//fout.printf("%g\t%g\n", poissonHz ,tstop) //First line -> Firing rate during generation , tstop
+fout.printf("%g\t%g\t%g\n",cellsE.count,cellsI.count, tstop) //#E, #I, tstop
+for i = 0, tvec.size-1{
+	fout.printf("%g\t%g\n", tvec.x(i),idvec.x(i))
+}
+fout.close()
+}
+
+strdef saveVecFName 
+saveVecFName = "recordedVectors.txt" //temp name
+
+proc save_all_soma_rec_vec(){   //save all recorded vectors , vVec_List, i_cap_List, injectI_List
+//Voltage
+if (POSTFIX){
+sprint(saveVecFName,"%sSomaVolt_%s.txt",dirLoc,postfixTxt) 
+}else{
+sprint(saveVecFName,"%sSomaVolt.txt",dirLoc)
+}
+save_vectors_to_file(vVec_List)
+//i_cap
+if (POSTFIX){
+sprint(saveVecFName,"%sSoma_i_cap_%s.txt",dirLoc,postfixTxt) 
+}else{
+sprint(saveVecFName,"%sSoma_i_cap.txt",dirLoc)
+}
+save_vectors_to_file(i_cap_List)
+
+//injectI_List   --- Noise current
+if (POSTFIX){
+sprint(saveVecFName,"%sSoma_injectI_%s.txt",dirLoc,postfixTxt) 
+}else{
+sprint(saveVecFName,"%sSoma_injectI.txt",dirLoc)
+}
+if (ADD_SPONTANEOUS_ACTIVITY){ 
+save_vectors_to_file(injectI_List)}
+
+//IClampVec   --- Current Injection via IClamp
+if (POSTFIX){
+sprint(saveVecFName,"%sSoma_injectI_%s.txt",dirLoc,postfixTxt) 
+}else{
+sprint(saveVecFName,"%sSoma_injectI.txt",dirLoc)
+}
+
+if(INSERT_I_to_SpecifiedE){
+	//Current injection to single E cell
+	if (POSTFIX){
+	sprint(saveVecFName,"%sSoma_injectI_specifiedE_%s.txt",dirLoc,postfixTxt) 
+	}else{
+	sprint(saveVecFName,"%sSoma_injectI_specifiedE.txt",dirLoc)
+	}
+	save_injectI_specifiedE_to_file()
+}	
+}
+
+proc save_injectI_specifiedE_to_file(){local i,j localobj fout,id
+fout = new File()
+fout.wopen(saveVecFName)
+fout.printf("%g\t%g\t%g\n",1,0, tstop) //#E, #I, tstop[ms] 
+
+fout.printf("%g\n",ID_SPECIFIED_E)
+
+injIClamp_SingleVec.printf(fout,"%g\n",0, injIClamp_SingleVec.size-1)
+
+fout.close()
+}
+
+
+
+proc save_vectors_to_file(){local i,j localobj fout,id
+fout = new File()
+fout.wopen(saveVecFName)
+fout.printf("%g\t%g\t%g",cellsE.count,cellsI.count, tstop) //#E, #I, tstop[ms]  (E cells' ID always go first)
+for i = 0,$o1.count-4{
+	fout.printf("\t%g",0)
+}
+fout.printf("\n")
+
+id = new Vector()
+id.indgen(0, $o1.count-1,1)
+id.printf(fout,"%g\t",0,id.size-1)
+//fout.printf("%g\n",id.x(id.size-1))
+
+for i = 0, $o1.o(0).size-1{
+	for j = 0, $o1.count-2 {
+		fout.printf("%g\t",$o1.o(j).x(i))
+	}
+	fout.printf("%g\n",$o1.o($o1.count-1).x(i))
+}
+fout.close()
+}
+
+//Save all voltage recorded vectors
+proc saveSomaVolt(){local i,j localobj fout,id strdef fname //$1 = file name
+fout = new File()
+000if (POSTFIX){
+sprint(fname,"%sSomaVolt_paramOpt_%s.txt",dirLoc,postfixTxt) 
+}else{
+sprint(fname,"%sSomaVolt_paramOpt.txt",dirLoc)
+}
+fout.wopen(fname)
+//fout.wopen("SomaVolt_paramOpt.txt")
+//fout.printf("v(0.5)\t")
+fout.printf("%g\t%g\t%g",cellsE.count,cellsI.count, tstop) //#E, #I, tstop[ms]  (E cells' ID always go first)
+for i = 0,vVec_List.count-4{
+	fout.printf("\t%g",0)
+}
+fout.printf("\n")
+
+id = new Vector()
+id.indgen(0, vVec_List.count-1,1)
+id.printf(fout,"%g\t",0,id.size-1)
+//fout.printf("%g\n",id.x(id.size-1))
+
+for i = 0, vVec_List.o(0).size-1{
+	for j = 0, vVec_List.count-2 {
+		fout.printf("%g\t",vVec_List.o(j).x(i))
+	}
+	fout.printf("%g\n",vVec_List.o(vVec_List.count-1).x(i))
+}
+fout.close()
+}
+
+proc saveSeedlist(){localobj fout strdef fname //$1 = file name
+fout = new File()
+if (POSTFIX){
+sprint(fname,"%sseedlist_%s.txt",dirLoc,postfixTxt) 
+}else{
+sprint(fname,"%sseedlist.txt",dirLoc)
+}
+fout.wopen(fname)
+seedlist.printf(fout,"%g\t",0,seedlist.size-1)
+fout.close()
+}
+
+proc saveGenSeedlist(){localobj fout strdef fname //$1 = file name
+fout = new File()
+if (POSTFIX){
+sprint(fname,"%sgenseedlist_%s.txt",dirLoc,postfixTxt) 
+}else{
+sprint(fname,"%sgenseedlist.txt",dirLoc)
+}
+fout.wopen(fname)
+genseedlist.printf(fout,"%g\t",0,genseedlist.size-1)
+fout.close()
+}
+
+proc saveRecordSeed(){local l localobj fout strdef fname //$1 = file name
+fout = new File()
+if (POSTFIX){
+sprint(fname,"%sseed_recorded_%s.txt",dirLoc,postfixTxt) 
+}else{
+sprint(fname,"%sseed_recorded.txt",dirLoc)
+}
+fout.wopen(fname)
+for l = 0 , recordseed.size-1{
+	fout.printf("%g\t%g\t%g\n",RANDOM123_ID1_POISSONSPK, recordseed.x(l),RANDOM123_ID3_RUN_POISSONSPK)
+}
+fout.close()
+}
+
+//////////////// Simulation ////////////////////////
+/*proc simulate() {
+VectorRecord() 
+spikerecord()
+spikerecordEI()
+xopen("PrmOptSes.ses")
+tstop = $1 
+run()
+graphList[0].o(0).exec_menu("View = plot")
+graphList[1].o(0).exec_menu("View = plot")
+rasterplot()
+rasterplotEI()
+saveSpikesToFile()
+saveSomaVolt()
+}*/
+
+proc create_sim_profile2() { localobj fout strdef fname  //Create Simulation Profile
+fout = new File()
+if (POSTFIX){
+sprint(fname,"%ssimProfile_%s.txt",dirLoc,postfixTxt) 
+}else{
+sprint(fname,"%ssimProfile.txt",dirLoc)
+}
+fout.wopen(fname)
+fout.printf("File location : %s\n", fname)
+fout.printf("Postfix : %s\n", postfixTxt)
+fout.printf("Network info : nE = %g, nI = %g, V1 size = %g\n", nE, nI, V1SIZE)
+fout.printf("Position info of LV: %s\n", POSITION_INFO)
+if(MAKE_M1_LAYER){
+fout.printf("Position info of M1: %s\n", POSITION_INFO_M1)}
+fout.printf("Using individual cells (not from real position)? Y(1)/N(0) : %g ,\n",INDV_NEURON )
+fout.printf("Injected Current: Mean = %f,  SD = %f\n", MEAN,STDEV)
+fout.printf("Pmax : %g\n", PMAX_E)
+fout.printf("Allow local connection? Y(1)/N(0) : %g ,\n", LOCAL_CONNECT ) 
+fout.printf("Connection Y/N (EE,EI,IE,II) : (%g,%g,%g,%g)\n", RUN_WEE,RUN_WEI,RUN_WIE,RUN_WII)
+fout.printf("W_EE = %f\tW_EI = %f\tW_IE = %f\tW_II = %f\t\n",W_EE,W_EI,W_IE,W_II)
+fout.printf("Number of connection by type : #EE = %g\t #EI = %g\t #IE = %g\t #II = %g\n",nConnEE, nConnEI, nConnIE, nConnII)
+fout.printf("Simulation Runtime : %g ms\n", tstop)
+
+fout.printf("Insert Poisson spike Input Y(1)/N(0) : %g ,\n", INSERT_SPK_INPUT) 
+if(INSERT_SPK_INPUT){
+fout.printf("Input spike generation firing rate = %f Hz\n", Input_spk_avg_fr)
+fout.printf("Weight for feed forward spike input = %f Hz\n", wFFin )
+}
+fout.printf("Insert Poisson spike Input to E Y(1)/N(0) : %g ,\n", INSERT_SPK_to_E ) 
+fout.printf("Insert Poisson spike Input to I Y(1)/N(0) : %g ,\n", INSERT_SPK_to_I) 
+
+fout.printf("Insert Current Input Y(1)/N(0) : %g ,\n", INSERT_I_INPUT) 
+if(INSERT_I_INPUT){
+fout.printf("Current Input Amp = %f nA\n", Input_I_Amp)
+}
+fout.printf("Insert Current Input to E Y(1)/N(0) : %g ,\n", INSERT_I_to_E) 
+fout.printf("Insert Current Input to I Y(1)/N(0) : %g ,\n", INSERT_I_to_I) 
+fout.close()
+}
+
+proc create_sim_profile_cellConfig() { localobj fout strdef fname  //Create Simulation Profile - Cell Configure
+fout = new File()
+if (POSTFIX){
+sprint(fname,"%ssimProfile_cellConfig%s.txt",DIRLOC, postfixTxt) 
+}else{
+sprint(fname,"%ssimProfile_cellConfig.txt",DIRLOC)
+}
+fout.wopen(fname)
+fout.printf("File location : %s\n", fname)
+fout.printf("Postfix : %s\n",postfixTxt)
+if(CELL_TYPE == 1){ //1 = WT, 2 = KO
+fout.printf("Cell Type : WT\n")
+}else{
+fout.printf("Cell Type : KO\n")
+}
+fout.printf("Soma Info : L = %g, diam = %g, Ra = %g, cm = %g\n", cells.o(0).soma.L,cells.o(0).soma.diam,cells.o(0).soma.Ra,cells.o(0).soma.cm)
+if(CELL_TYPE == 1){ //1 = WT, 2 = KO
+fout.printf("Ions info : ENa = %g, EK = %g, ECa = %g\n", cells.o(0).soma.ena, cells.o(0).soma.ek, cells.o(0).soma.eca)
+fout.printf("CaT mechanism : gmax_CaT = %g\n", cells.o(0).soma.gmax_CaT)
+}else{
+fout.printf("Ions info : ENa = %g, EK = %g\n", cells.o(0).soma.ena, cells.o(0).soma.ek)
+}
+fout.printf("HH mechanism : gnabar_hh = %g, gkbar_hh = %g, gl_hh = %g, el_hh = %g\n", cells.o(0).soma.gnabar_hh, cells.o(0).soma.gkbar_hh, cells.o(0).soma.gl_hh, cells.o(0).soma.el_hh)
+fout.printf("Synapses : \n\t\t /*E*/ tau1 = %g, tau2 = %g, e = %g\n", cells.o(0).synlist.o(0).tau1, cells.o(0).synlist.o(0).tau2,cells.o(0).synlist.o(0).e)
+fout.printf("\t\t /*I*/ tau1 = %g, tau2 = %g, e = %g\n", cells.o(0).synlist.o(1).tau1, cells.o(0).synlist.o(1).tau2,cells.o(0).synlist.o(1).e)
+if (ADD_SPONTANEOUS_ACTIVITY){ 
+fout.printf("Noise Current (InGauss mechanism):  del = %g, dur = %g, mean = %g, stdev = %g\n", inlist.o(0).del, inlist.o(0).dur, inlist.o(0).mean, inlist.o(0).stdev)
+}else {
+fout.printf("Noise Current (InGauss mechanism) does not add\n")
+}
+
+fout.printf("Insert Current Input Y(1)/N(0) : %g ,\n", INSERT_I_INPUT) 
+if(INSERT_I_INPUT){
+fout.printf("Current Injection (IClamp point process): del = %g, dur = %g, amp = %g\n",IClamplist.o(0).del, IClamplist.o(0).dur, IClamplist.o(0).amp)
+}
+if (INSERT_I_to_SpecifiedE ){
+		fout.printf("Current Injection (IClamp) at Single E cell: ID of E cell = %g ", ID_SPECIFIED_E )
+		fout.printf("        del = %g, dur = %g, amp = %g\n",injIClamp_Single.del, injIClamp_Single.dur, injIClamp_Single.amp)
+}
+
+fout.printf("Simulation Specific : tstop = %g ms, # of trials = %g, Ethreshold = %g, Einitial = %g, Resolution = %g\n",tstop, N_TRIAL,THRESHOLD, v_init, RESOLUTION )
+fout.close()
+}

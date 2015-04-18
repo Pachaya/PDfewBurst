@@ -1,0 +1,77 @@
+// Try the VecStem
+
+load_file("nrngui.hoc") 
+load_file("PD_Parameters.hoc") //Parameters
+load_file("PD_CellsTemplate.hoc")
+
+// Generate VL cell
+objref tmpWT1, tmpWT2, tmpWT3 
+tmpWT1 = new WT_Cell()
+tmpWT2 = new WT_Cell()
+tmpWT3 = new WT_Cell()
+
+
+
+//Test spike 
+objref spkt, spkt2
+spkt = new Vector(5)
+spkt.indgen(100,25)
+
+spkt2 = new Vector(5)
+spkt2.indgen(100,25)
+
+// Generate VecStim
+objref vs 
+vs = new VecStim()
+vs.play(spkt2)
+
+objref InSpk
+InSpk = new In_spk_VecStim()
+InSpk.pp.play(spkt)
+
+//weight
+WW = 0.001
+// Current method 
+objref nc1,nc2
+nc1 = InSpk.connect2target(tmpWT1.synlist.o(0))
+nc1.weight = WW
+nc1.delay = 0
+
+// connect spkt directly to VL cell
+nc2 = new NetCon(vs, tmpWT2.synlist.o(0))// tmpWT2.connect2target(vs)
+nc2.weight = WW
+nc2.delay = 0
+
+//tmpWT3 connect to nothing //for re
+// Generate VL cell
+objref tmpKO1, tmpKO2, tmpKO3 
+tmpKO1 = new KO_Cell()
+tmpKO2 = new KO_Cell()
+ objref si1,si2, vsKO,ncKO
+si1 = new Vector(1)
+si2 = new Vector(1)
+si1.x(0) = 100
+si2.x(0) = 100
+vsKO = new VecStim()
+vsKO.play(si1)
+ncKO = new NetCon(vsKO, tmpKO1.synlist.o(0))// tmpWT2.connect2target(vs)
+ncKO.weight = 0.001
+ncKO.delay = 0
+vs.play(si2)
+
+
+tstop = 300
+
+
+
+
+
+///////////////////////
+
+// Summary : It could be done in both way.
+// None of this can record their soma potential because it is artificial cell, that mean, it employ only events time and transfer it to target cell that it connect via netcon
+// The Poison spike train that send to the cell has poisson distribution
+// Q: When using spikebin function in NEURON on In_spk_VecStim , where the bin come from? The vector that was fed to the cell?
+//     ----> Check by compare the recorded spike vector (spkvec_list) and spikebin
+//     ----> change the bin size to improve fano factor
+//  You can do this later, after finishing optimization of other parameters

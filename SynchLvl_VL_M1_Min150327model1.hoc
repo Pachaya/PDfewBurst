@@ -1,0 +1,315 @@
+load_file("nrngui.hoc") //load basics library
+load_file("ranstream.hoc") 
+load_file("PDfb_CellsTemplate_FewBurstModel1.hoc")
+ttotal = startsw()
+steps_per_ms = 1
+v_init = -70
+
+strdef dirLoc
+dirLoc = "SimResult/TestMinSystem/"
+strdef simCode, CoreName 
+simCode  = "test"
+CoreName = ""
+
+
+Nsample = 20
+SynchLvl = 0// 50%
+Tcut = 200
+Tmeasure = 1000
+TSTOP = Tcut + Tmeasure
+tstop = TSTOP
+InputFR = 40
+W_SPK = 0.032 // 
+W_VL_M1 = 0.002/Nsample // always fire
+MEAN = -0.15
+STDEV  = 0.2
+
+
+objref NsameSPK 
+NsameSPK = new Vector(1)
+
+proc setNsameSPK(){
+NsameSPK = new Vector(1)
+NsameSPK.x(0) = SynchLvl*Nsample +0.5 
+NsameSPK.floor()
+}
+setNsameSPK()
+
+
+
+////// Make Cell + Connection
+objref SpkCell, VLCell_WT,VLCell_KO, M1Cell_WT, M1Cell_KO
+{SpkCell = new List()  VLCell_WT = new List()  VLCell_KO = new List() }
+objref SpkNC_W, SpkNC_K, TC_NC_W, TC_NC_K // List for Netcon 
+{ SpkNC_W = new List()   SpkNC_K = new List()   TC_NC_W = new List()   TC_NC_K = new List() }
+objref inlist_VL_WT, inlist_VL_KO, rslist_VL_WT, rslist_VL_KO
+{inlist_VL_WT = new List()  inlist_VL_KO = new List() rslist_VL_WT = new List() rslist_VL_KO = new List()}
+
+proc MakeCell(){local ii localobj tmp, InGtmp
+{SpkCell = new List()  VLCell_WT = new List()  VLCell_KO = new List()   M1Cell_WT = new List()   M1Cell_KO = new List()  }
+{ SpkNC_W = new List()   SpkNC_K = new List()   TC_NC_W = new List()   TC_NC_K = new List() }
+
+M1Cell_WT= new M1_Cell() // Make only one M1 cell
+M1Cell_KO= new M1_Cell() // Make only one M1 cell
+
+for ii = 0, Nsample-1 {
+	SpkCell.append(new In_spk_VecStim())
+	VLCell_WT.append( new WT_Cell())
+	VLCell_KO.append( new KO_Cell())
+	// InGauss Noise 
+	access VLCell_WT.o(VLCell_WT.count-1).soma
+	InGtmp = new InGauss(0.5) // add background noise to the cell 
+	InGtmp.mean = -1*MEAN // nA
+	InGtmp.stdev = STDEV // nA
+	InGtmp.del = 0 // ms
+	InGtmp.dur = 1e9 // "forever"
+	inlist_VL_WT.append(InGtmp)
+	rslist_VL_WT.append(new RandomStream(ii))
+	rslist_VL_WT.o(ii).r.normal(0,1) //uniform(0,1) // mean 0, variance 1
+	rslist_VL_WT.o(ii).start()
+	inlist_VL_WT.o(ii).noiseFromRandom(rslist_VL_WT.o(ii).r)
+	
+	access VLCell_KO.o(VLCell_KO.count-1).soma
+	InGtmp = new InGauss(0.5) // add background noise to the cell 
+	InGtmp.mean = -1*MEAN // nA
+	InGtmp.stdev = STDEV // nA
+	InGtmp.del = 0 // ms
+	InGtmp.dur = 1e9 // "forever"
+	inlist_VL_KO.append(InGtmp)
+	rslist_VL_KO.append(new RandomStream(ii))
+	rslist_VL_KO.o(ii).r.normal(0,1) //uniform(0,1) // mean 0, variance 1
+	rslist_VL_KO.o(ii).start()
+	inlist_VL_KO.o(ii).noiseFromRandom(rslist_VL_KO.o(ii).r)
+	
+	//Spike - VL Connection
+	SpkNC_W.append(SpkCell.o(ii).connect2target(VLCell_WT.o(ii).synlist.o(0)))
+	{SpkNC_W.o(ii).weight = W_SPK   SpkNC_W.o(ii).delay = 0}
+	SpkNC_K.append(SpkCell.o(ii).connect2target(VLCell_KO.o(ii).synlist.o(0)))
+	{SpkNC_K.o(ii).weight = W_SPK   SpkNC_K.o(ii).delay = 0}
+	//VL - M1 Connection
+	TC_NC_W.append(VLCell_WT.o(ii).connect2target(M1Cell_WT.synlist.o(0)))
+	{TC_NC_W.o(ii).weight = W_VL_M1   TC_NC_W.o(ii).delay = 0}
+	TC_NC_K.append(VLCell_KO.o(ii).connect2target(M1Cell_KO.synlist.o(0)))
+	{TC_NC_K.o(ii).weight = W_VL_M1  TC_NC_K.o(ii).delay = 0}
+}
+
+}
+////// Recording Vector 
+objref Rec_VL_W, Rec_VL_K, Rec_M1_W,  Rec_M1_K
+ { Rec_VL_W = new List() Rec_VL_K = new List() Rec_M1_W = new List()  Rec_M1_K = new List()}
+ 
+proc RecordSomaV(){local ii localobj tmpV
+ { Rec_VL_W = new List() Rec_VL_K = new List() Rec_M1_W = new List()  Rec_M1_K = new List()}
+for ii = 0, Nsample-1 {
+	//VL
+	tmpV = new Vector()
+	tmpV.record(&VLCell_WT.o(ii).soma.v(0.5),1) // Record Membrane Potential of WT cell
+	Rec_VL_W.append(tmpV)
+
+	tmpV = new Vector()
+	tmpV.record(&VLCell_KO.o(ii).soma.v(0.5),1) // Record Membrane Potential of WT cell
+	Rec_VL_K.append(tmpV)
+	}
+	
+	//M1
+	tmpV = new Vector()
+	tmpV.record(&M1Cell_WT.soma.v(0.5),1) // Record Membrane Potential of WT cell
+	Rec_M1_W.append(tmpV)
+
+	tmpV = new Vector()
+	tmpV.record(&M1Cell_KO.soma.v(0.5),1) // Record Membrane Potential of WT cell
+	Rec_M1_K.append(tmpV)
+}
+
+////// Fn to make PoisSpk 
+RANDOM123_ID1_POISSONSPK = 1
+TRIAL_NO = 1
+
+obfunc  poissonGenerator() { local tmpr,p,ii localobj rr, spktrain, spktime 
+//Return vector of spiking time (in ms)
+// $1 = seed, $2 = resolution (size of one bin in ms), $3 = time (ms), $4 = average firing rate
+	rr = new Random()
+	rr.uniform(0,1)
+	rr.Random123(RANDOM123_ID1_POISSONSPK,$1,TRIAL_NO)
+	spktrain = new Vector($3/$2) //Not use now
+	spktime = new Vector()
+	p = $4/(1000/$2)
+	//printf("p: %f \n", p)   
+	for ii =0,spktrain.size-1 {
+		tmpr = rr.repick
+		
+		if (tmpr < p){  //spike occur
+			spktrain.x(ii) = 1
+			spktime.append($2*ii)
+		}else{
+			spktrain.x(ii) = 0
+		}
+	}
+	return spktime // spkvec, 1) the multiple arrival time in one VecStim is account as the only one spike. 2) The spike time vector need to be sort ascending(less...more).
+}
+
+////////// Make the vectorspiketrain
+objref RecordSpkTrain
+RecordSpkTrain = new List()
+proc MakeVectorSpkTrain(){ local ii localobj MainSpk, tmpV
+////// Make main PoisSpk 
+MainSpk = new Vector()
+MainSpk = poissonGenerator(0,steps_per_ms,tstop,InputFR)
+for ii = 0, NsameSPK.x(0) - 1 { // first NsameSPK cells have same spike train 
+tmpV = new Vector()
+tmpV = MainSpk.c()
+RecordSpkTrain.append(tmpV)
+SpkCell.o(ii).pp.play(tmpV) 
+}
+
+////// Make Other Spike
+for ii = NsameSPK.x(0), SpkCell.count() - 1 { // last Nsample - NsameSPK cells have different spike train 
+tmpV = poissonGenerator(ii,steps_per_ms,tstop,InputFR)
+RecordSpkTrain.append(tmpV)
+SpkCell.o(ii).pp.play(tmpV) 
+}
+
+}
+
+strdef saveVecFName
+saveVecFName = "tmp"
+
+proc save_vectors_to_file(){local i,j localobj fout,id
+fout = new File()
+fout.wopen(saveVecFName)
+fout.printf("%g\t%g\t%g",$o1.count,0, tstop) //#E, #I, tstop[ms]  (E cells' ID always go first)
+for i = 0,$o1.count-4{
+	fout.printf("\t%g",0)
+}
+fout.printf("\n")
+
+id = new Vector()
+id.indgen(0, $o1.count-1,1)
+id.printf(fout,"%g\t",0,id.size-1)
+
+for i = 0, $o1.o(0).size-1{
+	for j = 0, $o1.count-2 {
+		fout.printf("%g\t",$o1.o(j).x(i))
+	}
+	fout.printf("%g\n",$o1.o($o1.count-1).x(i))
+}
+fout.close()
+}
+
+proc save_lessthan3vectors_to_file(){local i,j localobj fout,id
+fout = new File()
+fout.wopen(saveVecFName)
+fout.printf("%g\t%g\t%g",$o1.count,0, tstop) //#E, #I, tstop[ms]  (E cells' ID always go first)
+fout.printf("\n")
+
+if($o1.count == 1){
+fout.printf("%g\n",0)
+}else{
+id = new Vector()
+id.indgen(0, $o1.count-1,1)
+id.printf(fout,"%g\t",0,id.size-1)
+fout.printf("\n")
+}
+for i = 0, $o1.o(0).size-1{
+for j = 0, $o1.count-2 {
+		fout.printf("%g\t",$o1.o(j).x(i))
+	}
+	fout.printf("%g\n",$o1.o($o1.count-1).x(i))
+}
+fout.close()
+}
+
+
+proc Save_all_vectors(){
+
+sprint(simCode, "%sNsample%g_SynchLvl%g_TSTOP%g_InputFR%g_wSPK%g_wVLM1_%g", CoreName, Nsample,SynchLvl,tstop,InputFR, W_SPK,W_VL_M1)
+// VL
+sprint(saveVecFName,"%sSomaVolt_WT_VL_%s.txt",dirLoc,simCode) 
+save_vectors_to_file(Rec_VL_W)
+sprint(saveVecFName,"%sSomaVolt_KO_VL_%s.txt",dirLoc,simCode) 
+save_vectors_to_file(Rec_VL_K)
+
+// M1
+sprint(saveVecFName,"%sSomaVolt_WT_M1_%s.txt",dirLoc,simCode) 
+save_lessthan3vectors_to_file(Rec_M1_W)
+sprint(saveVecFName,"%sSomaVolt_KO_M1_%s.txt",dirLoc,simCode) 
+save_lessthan3vectors_to_file(Rec_M1_K)
+
+}
+
+
+proc Run_All(){
+
+MakeCell()
+RecordSomaV()
+MakeVectorSpkTrain()
+run()
+Save_all_vectors()
+}
+
+
+
+proc panel_button() { //panel
+xpanel("Setting Simulation Parameter")
+
+xvalue("# of sample","Nsample",10,"setNsameSPK()",0,1)
+xvalue("Synchronization Level (Range = 0 - 1)","SynchLvl",0.1,"setNsameSPK()",0,1)
+xvalue("Initialized time (cut time,ms)","Tcut",100,"tstop = Tcut + Tmeasure",0,1)
+xvalue("Measurement time (ms)","Tmeasure",100,"tstop = Tcut + Tmeasure",0,1)
+xlabel("")
+xvalue("Input Frequency (Hz)","InputFR",10,"InputFR",0,1)
+xvalue("W for Spk->VL","W_SPK",0.001,"W_SPK",0,1)
+xvalue("W for VL->M1","W_VL_M1",0.0001,"W_VL_M1",0,1)
+
+xlabel("")
+
+xbutton("Run", "Run_All()")
+
+xpanel()
+}
+
+panel_button()
+load_file("SynchLvlTest.ses")
+
+W_SPK = 0.032
+Tmeasure = 200000 // 200 s
+Tcut = 500
+tstop = Tcut + Tmeasure
+/////// Loop
+objref W_VL_M1_LST
+W_VL_M1_LST = new Vector(1)
+W_VL_M1_LST.x(0) = 0.0003
+//W_VL_M1_LST.indgen(0.0001,0.0003,0.0001/2)
+
+objref SynchLvl_LST 
+SynchLvl_LST = new Vector(1)
+SynchLvl_LST.x(0) = 0 
+//SynchLvl_LST.indgen(0,1,0.2)
+
+objref InputFR_LST
+InputFR_LST = new Vector(1)
+InputFR_LST.x(0) = 90        ////  Input Frequency  , It's faster to run it one by one  ---> that is change InputFR to 10,20,30,...
+//InputFR_LST.indgen(10,90,10)
+
+cnt_run = 0
+tloop = startsw()
+
+for p1_ii = 0,  W_VL_M1_LST.size-1{
+W_VL_M1 = W_VL_M1_LST.x(p1_ii)
+print "#",p1_ii," weight for VL -> M1 connection = ", W_VL_M1
+	for p2_ii = 0,  SynchLvl_LST.size-1 {
+	SynchLvl = SynchLvl_LST.x(p2_ii)
+	setNsameSPK()
+	print "\t#",p2_ii," Synchronization Level = ", SynchLvl
+		for p3_ii = 0,  InputFR_LST.size-1 {
+		InputFR = InputFR_LST.x(p3_ii)
+		print "\t\t#",p3_ii," Input Frequency = ", InputFR
+			Run_All()					
+			cnt_run = cnt_run + 1
+			print"\t\t\t### End one set :: cnt = ", cnt_run," ###"
+		}
+	}
+
+print "==================== End one big set Elapsed Time ", startsw()-tloop, "==========================="
+}
+print "Total Time : ",startsw() - ttotal

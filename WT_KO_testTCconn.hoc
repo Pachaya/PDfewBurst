@@ -1,0 +1,85 @@
+//////// NOTE : Noise input model as InGauss here.
+////////      : Photoactivation Current model as IClamp
+////////      : Noise Current model as InGauss
+//Main Code
+load_file("nrngui.hoc") //load basics library
+load_file("ranstream.hoc") //for InGauss random seed
+load_file("PD4_CellsTemplate_BestNoNoise.hoc") //load basics library  Note: Parameters for Cells template are specified inside
+//load_file("PD_NetSpecIntf.hoc") // Network specification interface
+ 
+ 
+ SPK_WEIGHT =  0.005
+ TC_WEIGHT =  0.0001
+ 
+ strdef dirLoc, Vdiff_WT, Vdiff_KO
+ dirLoc ="SimResult/TestM1_TC/"
+ 
+ objref WT, KO, M1_W, M1_K, SPK_W,SPK_K // Cells 
+ objref SpkVec // Vector
+ 
+ //Single Spikes    // Poisson Spikes shortly later  
+WT = new WT_Cell()
+KO = new KO_Cell() 
+SPK_W = new In_spk_VecStim()
+SPK_K = new In_spk_VecStim()
+M1_W = new M1_Cell()
+M1_K = new M1_Cell()
+
+// Build Connection
+objref NC_W , NC_K, TC_W, TC_K
+// SpkTrain to VL  
+NC_W = SPK_W.connect2target(WT.synlist.o(0))
+{NC_W.weight = SPK_WEIGHT   NC_W.delay = 0}
+NC_K = SPK_K.connect2target(KO.synlist.o(0))
+{NC_K.weight = SPK_WEIGHT   NC_K.delay = 0}
+//VL to M1 
+ TC_W = WT.connect2target(M1_W.synlist.o(0))
+ {TC_W.weight = TC_WEIGHT   TC_W.delay = 0}
+ TC_K = KO.connect2target(M1_K.synlist.o(0))
+ {TC_K.weight = TC_WEIGHT   TC_K.delay = 0}
+	
+// Input spike train
+
+SpkDel = 500
+SpkInterval = 50
+N_SPK = 2
+
+SpkVec = new Vector(N_SPK)
+SpkVec.indgen(SpkInterval)
+SpkVec.add(SpkDel) 
+SPK_W.pp.play(SpkVec)  // Specify spike train to VecStim
+SPK_K.pp.play(SpkVec)
+
+proc Set_Input_spk_train(){
+SpkVec = new Vector(N_SPK)
+SpkVec.indgen(SpkInterval)
+SpkVec.add(SpkDel) 
+SPK_W.pp.play(SpkVec)  // Specify spike train to VecStim
+SPK_K.pp.play(SpkVec)
+}
+
+objref WT_V, KO_V, M1_W_V, M1_K_V
+{ WT_V = new Vector() KO_V = new Vector() M1_W_V = new Vector() M1_K_V = new Vector()}
+
+WT_V.record(&WT.soma.v(0.5),1) // Record Membrane Potential of WT cell
+KO_V.record(&KO.soma.v(0.5),1) // Record Membrane Potential of KO cell
+M1_W_V.record(&M1_W.soma.v(0.5),1) // Record Membrane Potential of M1 cell for WT
+M1_K_V.record(&M1_K.soma.v(0.5),1) // Record Membrane Potential of M1 cell for KO
+
+proc panel_button() { //panel
+xpanel("Setting Simulation Parameter")
+xlabel("=== Setting Input spike train ===")
+xvalue("Input start time","SpkDel",100,"{Set_Input_spk_train()}",0,1)
+xvalue("Spike interval","SpkInterval",10,"{Set_Input_spk_train()}",0,1)
+xvalue("Number of Spike","N_SPK",1,"{Set_Input_spk_train()}",0,1)
+xlabel("=== Connection Strength ===")
+xvalue("Input spike -> VL","SPK_WEIGHT",0.001,"{NC_W.weight = SPK_WEIGHT NC_K.weight = SPK_WEIGHT}",0,1)
+xvalue("VL -> M1","TC_WEIGHT",0.0001,"{TC_W.weight = TC_WEIGHT TC_K.weight = TC_WEIGHT}",0,1)
+xbutton("Run", "run()")
+xpanel()
+}
+
+load_file("WT_KO_Conn.ses")
+tstop = 1000
+v_init = -70
+panel_button()

@@ -1,0 +1,30 @@
+load_file("nrngui.hoc") //load basics library
+T_everything = startsw()
+load_file("ranstream.hoc") //for InGauss random seed
+load_file("PD_Parameters.hoc") //Parameters
+////////////////////////////////////////////////////
+// Make M1 layer or not? , Add I cells to VL and M1 or not?
+MAKE_M1_LAYER = 0  
+ADD_I_to_M1 = 0
+ADD_I_to_VL = 0
+////////////////////////////////////////////////////////
+load_file("PDfb_CellsTemplate_FewBurstModel1.hoc") //load basics library  Note: Parameters for Cells template are specified inside
+load_file("PDfb_NetSpecIntf.hoc") // Network specification interface
+load_file("PD3_load_position_file_simVL.hoc") 
+load_file("PD3_load_position_file_M1centerE.hoc") //Read position of M1
+load_file("PD_ObjrefDeclare.hoc") // Objects declaration 
+
+objref WT, KO, VecIn
+WT = new WT_Cell()
+KO = new KO_Cell()
+VecIn = new In_spk_VecStim()
+
+InMean = -0.15
+InNoise = 0.2
+Weight = 0.032
+
+
+// 
+access WT.soma
+WT 
+

@@ -1,0 +1,42 @@
+uI_IE = 4 // PV + SST interneuron ( inhibit E )  units 
+uI_II = 1 // VIP interneuron ( inhibit other I )  units
+rI_IE = uI_IE/(uI_IE+uI_II)
+rI_II = uI_II/(uI_IE+uI_II)
+NtwrkSIZE = 1500 
+
+
+ objref tmpcutX, tmpcutY, tmpindX, tmpindY, brdr_sec
+ {tmpcutX = new Vector() tmpcutY = new Vector() tmpindX = new Vector() tmpindY = new Vector() brdr_sec = new Vector()}
+ objref cutX_L, cutY_L, indX_L, indY_L, brdr_cut
+ {tmpcutX = new List() tmpcutY = new List() tmpindX = new List() tmpindY = new List() brdr_cut = new Vector()}
+ 
+ 
+ brdr_sec.indgen(0,NtwrkSIZE,cut)
+ 
+ 
+for b_ii = 0, brdr_sec.size-2{
+	for b_jj = 0, brdr_sec.size -2{
+		{ b1_x = brdr_sec.x(b_ii)  b2_x = brdr_sec.x(b_ii+1)
+		  b1_y = brdr_sec.x(b_jj)  b2_y = brdr_sec.x(b_jj+1)}
+		  print " X: (", b1_x, " , " , b2_x, " )"
+		  print " Y: (", b1_y, " , " , b2_y, " )"
+			 
+	 tmpindX = posIx.c.indvwhere(posIx,"(]", b1_x,b2_x)
+	 tmpindY = posIy.c.indvwhere(posIy.c.index(posIy,tmpindX),"(]", b1_y,b2_y)
+	 tmpindY.index(tmpindX,tmpindY)
+	 tmpcutY.index(posIy.c, tmpindY)
+	 tmpcutX.index(posIx.c, tmpindY)
+ 
+		}
+		}
+		
+
+ 
+ 
+ 
+ 
+ 
+ 
+	str_I+ID_Ipos_IE.x(i)
+	str_I+ID_Ipos_II.x(i)
+		nI_IE

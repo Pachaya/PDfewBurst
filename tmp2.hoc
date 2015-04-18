@@ -1,0 +1,92 @@
+begintemplate M1_Cell //////////////////////////////////////////////////////////Begin M1_Cell template. ---- No Ca channel. Similar to KO
+public is_art
+public init, topol, basic_shape, subsets, geom, biophys, geom_nseg, biophys_inhomo
+public synlist, cID, tID, cType, x, y, z, position, connect2target, setID   //cID = cell ID (numbering of all cells) tID = type ID (numbering of the type of cell)
+
+public soma
+public all
+
+objref synlist
+external  SOMA_SIZE_L, SOMA_SIZE_diam, SOMA_Ra,SOMA_cm, GNaBAR_HH, GKBAR_HH, GL_HH_ZERO, EL_HH, ENa_HH , EK_HH, NETCON_THRESHOLD 
+external EPSP_TAU1,EPSP_TAU2,EPSP_E_REVERSE ,IPSP_TAU1,IPSP_TAU2, IPSP_I_REVERSE, EL_PAS, GL_PAS
+
+proc init() {
+  topol()
+  subsets()
+  geom()
+  biophys()
+  geom_nseg()
+  synlist = new List()
+  synapses()
+  x = y = z = 0 // only change via position
+}
+
+create soma
+
+proc topol() { local i
+  basic_shape()
+}
+proc basic_shape() {
+  soma {pt3dclear() pt3dadd(0, 0, 0, 1) pt3dadd(15, 0, 0, 1)}
+}
+
+objref all
+proc subsets() { local i
+  objref all
+  all = new SectionList()
+    soma all.append()
+
+}
+proc geom() {
+  forsec all {  L = SOMA_SIZE_L diam = SOMA_SIZE_diam  } //{  L =  SOMA_SIZE  diam =  SOMA_SIZE  } //um  
+}
+external lambda_f
+proc geom_nseg() {
+  forsec all { nseg = int((L/(0.1*lambda_f(100))+.999)/2)*2 + 1  }
+}
+proc biophys() {
+  forsec all {
+	Ra = SOMA_Ra //ohm-cm
+	cm = SOMA_cm // uF/cm2
+    insert hh
+      gnabar_hh = GNaBAR_HH  //GNaBAR_HH //0.12
+      gkbar_hh = GKBAR_HH  //GKBAR_HH //0.036 
+      gl_hh = GL_HH_ZERO  //GL_HH_ZERO //0.0001
+      el_hh = EL_HH //EL_HH //-60
+	  ena = ENa_HH
+	  ek = EK_HH
+	insert pas
+		e_pas = EL_PAS
+		g_pas = GL_PAS
+  }
+}
+proc biophys_inhomo(){}
+proc position() { local i
+  soma for i = 0, n3d()-1 {
+    pt3dchange(i, $1-x+x3d(i), $2-y+y3d(i), $3-z+z3d(i), diam3d(i))
+  }
+  x = $1  y = $2  z = $3
+}
+obfunc connect2target() { localobj nc //$o1 target point process, optional $o2 returned NetCon
+  soma nc = new NetCon(&v(0.5), $o1)
+  nc.threshold = NETCON_THRESHOLD  //THRESHOLD //-55
+  if (numarg() == 2) { $o2 = nc } // for backward compatibility
+  return nc
+}
+proc setID(){ //$1 = cell ID , $2 = type ID, $3 = cType 0=Input, E=1, I =2
+	 cID = $1  tID = $2 cType = $3 }
+objref syn_
+
+proc synapses() {
+  /* E0 */   soma syn_ = new Exp2Syn(0.5)  synlist.append(syn_)
+    syn_.tau1 = EPSP_TAU1 //EPSP_TAU1 //1
+    syn_.tau2 = EPSP_TAU2 //EPSP_TAU2 //3
+	syn_.e = EPSP_E_REVERSE //EPSP_E_REVERSE//0
+  /* I1 */   soma syn_ = new Exp2Syn(0.5)  synlist.append(syn_)
+    syn_.tau1 = IPSP_TAU1 //IPSP_TAU1 //1
+    syn_.tau2 = IPSP_TAU2 //IPSP_TAU2 //7
+    syn_.e = IPSP_I_REVERSE //IPSP_I_REVERSE //-80 
+}
+func is_art() { return 0 }
+
+endtemplate M1_Cell //////////////////////////////////////////////////////////End M1_Cell template  

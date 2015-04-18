@@ -1,0 +1,344 @@
+////////////////// Local Cortical Connection in VL layer///////////////
+printf("Start Local Connection generation in M1 layer")
+
+objref tmpVec, srclist_M1, tarlist_M1, conlist_M1, typelist_M1, ConMat_M1
+ConMat_M1 = new List()
+srclist_M1 = new Vector()
+tarlist_M1= new Vector()
+conlist_M1 = new List()
+
+objref tmpVec2, tmpInd
+///////// Connection Probability ///////// 
+
+//rangeE = 200
+sigE_M1 = RANGE_E/sqrt(2)
+//rangeI = 100
+sigI_M1 = RANGE_I/sqrt(2)
+cntCon_M1 = 0
+PmaxE_M1 = PMAX_E//0.85
+PmaxI = PMAX_I//0.85
+
+func connectivity2_M1(){
+	pmax =$1
+	dist = $2
+	sig =$3
+ return pmax*exp(- (dist*dist)/(2*sig*sig))
+}
+
+//Construct connection matrix
+//objref ran 
+//ran = new Random()
+//ran.uniform(0,1)
+ran = new Random()
+ran.uniform(0,1)
+//E cells 
+for i = 0, cellsE_M1.count-1{
+	//Find distance between cell ith and other cells
+	if (RUN_WEE_M1) {
+		//E-E Connection
+		tmpVec = new Vector(3)
+		for j =0, cellsE_M1.count-1{
+			if (i != j){
+				dist = dist2cells(cellsE_M1.o(i).cID,cellsE_M1.o(j).cID)  // Distance
+				//Connect cells?
+				p = connectivity2_M1(PmaxE_M1,dist,sigE_M1)
+				if (ran.repick() < p){ //connect
+					//srclist_M1.append(cellsE_M1.o(i).cID)
+					//tarlist_M1.append(cellsE_M1.o(j).cID)
+					tmpVec.x(0) = cellsE_M1.o(i).cID //source cell ID
+					tmpVec.x(1) = cellsE_M1.o(j).cID //target cell ID
+					tmpVec.x(2) = 0 //Connection Type EE:0
+					conlist_M1.append(tmpVec.c)
+					cntCon_M1 = cntCon_M1+1
+				}
+			}
+		}
+	}
+	
+	if(RUN_WEI_M1){
+		//E-I Connection
+		tmpVec = new Vector(3)
+		for j =0, cellsI_M1.count-1{
+			dist = dist2cells(cellsE_M1.o(i).cID,cellsI_M1.o(j).cID) 
+			//Connect cells?
+			p = connectivity2_M1(PmaxE_M1,dist,sigE_M1)
+			if (ran.repick() < p){ //connect
+				//srclist_M1.append(cellsE_M1.o(i).cID)
+				//tarlist_M1.append(cellsI_M1.o(j).cID)	
+				tmpVec.x(0) = cellsE_M1.o(i).cID //source cell ID
+				tmpVec.x(1) = cellsI_M1.o(j).cID //target cell ID
+				tmpVec.x(2) = 1 //Connection Type EI:1
+				conlist_M1.append(tmpVec.c)			
+				cntCon_M1 = cntCon_M1+1
+			}
+		}
+	}
+}
+
+print " ------------------------ Done Generate E connection -------------------------- "
+print " ------------------------ conlist_M1 ID#", conlist_M1.count," -------------------------- "
+///I cells 
+	if(SEPARATE_I_TYPE_M1){
+	// Make connection for Interneuron type I - IE connection
+	if(RUN_WIE_M1){
+	print "Make I_IE "
+	for i = 0, nI_IE-1 { 
+		//I-E Connection
+		tmpVec = new Vector(3)
+		for j =0, cellsE_M1.count-1{
+			dist = dist2cells(cellsI_M1.o(ID_Ipos_IE.x(i)).cID,cellsE_M1.o(j).cID) 
+			//Connect cells?
+			p = connectivity2_M1(PmaxI,dist,sigI_M1)
+			if (ran.repick() < p){ //connect
+				//srclist_M1.append(cellsI_M1.o(i).cID)
+				//tarlist_M1.append(cellsE_M1.o(j).cID)	
+				tmpVec.x(0) = cellsI_M1.o(ID_Ipos_IE.x(i)).cID //source cell ID
+				tmpVec.x(1) = cellsE_M1.o(j).cID //target cell ID
+				tmpVec.x(2) = 2 //Connection Type IE:2
+				conlist_M1.append(tmpVec.c)
+				cntCon_M1 = cntCon_M1+1
+			}
+		}
+	}
+	print " ------------------------ Done Generate I - IE connection -------------------------- "
+	print " ------------------------ conlist_M1 ID#", conlist_M1.count," -------------------------- "
+	}
+	// Make connection for Interneuron type I - II connection
+	if(RUN_WII_M1){
+	print "Make I_II "
+		for i = 0, nI_II-1 { 
+		//I-I Connection
+		tmpVec = new Vector(3)
+		for j =0, nI_IE-1{
+			
+				dist = dist2cells(cellsI_M1.o(ID_Ipos_II.x(i)).cID,cellsI_M1.o(ID_Ipos_IE.x(j)).cID) 
+				//Connect cells?
+				p = connectivity2_M1(PmaxI,dist,sigI_M1)
+				if (ran.repick() < p){ //connect
+					//srclist_M1.append(cellsI_M1.o(i).cID)
+					//tarlist_M1.append(cellsI_M1.o(j).cID)			
+					tmpVec.x(0) = cellsI_M1.o(ID_Ipos_II.x(i)).cID //source cell ID
+					tmpVec.x(1) = cellsI_M1.o(ID_Ipos_IE.x(j)).cID //target cell ID
+					tmpVec.x(2) = 3 //Connection Type II:3
+					conlist_M1.append(tmpVec.c)
+					cntCon_M1 = cntCon_M1+1
+				}
+			
+		}
+		
+	}
+	print " ------------------------ Done Generate I - II connection -------------------------- "
+		print " ------------------------ conlist_M1 ID#", conlist_M1.count," -------------------------- "
+
+	}else {
+	
+for i = 0, cellsI_M1.count-1{
+	//Find distance between cell ith and other cells
+	if(RUN_WIE_M1){
+	
+		//I-E Connection
+		tmpVec = new Vector(3)
+		for j =0, cellsE_M1.count-1{
+			dist = dist2cells(cellsI_M1.o(i).cID,cellsE_M1.o(j).cID) 
+			//Connect cells?
+			p = connectivity2_M1(PmaxI,dist,sigI_M1)
+			if (ran.repick() < p){ //connect
+				//srclist_M1.append(cellsI_M1.o(i).cID)
+				//tarlist_M1.append(cellsE_M1.o(j).cID)	
+				tmpVec.x(0) = cellsI_M1.o(i).cID //source cell ID
+				tmpVec.x(1) = cellsE_M1.o(j).cID //target cell ID
+				tmpVec.x(2) = 2 //Connection Type IE:2
+				conlist_M1.append(tmpVec.c)
+				cntCon_M1 = cntCon_M1+1
+			}
+		}
+	}
+	if(RUN_WII_M1){
+		//I-I Connection
+		tmpVec = new Vector(3)
+		for j =0, cellsI_M1.count-1{
+			if (i != j){
+				dist = dist2cells(cellsI_M1.o(i).cID,cellsI_M1.o(j).cID) 
+				//Connect cells?
+				p = connectivity2_M1(PmaxI,dist,sigI_M1)
+				if (ran.repick() < p){ //connect
+					//srclist_M1.append(cellsI_M1.o(i).cID)
+					//tarlist_M1.append(cellsI_M1.o(j).cID)			
+					tmpVec.x(0) = cellsI_M1.o(i).cID //source cell ID
+					tmpVec.x(1) = cellsI_M1.o(j).cID //target cell ID
+					tmpVec.x(2) = 3 //Connection Type II:3
+					conlist_M1.append(tmpVec.c)
+					cntCon_M1 = cntCon_M1+1
+				}
+			}
+		}
+	}
+	}
+}
+}
+srclist_M1 = new Vector(cntCon_M1)
+tarlist_M1 = new Vector(cntCon_M1)
+typelist_M1= new Vector(cntCon_M1)
+for i = 0, conlist_M1.count-1{
+	srclist_M1.x(i) = conlist_M1.o(i).x(0)
+	tarlist_M1.x(i) = conlist_M1.o(i).x(1)
+	typelist_M1.x(i) = conlist_M1.o(i).x(2)
+}
+//Get src-tar ID lists 
+
+///////// Make Connection ///////// 
+/*
+//delay =1
+for i=0,srclist_M1.size-1{ 
+nc_append(srclist_M1.x(i),   tarlist_M1.x(i), getSynInd (srclist_M1.x(i)),  weightCal (srclist_M1.x(i),tarlist_M1.x(i),1,W_RATIO),delayCal(srclist_M1.x(i),tarlist_M1.x(i)))  //weightCal (srclist_M1.x(i),tarlist_M1.x(i),flag) flag: 0 -> fixed, 1 -> spatial dependent
+}
+*/
+
+objref tmpNConn_M1
+{tmpNConn_M1 = new Vector()
+tmpNConn_M1.where(typelist_M1,"==",0)
+nConnEE_M1 = tmpNConn_M1.size
+tmpNConn_M1.where(typelist_M1,"==",1)
+nConnEI_M1 = tmpNConn_M1.size
+tmpNConn_M1.where(typelist_M1,"==",2)
+nConnIE_M1 = tmpNConn_M1.size
+tmpNConn_M1.where(typelist_M1,"==",3)
+nConnII_M1 = tmpNConn_M1.size
+}
+printf("Finished wiring local connection in M1 layer")
+printf("Number of connection by type\n\t#EE: %g\n\t#EI: %g\n\t#IE: %g\n\t#II: %g\n",nConnEE_M1, nConnEI_M1, nConnIE_M1, nConnII_M1 )
+
+unit_M1conn  = 0
+ratio1_M1conn = 0
+unity_M1conn = 0
+reciprocal_M1conn  = 0
+LCM_M1conn  = 0
+specified_M1conn = 0
+if(unit_M1conn ){
+W_EE_M1 = 1
+W_EI_M1 = 1
+W_IE_M1 = 1
+W_II_M1 = 1
+}
+if(ratio1_M1conn){
+W_EE_M1 = 1*1.5*W_SCALE
+W_EI_M1 = 1*1.5*W_SCALE
+W_IE_M1 = 1*1.5*W_SCALE
+W_II_M1 = 1*1.5*W_SCALE
+}
+// unity_M1conn weight for reference
+if(unity_M1conn){
+W_EE_M1 = 1*W_MULT*W_SCALE 
+W_EI_M1 = 1*W_MULT*W_SCALE 
+W_IE_M1 = 1*W_MULT*W_SCALE 
+W_II_M1 = 1*W_MULT*W_SCALE 
+}
+//reciprocal_M1conn  method
+if(reciprocal_M1conn ){
+ratio_EE_M1 = nConnEE_M1 /nConnEE_M1 
+ratio_EI_M1 = nConnEE_M1 / nConnEI_M1 
+ratio_IE_M1 = nConnEE_M1 /nConnIE_M1
+ratio_II_M1 = nConnEE_M1 /nConnII_M1 
+
+W_EE_M1 = ratio_EE_M1*W_MULT*W_SCALE 
+W_EI_M1 = ratio_EI_M1*W_MULT*W_SCALE 
+W_IE_M1 = ratio_IE_M1*W_MULT*W_SCALE
+W_II_M1 = ratio_II_M1*W_MULT*W_SCALE
+
+}
+
+// LCM_M1conn  method
+if(LCM_M1conn ){
+ratio_EE_M1 = nConnEE_M1 /nConnEE_M1 *10
+ratio_EI_M1 = nConnEI_M1 / nConnEE_M1 *10
+ratio_IE_M1 = nConnIE_M1 /nConnEE_M1 *10
+ratio_II_M1 = nConnII_M1 /nConnEE_M1 *10
+
+rEE_M1 = ratio_EI_M1 *ratio_IE_M1 *ratio_II_M1
+rEI_M1 = ratio_EE_M1 * ratio_IE_M1 * ratio_II_M1
+rIE_M1 = ratio_EE_M1 * ratio_EI_M1 * ratio_II_M1
+rII_M1 = ratio_EE_M1 * ratio_EI_M1 * ratio_IE_M1
+
+W_EE_M1 = rEE_M1*W_MULT*W_SCALE 
+W_EI_M1 = rEI_M1*W_MULT*W_SCALE 
+W_IE_M1 = rIE_M1*W_MULT*W_SCALE
+W_II_M1 = rII_M1*W_MULT*W_SCALE
+}
+
+if(specified_M1conn ){
+rEE_M1 = 0
+rEI_M1 = 2
+rIE_M1 = 3
+rII_M1 = 0
+
+W_EE_M1 = rEE_M1*W_MULT*W_SCALE 
+W_EI_M1 = rEI_M1*W_MULT*W_SCALE 
+W_IE_M1 = rIE_M1*W_MULT*W_SCALE
+W_II_M1 = rII_M1*W_MULT*W_SCALE
+
+}
+
+if(SPECIFIED_RATIO){
+rEE_M1 = R_EE
+rEI_M1 = R_EI
+rIE_M1 = R_IE
+rII_M1 = R_II
+
+W_EE_M1 = rEE_M1*W_MULT*W_SCALE 
+W_EI_M1 = rEI_M1*W_MULT*W_SCALE 
+W_IE_M1 = rIE_M1*W_MULT*W_SCALE
+W_II_M1 = rII_M1*W_MULT*W_SCALE
+
+}
+
+
+//for parameter search
+for i=0,srclist_M1.size-1{ 
+nc_append(srclist_M1.x(i),   tarlist_M1.x(i), getSynInd (srclist_M1.x(i)),  weightCal (srclist_M1.x(i),tarlist_M1.x(i),3,RUN_WEE_M1*W_EE_M1 ,RUN_WEI_M1*W_EI_M1,RUN_WIE_M1*W_IE_M1,RUN_WII_M1*W_II_M1),delayCal(srclist_M1.x(i),tarlist_M1.x(i)))  
+//weightCal (srclist_M1.x(i),tarlist_M1.x(i),flag) flag: 0 -> fixed, 1 -> spatial dependent
+// flag: 3 -> input weight values : $4 $5 $6 $7 for user specified WEE, WEI, WIE, WII correspondingly
+}
+printf("Weight values\n\tWEE: %g\n\tWEI: %g\n\tWIE: %g\n\tWII: %g\n", RUN_WEE_M1*W_EE_M1 ,RUN_WEI_M1*W_EI_M1,RUN_WIE_M1*W_IE_M1,RUN_WII_M1*W_II_M1)
+
+
+/////////  print connection to file ///////// 
+if (INSERT_SPK_INPUT_M1){
+	if (INSERT_SPK_to_E && INSERT_SPK_to_I) {
+	nclistSTR = nE+nI
+	}else{
+			if (INSERT_SPK_to_E ) {
+				nclistSTR = nE
+			}
+			if (INSERT_SPK_to_I ) {
+				nclistSTR = nI
+			}
+	}
+} else{
+nclistSTR = 0
+}
+objref fout, foutWD
+strdef fname
+fout = new File()
+if (POSTFIX){
+sprint(fname,"%sSpatialConnectionParam_M1%s.txt",dirLoc,postfixTxt) 
+}else{
+sprint(fname,"%sSpatialConnectionParam_M1.txt",dirLoc)
+}
+fout.wopen(fname)
+//fout.wopen("SpatialConnectionParam.txt")
+fout.printf("%d\n",srclist_M1.size) //total number of connection
+foutWD = new File()
+if (POSTFIX){
+sprint(fname,"%sSpatialConnectionWDParam_M1%s.txt",dirLoc,postfixTxt) 
+}else{
+sprint(fname,"%sSpatialConnectionWDParam_M1.txt",dirLoc)
+}
+foutWD.wopen(fname)
+//foutWD.wopen("SpatialConnectionWDParam.txt")
+foutWD.printf("%d\n",srclist_M1.size) //total number of connection
+for i =0,srclist_M1.size-1{
+	fout.printf("%d\t%d\t%d\n",srclist_M1.x(i),tarlist_M1.x(i),typelist_M1.x(i)) // or conlist.o(i).printf(fout,"%g\t") fout.printf("\n")
+	foutWD.printf("%d\t%d\t%d\t%.10f\t%.10f\n",srclist_M1.x(i),tarlist_M1.x(i),typelist_M1.x(i),nclist.o(nclistSTR+i).weight,nclist.o(nclistSTR+i).delay)
+}
+fout.close()
+foutWD.close()

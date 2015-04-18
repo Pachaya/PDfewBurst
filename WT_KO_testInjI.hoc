@@ -1,0 +1,61 @@
+
+//Main Code
+load_file("nrngui.hoc") //load basics library
+load_file("ranstream.hoc") //for InGauss random seed
+load_file("PD_Parameters.hoc") //Parameters
+////////////////////////////////////////////////////
+MAKE_M1_LAYER = 0  // Testing first
+ADD_I_to_M1 = 0
+ADD_I_to_VL = 0
+////////////////////////////////////////////////////////
+load_file("PD_CellsTemplate.hoc") //load basics library  Note: Parameters for Cells template are specified inside
+
+strdef dirLoc
+sprint(dirLoc,"SimResult/WT_KO_testInjI/")
+objref WT, KO, WT_Inj, KO_Inj
+Mean = -0.5
+WT = new WT_Cell()
+access WT.soma
+WT_Inj = new InGauss(0.5)
+WT_Inj.stdev = 0
+WT_Inj.mean = -1*Mean
+WT_Inj.dur = 1e09
+
+KO = new KO_Cell()
+access KO.soma
+KO_Inj = new InGauss(0.5)
+KO_Inj.stdev =0
+KO_Inj.mean  = -1*Mean
+KO_Inj.dur = 1e09
+
+objref WT_V, KO_V
+WT_V = new Vector()
+KO_V = new Vector()
+
+WT_V.record(&WT.soma.v(0.5),1)
+KO_V.record(&KO.soma.v(0.5),1)
+
+proc set_Mean(){
+WT_Inj.mean = -1*Mean
+KO_Inj.mean = -1*Mean
+}
+
+
+proc saveVolt(){localobj fout strdef fname //$1 = file name
+fout = new File()
+sprint(fname,"%sSomaVolt_WT_%g_KO_%g_T%g.txt",dirLoc,-1*WT_Inj.mean,-1*KO_Inj.mean,tstop) 
+fout.wopen(fname)
+WT_V.printf(fout,"%g\t",0,WT_V.size-1)
+KO_V.printf(fout,"%g\t",0,KO_V.size-1)
+fout.close()
+}
+
+proc panel_button() { //panel to choose cell's ID to plot
+xpanel("Setting injected current")
+xvalue("Set injected current","Mean",1,"Mean",0,1)
+xbutton("set_Mean", "set_Mean(Mean)")
+xbutton("saveVolt", "saveVolt()")
+xpanel()
+}
+panel_button()
+load_file("WT_KO_injI_ses.ses")

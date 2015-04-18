@@ -1,0 +1,126 @@
+///////// * Generate seedfile *///////
+objref rtest 
+objref randpick
+
+for id = 0,5 {
+printf(" Random() with random123(0,%g,0)\n", id)
+
+rtest = new Random()
+rtest
+rtest.uniform(0, 1)
+rtest.Random123(0,id,0)
+
+
+randpick = new Vector(20)
+for i = 0, 19{ randpick.x(i) = rtest.repick() }
+randpick.printf
+
+}
+
+
+for id = 0,5 {
+printf(" Random(1) with random123(0,%g,0)\n", id)
+
+rtest = new Random(1)
+rtest
+rtest.uniform(0, 1)
+rtest.Random123(0,id,0)
+
+
+randpick = new Vector(20)
+for i = 0, 19{ randpick.x(i) = rtest.repick() }
+randpick.printf
+
+}
+
+
+/*
+print "================== Uniform ================"
+objref r, vec, g1, g2, hist
+r = new Random()
+r.uniform(0, 2)
+vec = new Vector(1000)
+vec.setrand(r)
+hist = vec.histogram(0, 2, 0.2)
+
+g1 = new Graph()
+g2 = new Graph()
+g1.size(0, 1000, 0, 2)
+g2.size(0, 2, 0, 150)
+vec.plot(g1)
+hist.plot(g2, .2)
+
+
+
+print "/////////////////////// Discrete Uniform :: rtest.discunif(0, 20) "
+objref rtest 
+rtest = new Random(0)
+rtest
+rtest.discunif(0, 20)
+rtest.Random123(0,0,0)
+
+objref randpick
+
+randpick = new Vector(20)
+for i = 0, 19{ randpick.x(i) = rtest.repick() }
+randpick.printf
+print " Random(0) with random123"
+
+
+
+objref rtest 
+rtest = new Random(0)
+rtest
+rtest.discunif(0, 20)
+//rtest.Random123(0,0,0)
+
+objref randpick
+
+randpick = new Vector(20)
+for i = 0, 19{ randpick.x(i) = rtest.repick() }
+randpick.printf
+print " Random(0)"
+
+
+objref rtest 
+rtest = new Random(0.1)
+rtest
+rtest.discunif(0, 20)
+//rtest.Random123(0,0,0)
+
+objref randpick
+
+randpick = new Vector(20)
+for i = 0, 19{ randpick.x(i) = rtest.repick() }
+randpick.printf
+print " Random(0.1)"
+
+
+
+objref rtest 
+rtest = new Random(1)
+rtest
+rtest.discunif(0, 20)
+//rtest.Random123(0,0,0)
+
+objref randpick
+
+randpick = new Vector(20)
+for i = 0, 19{ randpick.x(i) = rtest.repick() }
+randpick.printf
+print " Random(1)"
+
+objref rtest 
+rtest = new Random(2)
+rtest
+rtest.discunif(0, 20)
+//rtest.Random123(0,0,0)
+
+objref randpick
+
+randpick = new Vector(20)
+for i = 0, 19{ randpick.x(i) = rtest.repick() }
+randpick.printf
+print " Random(2)"
+
+*/

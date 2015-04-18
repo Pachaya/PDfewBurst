@@ -1,0 +1,121 @@
+//Main Code
+load_file("nrngui.hoc") //load basics library
+load_file("ranstream.hoc") //for InGauss random seed
+load_file("PD_Parameters.hoc") //Parameters
+////////////////////////////////////////////////////
+MAKE_M1_LAYER = 0  // Testing first
+ADD_I_to_M1 = 0
+ADD_I_to_VL = 0
+////////////////////////////////////////////////////////
+load_file("PD_CellsTemplate.hoc") //load basics library  Note: Parameters for Cells template are specified inside
+
+strdef dirLoc
+sprint(dirLoc,"SimResult/WT_KO_testInjI/")
+objref WT, KO, WT_Inj, KO_Inj, WT_PosInj, KO_PosInj
+Mean = 0
+PosMean = 0
+WT = new WT_Cell()
+access WT.soma
+WT_Inj = new InGauss(0.5)
+WT_Inj.stdev = 0
+WT_Inj.mean = -1*Mean
+WT_Inj.dur = 1e09
+WT_PosInj = new InGauss(0.5)
+WT_PosInj.stdev = 0
+WT_PosInj.mean = -1*PosMean
+WT_PosInj.dur = 1e09
+
+KO = new KO_Cell()
+access KO.soma
+KO_Inj = new InGauss(0.5)
+KO_Inj.stdev =0
+KO_Inj.mean  = -1*Mean
+KO_Inj.dur = 1e09
+KO_PosInj = new InGauss(0.5)
+KO_PosInj.stdev = 0
+KO_PosInj.mean = -1*PosMean
+KO_PosInj.dur = 1e09
+
+objref WT_V, KO_V
+WT_V = new Vector()
+KO_V = new Vector()
+
+WT_V.record(&WT.soma.v(0.5),1)
+KO_V.record(&KO.soma.v(0.5),1)
+
+proc set_Mean(){
+WT_Inj.mean = -1*Mean
+KO_Inj.mean = -1*Mean
+WT_PosInj.mean = -1*PosMean
+KO_PosInj.mean = -1*PosMean
+}
+
+proc set_CellParameters(){
+//WT
+	WT.soma.L = SOMA_SIZE_L 
+	WT.soma.diam = SOMA_SIZE_diam
+	WT.soma.Ra = SOMA_Ra //ohm-cm
+	WT.soma.cm = SOMA_cm // uF/cm2
+    WT.soma.gnabar_hh = GNaBAR_HH  //GNaBAR_HH //0.12
+    WT.soma.gkbar_hh = GKBAR_HH  //GKBAR_HH //0.036 
+    WT.soma.gl_hh = GL_HH  //GL_HH //0.0001
+    WT.soma.el_hh = EL_HH //EL_HH //-60
+	WT.soma.ena = ENa_HH
+	WT.soma.ek = EK_HH
+	WT.soma.gmax_CaT = GCaMAX_CaT
+	WT.soma.eca = ECa_CaT
+	
+//KO
+	KO.soma.L = SOMA_SIZE_L 
+	KO.soma.diam = SOMA_SIZE_diam
+	KO.soma.Ra = SOMA_Ra //ohm-cm0
+	KO.soma.cm = SOMA_cm // uF/cm2
+    KO.soma.gnabar_hh = GNaBAR_HH  //GNaBAR_HH //0.12
+    KO.soma.gkbar_hh = GKBAR_HH  //GKBAR_HH //0.036 
+    KO.soma.gl_hh = GL_HH  //GL_HH //0.0001
+    KO.soma.el_hh = EL_HH //EL_HH //-60
+	KO.soma.ena = ENa_HH
+	KO.soma.ek = EK_HH
+
+}
+
+
+
+proc saveVolt(){localobj fout strdef fname //$1 = file name
+fout = new File()
+sprint(fname,"%sSomaVolt_WT_n%g_p%g_KO_n%g_p%g_L%g_diam%g_Ra%g_cm%g_gnabar%g_gkbar%g_gl%g_el%g_ena%g_ek%g_gCaT%g_eca%g_T%g.txt",dirLoc,-1*WT_Inj.mean,-1*WT_PosInj.mean,-1*KO_Inj.mean,-1*KO_PosInj.mean,SOMA_SIZE_L, SOMA_SIZE_diam,SOMA_Ra,SOMA_cm,GNaBAR_HH,GKBAR_HH,GL_HH,EL_HH,ENa_HH,EK_HH,GCaMAX_CaT,ECa_CaT,tstop) 
+fout.wopen(fname)
+WT_V.printf(fout,"%g\t",0,WT_V.size-1)
+KO_V.printf(fout,"%g\t",0,KO_V.size-1)
+fout.close()
+printf("Saved file :: %s\n",fname)
+printf("-------------------------------------------------\n\n")
+}
+
+proc panel_button() { //panel to choose cell's ID to plot
+xpanel("Setting positive and negative injected current")
+xvalue("Set injected current","Mean",1,"Mean",0, 1) //xvalue("prompt", "variable" [, boolean_deflt, "action" [, boolean_canrun, boolean_usepointer]])
+xvalue("Set positive injected current","PosMean",1,"PosMean",0,1) //xvalue("prompt", "variable" [, boolean_deflt, "action" [, boolean_canrun, boolean_usepointer]])
+xbutton("set_Mean", "set_Mean(Mean)")
+xvalue("Set Cell parameter : SOMA_SIZE_L","SOMA_SIZE_L",1,"SOMA_SIZE_L",0,1)
+xvalue("Set Cell parameter : SOMA_SIZE_diam","SOMA_SIZE_diam",1,"SOMA_SIZE_diam",0,1)
+xvalue("Set Cell parameter : SOMA_Ra","SOMA_Ra",1,"SOMA_Ra",0,1)
+xvalue("Set Cell parameter : SOMA_cm","SOMA_cm",1,"SOMA_cm",0,1)
+xvalue("Set Cell parameter : GNaBAR_HH","GNaBAR_HH",1,"GNaBAR_HH",0,1)
+xvalue("Set Cell parameter : GKBAR_HH","GKBAR_HH",1,"GKBAR_HH",0,1)
+xvalue("Set Cell parameter : GL_HH","GL_HH",1,"GL_HH",0,1)
+xvalue("Set Cell parameter : EL_HH","EL_HH",1,"EL_HH",0,1)
+xvalue("Set Cell parameter : ENa_HH","ENa_HH",1,"ENa_HH",0,1)
+xvalue("Set Cell parameter : EK_HH","EK_HH",1,"EK_HH",0,1)
+xvalue("Set Cell parameter : GCaMAX_CaT","GCaMAX_CaT",1,"GCaMAX_CaT",0,1)
+xvalue("Set Cell parameter : ECa_CaT","ECa_CaT",1,"ECa_CaT",0,1)
+
+xbutton("set_CellParameters", "set_CellParameters()")
+xbutton("saveVolt", "saveVolt()")
+xpanel()
+}
+panel_button()
+load_file("WT_KO_injI_ses.ses")
+tstop = 2000
+v_init = -70
+

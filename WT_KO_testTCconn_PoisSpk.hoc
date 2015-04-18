@@ -1,0 +1,188 @@
+//////// NOTE : Noise input model as InGauss her.
+////////      : Photoactivation Current model as IClamp
+////////      : Noise Current model as InGauss
+//Main Code
+load_file("nrngui.hoc") //load basics library
+load_file("ranstream.hoc") //for InGauss random seed
+load_file("PD4_CellsTemplate_BestNoNoise.hoc") //load basics library  Note: Parameters for Cells template are specified inside
+
+strdef dirLoc, Vdiff_WT, Vdiff_KO
+ dirLoc ="SimResult/TestM1_TC/"
+ 
+objref WT, KO, M1_W, M1_K, SPK_W,SPK_K // Cells 
+objref WT_InG, KO_InG,  WT_IC, KO_IC, SpkVec // Vector
+
+ SPK_WEIGHT =  0.005
+ TC_WEIGHT =  0.0001
+
+ Mean = 0
+STDEV = 0
+Del = 1000
+Dur =  1000
+IC_AMP = -0.3
+WT_delV = 0
+KO_delV = 0
+{ WT_T1 = 0 WT_T2 = 0 KO_T1 = 0 KO_T2 = 0 WT_minV = v_init KO_minV = v_init  WT_maxV = v_init KO_maxV = v_init}
+
+T1 = 900
+T2 = 1800
+
+// Build Cells
+SPK_W = new In_spk_VecStim()
+SPK_K = new In_spk_VecStim()
+M1_W = new M1_Cell()
+M1_K = new M1_Cell()
+
+WT = new WT_Cell()
+access WT.soma // access WT's soma to inject mechanism
+WT_InG = new InGauss(0.5) // InGauss for noise current
+WT_InG.stdev = STDEV // sigma
+WT_InG.mean = -1*Mean // mean  -> The original InGauss mechanism use -negative for depolarize signal  so multiply by -1 to make the sign convention same with IClamp
+WT_InG.del = 0 // delay = starting time for injection
+WT_InG.dur = 1e09  // forever
+WT_IC = new IClamp(0.5) // ICLamp = Current Clamp 
+WT_IC.amp = IC_AMP // amplitude (unit is nA)
+WT_IC.del = Del // Delay = starting time for injection
+WT_IC.dur = Dur // Duration of injection
+
+KO = new KO_Cell()
+access KO.soma // access WT's soma to inject mechanism
+KO_InG = new InGauss(0.5)
+KO_InG.stdev = STDEV
+KO_InG.mean  = -1*Mean
+KO_InG.del = 0 
+KO_InG.dur = 1e09 
+
+KO_IC = new IClamp(0.5)
+KO_IC.amp = IC_AMP
+KO_IC.del = Del
+KO_IC.dur = Dur
+
+// Build Connection
+objref NC_W , NC_K, TC_W, TC_K
+// SpkTrain to VL  
+NC_W = SPK_W.connect2target(WT.synlist.o(0))
+{NC_W.weight = SPK_WEIGHT   NC_W.delay = 0}
+NC_K = SPK_K.connect2target(KO.synlist.o(0))
+{NC_K.weight = SPK_WEIGHT   NC_K.delay = 0}
+//VL to M1 
+ TC_W = WT.connect2target(M1_W.synlist.o(0))
+ {TC_W.weight = TC_WEIGHT   TC_W.delay = 0}
+ TC_K = KO.connect2target(M1_K.synlist.o(0))
+ {TC_K.weight = TC_WEIGHT   TC_K.delay = 0}
+	
+// Input spike train
+
+SpkDel = 500
+SpkInterval = 50
+N_SPK = 2
+
+SpkVec = new Vector(N_SPK)
+SpkVec.indgen(SpkInterval)
+SpkVec.add(SpkDel) 
+SPK_W.pp.play(SpkVec)  // Specify spike train to VecStim
+SPK_K.pp.play(SpkVec)
+
+proc Set_Input_spk_train(){
+SpkVec = new Vector(N_SPK)
+SpkVec.indgen(SpkInterval)
+SpkVec.add(SpkDel) 
+SPK_W.pp.play(SpkVec)  // Specify spike train to VecStim
+SPK_K.pp.play(SpkVec)
+}
+
+objref WT_V, KO_V, M1_W_V, M1_K_V
+{ WT_V = new Vector() KO_V = new Vector() M1_W_V = new Vector() M1_K_V = new Vector()}
+
+WT_V.record(&WT.soma.v(0.5),1) // Record Membrane Potential of WT cell
+KO_V.record(&KO.soma.v(0.5),1) // Record Membrane Potential of KO cell
+M1_W_V.record(&M1_W.soma.v(0.5),1) // Record Membrane Potential of M1 cell for WT
+M1_K_V.record(&M1_K.soma.v(0.5),1) // Record Membrane Potential of M1 cell for KO
+
+
+proc saveVolt(){localobj fout strdef fname 
+fout = new File()
+sprint(fname,"%sSomaVolt_IGmean%g_IGstdev%g_ICamp%g_ICdel%g_ICdur%g_L%g_diam%g_Ra%g_cm%g_gnabar%g_gkbar%g_gl%g_el%g_ena%g_ek%g_gCaT%g_eca%g_T%g.txt",dirLoc,-1*WT_InG.mean,WT_InG.stdev, WT_IC.amp, WT_IC.del,WT_IC.dur, SOMA_SIZE_L, SOMA_SIZE_diam,SOMA_Ra,SOMA_cm,GNaBAR_HH,GKBAR_HH,GL_PAS,EL_PAS,ENa_HH,EK_HH,GCaMAX_CaT,ECa_CaT,tstop) 
+fout.wopen(fname)
+WT_V.printf(fout,"%g\t",0,WT_V.size-1)
+KO_V.printf(fout,"%g\t",0,KO_V.size-1)
+fout.close()
+printf("Saved file :: %s\n",fname)
+printf("-------------------------------------------------\n\n")
+}
+
+proc show_V_diff(){
+WT_T1 = WT_V.x(T1)
+WT_T2 = WT_V.x(T2)
+KO_T1 = KO_V.x(T1)
+KO_T2 = KO_V.x(T2)
+WT_delV = WT_V.x(T2) - WT_V.x(T1)
+KO_delV = KO_V.x(T2) - KO_V.x(T1)
+WT_minV = WT_V.c(T1,T2).min()
+KO_minV = KO_V.c(T1,T2).min()
+WT_maxV = WT_V.c(T1,T2).max()
+KO_maxV = KO_V.c(T1,T2).max()
+}
+
+
+proc panel_button() { //panel
+xpanel("Setting Simulation Parameter")
+xlabel("=== Setting Input spike train ===")
+xvalue("Input start time","SpkDel",100,"{Set_Input_spk_train()}",0,1)
+xvalue("Spike interval","SpkInterval",10,"{Set_Input_spk_train()}",0,1)
+xvalue("Number of Spike","N_SPK",1,"{Set_Input_spk_train()}",0,1)
+xlabel("=== Connection Strength ===")
+xvalue("Input spike -> VL","SPK_WEIGHT",0.001,"{NC_W.weight = SPK_WEIGHT NC_K.weight = SPK_WEIGHT}",0,1)
+xvalue("VL -> M1","TC_WEIGHT",0.0001,"{TC_W.weight = TC_WEIGHT TC_K.weight = TC_WEIGHT}",0,1)
+xlabel("=== Run control ===")
+xbutton("Run", "run()")
+xvalue("simulation time","tstop",1,"tstop",0,1)
+xlabel("=== Setting IClamp injection (as photoactivation) parameters ===")
+xvalue("Set IClamp amplitude","IC_AMP",1,"{WT_IC.amp = IC_AMP KO_IC.amp = IC_AMP }",0,1)
+xvalue("Set IClamp delay","Del",1,"{WT_IC.del = Del KO_IC.del = Del}",0,1)
+xvalue("Set IClamp duration","Dur",1,"{WT_IC.dur = Dur KO_IC.dur = Dur}",0,1)
+xlabel("")
+xlabel("=== Setting noise current parameters (Gaussian Noise Current) ===")
+xvalue("Set mean value","Mean",1,"{WT_InG.mean = -1*Mean KO_InG.mean = -1*Mean}",0,1)
+xvalue("Set STDEV value","STDEV",1,"{WT_InG.stdev = STDEV KO_InG.stdev = STDEV}",0,1)
+xlabel("")
+xlabel("=== Set parameters for cell's properties ===")
+xvalue("Set Cell parameter : SOMA_SIZE_L","SOMA_SIZE_L",1,"{WT.soma.L = SOMA_SIZE_L  KO.soma.L = SOMA_SIZE_L }",0,1)
+xvalue("Set Cell parameter : SOMA_SIZE_diam","SOMA_SIZE_diam",1,"{WT.soma.diam = SOMA_SIZE_diam  KO.soma.diam = SOMA_SIZE_diam }",0,1)
+xvalue("Set Cell parameter : SOMA_Ra","SOMA_Ra",1,"{WT.soma.Ra = SOMA_Ra KO.soma.Ra = SOMA_Ra}",0,1)
+xvalue("Set Cell parameter : SOMA_cm","SOMA_cm",1,"{WT.soma.cm = SOMA_cm KO.soma.cm = SOMA_cm}",0,1)
+xvalue("Set Cell parameter : GNaBAR_HH","GNaBAR_HH",1,"{WT.soma.gnabar_hh = GNaBAR_HH  KO.soma.gnabar_hh = GNaBAR_HH}",0,1)
+xvalue("Set Cell parameter : GKBAR_HH","GKBAR_HH",1,"{WT.soma.gkbar_hh = GKBAR_HH  KO.soma.gkbar_hh = GKBAR_HH} ",0,1)
+xvalue("Set Cell parameter : ENa_HH","ENa_HH",1,"{WT.soma.ena = ENa_HH KO.soma.ena = ENa_HH}",0,1)
+xvalue("Set Cell parameter : EK_HH","EK_HH",1,"{WT.soma.ek = EK_HH KO.soma.ek = EK_HH}",0,1)
+xvalue("Set Cell parameter : GL_PAS","GL_PAS",1,"{WT.soma.g_pas = GL_PAS  KO.soma.g_pas = GL_PAS}",0,1)
+xvalue("Set Cell parameter : EL_PAS","EL_PAS",1,"{WT.soma.e_pas = EL_PAS KO.soma.e_pas = EL_PAS}",0,1)
+xvalue("Set Cell parameter : GCaMAX_CaT","GCaMAX_CaT",1,"{WT.soma.gmax_CaT = GCaMAX_CaT}",0,1)
+xvalue("Set Cell parameter : ECa_CaT","ECa_CaT",1,"{WT.soma.eca = ECa_CaT}",0,1)
+xlabel("")
+xlabel("=== Measure difference in voltage ===")
+xvalue("T1","T1",1,"T1",0,1) xvalue("T2","T2",1,"T2",0,1)
+xbutton("Voltage Difference", "show_V_diff()") 
+
+xfixedvalue("WT_T1")  xfixedvalue("WT_T2")  
+xfixedvalue("KO_T1")  xfixedvalue("KO_T2")  
+xlabel("")
+xfixedvalue("WT_delV")
+xfixedvalue("KO_delV")
+xlabel("")
+xfixedvalue("WT_minV")  xfixedvalue("KO_minV")  
+xfixedvalue("WT_maxV")  xfixedvalue("KO_maxV") 
+xfixedvalue("WT_maxV - WT_minV")  xfixedvalue("KO_maxV- KO_minV")  
+//xbutton("set_CellParameters", "set_CellParameters()")
+xbutton("saveVolt", "saveVolt()")
+xpanel()
+}
+
+load_file("WT_KO_Conn.ses")
+tstop = 3000
+v_init = -70
+WT_minV = v_init 
+KO_minV = v_init
+
+panel_button()
+

@@ -1,0 +1,131 @@
+//////////////////* Network specification interface *//////////////////
+// cType : #0 = Artificial Input cell, #1 = E cell of VL, #2 = I cell of VL, #3 = E cell of M1, #4 = I cell of M1, #5 = E cell of GPm, #6 = I cell of GPm
+
+objref cells, cellsIN, cellsE, cellsI, cellsCN, nclist, netcon, cellsFFin 
+{cells = new List() cellsIN = new List() cellsE = new List() cellsI = new List()  cellsCN = new List()
+ nclist = new List() cellsFFin= new List() }
+
+func cell_append() {cells.append($o1)  $o1.position($2,$3,$4) 
+	$o1.setID($5,$6,$7) 
+	return cells.count - 1
+}
+
+func dist2cells(){ 
+ return sqrt( (cells.object($1).x - cells.object($2).x)^2 +(cells.object($1).y-cells.object($2).y)^2+(cells.object($1).z - cells.object($2).z)^2)
+} //consider using pre-calculate value in distMat
+
+func gauss_dist(){ //$1 dist, $2 sig : gauss_dist(dist,sig)
+ return exp(-($1*$1)/(2*$2*$2))
+}
+
+func delayCal(){ // Calculate propagation time delay in NetCon.delay Unit: Time (ms)     
+if( cells.object($1).cType == 2){ 
+	return dist2cells($1,$2) / PROP_SPEED_I //I: speed of axonal propagation (um/ms)
+}else{ return dist2cells($1,$2) / PROP_SPEED_E //E: speed of axonal propagation (um/ms)
+}
+}
+
+func weightCal (){ local dist, w, lambda, sig, k //$1=src, $2=tar, $3= flag, use spatial weighting or not? , $4 in case of 
+//the weight specified here is just the relative ratio or $4 $5 $6 $7 for user specified WEE, WEI, WIE, WII correspondingly
+	k=1 // need to get input // what about use 0.001 scale? -> that is mult by 0.01 -->  WEE : WEI : WIE : WII = 0.0003 : 0.0012 : 0.0024 : 0.0003
+//**This will delete and use only one set of weight later
+ if( cells.object($1).cType == 0){ //Input cell to any cells
+ 	w= 0.001 *k
+ }else{
+   	if( cells.object($1).cType == 1 || cells.object($1).cType == 3 ||cells.object($1).cType == 5){ // Source is E
+   	 	if(cells.object($2).cType == 1|| cells.object($2).cType == 3 ||cells.object($2).cType == 5){ //EE 
+   	 	w= 0.03*k
+   	 	}else{ //E-I
+ 		w= 0.12 *k
+ 		}
+   	}else{ //cType = 2/4/6 Source is I
+   		if(cells.object($2).cType == 1 || cells.object($2).cType == 3 ||cells.object($2).cType == 5){ //I-E 
+   		w = 0.24*k
+   		}else{
+   		w = 0.03*k
+   		}
+   	}
+   }
+   
+   //dist = sqrt( (cells.object($1).x - cells.object($2).x)^2 +(cells.object($1).y-cells.object($2).y)^2+(cells.object($1).z - cells.object($2).z)^2)
+   dist = dist2cells($1,$2)
+   //printf("Distance x^2 #%d-#%d is %g\n", $1,$2, dist)  //3D Euclidean distance
+   
+   if ($3 ==0){ //Fixed weight
+    if (numarg() == 3) { return w }
+    if (numarg() == 4) {return w*$4 }    // In case of fixed and want to change ratio
+   }
+   
+   if($3 ==1){ //allow spatially dependent weighted : Gaussian
+   if (cells.object($1).cType == 2 || cells.object($1).cType == 4 ||cells.object($1).cType == 6){ //I-connection
+   lambda = RANGE_I
+   sig = lambda/(sqrt(2))
+   }else{ lambda = RANGE_E
+   sig = lambda/(sqrt(2))
+   } //E-connection
+   if (numarg() == 3) { return w * gauss_dist(dist,sig) }
+   if (numarg() == 4) { return w * $4 * gauss_dist(dist,sig) } // In case of want to change the ratio
+   }
+   
+   if($3 ==2){ //allow spatially dependent weighted : Exponential
+   //printf("Allow spatially dependent weight\n")
+   if (cells.object($1).cType == 2 || cells.object($1).cType == 4 ||cells.object($1).cType == 6){ //I-connection
+   lambda = RANGE_I
+   }else{ lambda = RANGE_E } //E-connection
+   //printf("Delta = %g\n", (w*exp(-dist/lambda)))
+   return w*exp(-dist/lambda)
+   }
+   
+   if($3 ==3){ //input weight values : $4 $5 $6 $7 for user specified WEE, WEI, WIE, WII correspondingly
+	if( cells.object($1).cType == 0){ //FF input cell, assume same as EE connection ( may change later)
+		w = $4  
+	 }else{
+		if( cells.object($1).cType == 1|| cells.object($1).cType == 3 ||cells.object($1).cType == 5){ // Source is E
+			if(cells.object($2).cType == 1 || cells.object($2).cType == 3 ||cells.object($2).cType == 5){ //EE 
+			w = $4 
+			}else{ //E-I
+			w = $5 
+			}
+		}else{ //cType = 2 Source is I
+			if(cells.object($2).cType == 1|| cells.object($2).cType == 3 ||cells.object($2).cType == 5){ //I-E 
+			w = $6
+			}else{ //I-I
+			w = $7
+			}
+		}
+	   }
+	  
+    if (cells.object($1).cType == 2|| cells.object($1).cType == 4 ||cells.object($1).cType == 6){ //I-connection
+		lambda = RANGE_I
+		sig = lambda/(sqrt(2))
+	}else{ lambda = RANGE_E
+		sig = lambda/(sqrt(2))
+	} //E-connection
+	
+   return w * gauss_dist(dist,sig) //spatially dependent, modelling with Gaussian   
+   }
+   
+}
+
+func getSynInd (){ //$1 src cell
+	if( cells.object($1).cType == 0 || cells.object($1).cType == 1|| cells.object($1).cType == 3 ||cells.object($1).cType == 5){ // Input or E
+	return 0 //synIndex 0 = E
+	}
+	if (cells.object($1).cType == 2 || cells.object($1).cType == 4 ||cells.object($1).cType == 6){//I
+	return 1 //synIndex 1 = I
+	}
+}
+
+func nc_append() { local w, delay 
+//srcindex, tarcelindex, synindex, weight, delay   //Ex. //  /* C1 -> C2.E0 */  nc_append(1,   2, 0,  0.12,1)
+  if ($3 >= 0) {
+    netcon = cells.object($1).connect2target(cells.object($2).synlist.object($3))  // Excitatory and Inhibitory effects define at the synaptic input of target cell (*post* synaptic)
+    netcon.weight = $4   netcon.delay = $5
+  }else{
+    netcon = cells.object($1).connect2target(cells.object($2).pp)
+    netcon.weight = $4   netcon.delay = $5
+  }
+  nclist.append(netcon) //nclist is list of NetCon object, The source cell can be access by call netcon.precell and access target cell by calling netcon.postcell ex. nclist.o(1).precell 
+  return nclist.count - 1 
+}
+printf("Done Network specification interface")

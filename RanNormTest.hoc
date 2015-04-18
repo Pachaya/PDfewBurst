@@ -1,0 +1,20 @@
+objref r, g, hist, vec
+r = new Random()
+r.normal(0.1, 0.01)
+
+vec = new Vector()
+vec.indgen(-.06, 0.16, .01)       // x-axis for plot
+hist = new Vector(vec.size())
+g = new Graph()
+g.size(-3, 2, 0, 50)
+hist.plot(g, vec)
+for(i=0; i<500; i=i+1){
+    x = r.repick()
+    print i, x
+    j = int((x+0.06)*100) // -3 to 2 -> 0 to 50
+    if (j >= 0) {
+            hist.x[j] = hist.x[j]+1
+    }
+    g.flush()
+    doNotify()
+}

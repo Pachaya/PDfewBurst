@@ -1,0 +1,160 @@
+// Tmp Hoc File to test InGauss
+
+
+//
+load_file("nrngui.hoc") //load basics library
+load_file("ranstream.hoc") //for InGauss random seed
+load_file("PD_Parameters.hoc") //Parameters
+
+load_file("PD_CellsTemplate.hoc") //load basics library  Note: Parameters for Cells template are specified inside
+load_file("PD_NetSpecIntf.hoc") // Network specification interface
+load_file("PD_load_position_file.hoc") //Now do not read INpos.txt 
+load_file("PD_load_position_file_M1.hoc") //Read position of M1
+
+load_file("PD_ObjrefDeclare.hoc") // Object declaration 
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////  parameter & variables with user specified values
+RESOLUTION = 1 //bins = 1 ms
+MEAN = 0 // Noise by InGauss
+STDEV  = 0.5 //0.115 // Noise by InGauss
+THRESHOLD = -55
+POSTFIX = 1
+
+MAKE_M1_LAYER = 0
+GPM_INPUT_to_VL = 0 // Use GPm for Input
+MULT_TRIAL = 0 
+N_TRIAL = 1
+cntTrial = 1 
+//////////  Simulation Setting
+INDV_NEURON = 0 // If 1: Neuron location are fixed , if 0: use neuron location from file. 
+N_REPEAT = 100
+LOCAL_CONNECT = 1
+INSERT_SPK_INPUT = 1
+INSERT_SPK_to_E = 1 //as noise for VL
+INSERT_SPK_to_I = 1 //as noise for VL
+INSERT_I_INPUT = 1  //to VL; Hyperpolarized (negative current)
+INSERT_I_to_E = 1
+INSERT_I_to_I = 0
+
+INSERT_I_to_SpecifiedE = 0 // Vector --> injIClamp_SingleVec /  IClamp --> injIClamp_Single
+ID_SPECIFIED_E = 570 //In the center part of Network
+
+ADD_SPONTANEOUS_ACTIVITY = 1 // When both mean and stdev = 0 --> Cells are silent(with zero spontaneous activity)
+
+NOISE_POISSONSPK_GPm = 0
+NOISE_POISSONSPK_M1 = 0
+/////////////////////////////////// SET CELL TYPE HERE //////////////////////////////////
+CELL_TYPE = 1 //1 = WT, 2 = KO  /////////////////////////////////// SET CELL TYPE HERE //////////////////////////////////
+/////////////////////////////////// SET CELL TYPE HERE //////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+TRIAL_NO = 1
+RANDOM123_ID1_POISSONSPK = 1 
+RANDOM123_ID3_RUN_POISSONSPK = TRIAL_NO //For  multiple trials (trial#)
+
+////////////////////////////////////////////////////////////////////////////
+// connection weight
+W_MULT = 1
+W_SCALE = 0.00001
+W_MULT_TC = 50
+W_SCALE_TC = W_SCALE
+W_POISSPK_VL = 0.0006
+// IClamp stimulation at E
+Light_Stim_Amp = 0.25 //Stimulate at GPm 
+Input_I_Amp = 0 //-0.3  // Stimulate at VL
+////////////////////////////////////////////////////////////////////////////
+//////////  Setting Directories 
+//strdef DIRLOC, F_PRE,F_PRENAME 
+strdef postfixTxt, dirLoc, core 
+
+postfixTxt = "" //testingSixtyWIIWEE5s_restart
+//core = "TestWT_slnt_InjI_singleE570_burst_lclConn_Wspecified_1_6_11_41.5" //"TestRunVLnetKO_Setparam_burst_lclConn_Wspecified_1_6_11_41.5" 
+core = "TestInGauss" //"VL_Basal_Act"
+
+if ( CELL_TYPE == 1){ //WT
+	sprint(core,"%s_WT",core)
+}else { //KO
+	sprint(core,"%s_KO",core)
+}
+if (STDEV != 0){
+ sprint(core,"%s_InGauss%g",core,STDEV)
+}
+sprint(core,"%s_W%g",core, W_POISSPK_VL )
+dirLoc = "RunBigNet/VL_Basal_Act/" //"SimulationResult/SfN_ctrlParamters/" 
+/////////////////////////////////////////////////////////////////////////
+
+objref genseedlist
+genseedlist = new Vector()
+cIDrec = -1
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+objref KO_List, WT_List, AllCell_List, M1_List, GPm_List
+{ KO_List = new List() WT_List = new List()	AllCell_List = new List()  M1_List = new List() GPm_List = new List() }
+
+objref KO, WT, M1, GPm
+KO = new KO_Cell()
+WT = new WT_Cell()
+M1 = new M1_Cell()
+GPm = new GPm_Cell()
+
+// Make Cell
+cIDrec = -1
+
+cIDrec = cIDrec+1
+strKO = cIDrec
+KOrec = 0
+cell_append(KO,50,50, 0,cIDrec, KOrec,1) // cells type ID : 1 = Excitatory cells
+KO_List.append(KO) AllCell_List.append(KO)  //#1 KO cells 
+
+cIDrec = cIDrec+1
+strWT = cIDrec
+WTrec = 0
+cell_append(WT,50,50, 0,cIDrec, WTrec,1) // cells type ID : 1 = Excitatory cells
+WT_List.append(WT) AllCell_List.append(WT)  //#2 WT cells 
+
+tstop = 100
+
+//////////////////Background Noise of the cell///////////////
+if (ADD_SPONTANEOUS_ACTIVITY){
+print "Called and get into the loop for adding InGauss to soma "
+print "======================================================== "
+psection()
+print " MEAN = ", MEAN
+print " STDEV = ", STDEV
+print " tstop = ", tstop
+//The following segment for noise need ("ranstream.hoc") // Done it in MainCode
+random_stream_offset_ = (tstop+1000)*1/dt // assumes dt = 0.025  //////////////////////////////////////////// Check  whether the values is change every dt or point resolution, i.e. 1/dt or steps_per_ms
+print " random_stream_offset_ = ", random_stream_offset_
+
+inoise_random_low_start_ = 1
+mcell_ran4_init(inoise_random_low_start_)
+
+objref rslist, inlist,in
+rslist = new List()
+inlist = new List()
+//rslist.remove_all()
+//inlist.remove_all()
+
+for i = 0, cells.count-1 {
+	access cells.o(i).soma 
+
+	in = new InGauss(0.5) // add background noise to the cell 
+	in.mean = MEAN // nA
+	in.stdev = STDEV // nA
+	in.del = 0 // ms
+	in.dur = 1e9 // "forever"
+	inlist.append(in)
+	rslist.append(new RandomStream(i))
+	rslist.o(i).r.normal(0,1) //uniform(0,1) // mean 0, variance 1
+	rslist.o(i).start()
+	inlist.o(i).noiseFromRandom(rslist.o(i).r)
+}	
+}
+
+
+
+
+
+

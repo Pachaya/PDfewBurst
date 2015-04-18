@@ -1,0 +1,26 @@
+create a
+access a
+nseg = 1
+insert Passive
+g_Passive=.001
+erev_Passive=0
+proc cur() {
+	axis(0,1,1,0,.001,1) axis()
+	plot(1)
+	for (v=0; v < 1; v=v+.01) {
+		fcurrent()
+		plot(v, i_Passive)
+	}
+	plt(-1)
+}	
+
+proc run() {
+	axis(0,3,3,0,1,1) axis()
+	t = 0
+	v=1
+	plot(1)
+	while (t < 3) {
+		plot(t,v)
+		fadvance()
+	}
+}

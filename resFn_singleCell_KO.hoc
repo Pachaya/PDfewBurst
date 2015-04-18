@@ -1,0 +1,114 @@
+// init and run everything (including *.ses) 
+
+load_file("nrngui.hoc")
+
+load_file("TestCat_with_gui_noCat_Noise.ses")
+////////////////// load_file("TestCat_with_gui_Noise.ses")
+
+// parameter & variables with user specified values
+RESOLUTION = 1 //bins = 1 ms
+MEAN = 0
+STDEV  = 0.115
+N_TRIAL = 100
+THRESHOLD = -55
+strdef DIRLOC, F_PRE,F_PRENAME 
+DIRLOC = "RunSingle/"
+F_PRE = "SingleKOburst_compare" ////////
+sprint(F_PRENAME ,"%s_NTrial%g.txt",F_PRE ,N_TRIAL)
+POSTFIX = 1
+
+CELL_TYPE = 2 //1 = WT, 2 = KO
+
+// NOTE on setting values  : The values that are in the cell Builder will be changed to the values in GUI despite the setting in hoc code. Therefore, check value of variables in the C3llBuild every time before run
+// change soma's property
+soma.gl_hh = 5e-05
+soma.el_hh = -60
+
+// setting reversing potential for ion Channel
+soma.ena = 55
+soma.ek = -80
+//soma.eca = 126.1
+
+//Add InGauss Injected Current
+objref in
+access soma
+    in = new InGauss(0.5) // add background noise to the cell 
+	in.mean = MEAN // nA
+	in.stdev = STDEV // nA
+	in.del = 0 // ms
+	in.dur = 1e9 // "forever"
+	
+//Recording 
+objref recInoise, recV, recIinj, recI_cap, recSpk
+recSpk = new Vector()
+
+recInoise = new Vector()
+recInoise.record(&in.i,RESOLUTION)
+
+recV = new Vector()
+recV.record(&soma.v(0.5),RESOLUTION)
+
+recIinj = new Vector()
+recIinj.record(&IClamp[0].i,RESOLUTION)
+
+recI_cap = new Vector()
+recI_cap.record(&soma.i_cap(0.5),RESOLUTION)
+
+objref recInoise_List,recV_List, recIinj_List, recI_cap_List, recSpk_List
+ recInoise_List = new List() 
+ recV_List = new List() 
+ recIinj_List = new List() 
+ recI_cap_List = new List() 
+ recSpk_List = new List()
+ 
+load_file("saveRecVecs.hoc")
+ATMPT = 1
+
+xpanel("Setting Number of Trials for Run")
+xvalue("Attempt ID # ","ATMPT",1,"ATMPT",0,1)
+xvalue("Noise amplitude mean ","in.mean",0,"in.mean",0,1)
+xvalue("Noise amplitude sigma ","in.stdev",0.115,"in.stdev",0,1)
+xvalue("Set No of Trials ","N_TRIAL",100,"N_TRIAL",0,1)
+xbutton("Run", "run_NTrials(N_TRIAL)")
+xpanel()
+
+
+
+proc run_NTrials (){local tr //, t_runStr, t_runStp
+t_runStr = startsw()
+
+ recInoise_List.remove_all() 
+ recV_List.remove_all()
+ recIinj_List.remove_all() 
+ recI_cap_List.remove_all()
+ recSpk_List.remove_all()
+ 
+for tr = 0, N_TRIAL-1 {
+print "Run Trial#", tr+1
+t_oneR = startsw()
+ 
+access soma
+finitialize()
+frecord_init()
+print "Called run_all()"
+run()
+
+recSpk.spikebin(recV, THRESHOLD)
+
+recInoise_List.append(recInoise.c)
+recV_List.append(recV.c) 
+recIinj_List.append(recIinj.c)
+recI_cap_List.append(recI_cap.c)
+recSpk_List.append(recSpk.c)
+print "Runtime for one Trial ", startsw() - t_oneR
+}
+//Save to File
+//sprint(F_PRENAME ,"%s_NTrial%g_meu%g_sd%g",F_PRE ,$1,in.mean,in.stdev)
+sprint(F_PRENAME ,"%s_gl%g_NTrial%g_meu%g_sd%g_Iinj%g_atmpt%g",F_PRE, soma.gl_hh ,$1,in.mean,in.stdev,IClamp[0].amp,ATMPT)
+create_sim_profile() 
+save_all_soma_rec_vec()
+t_runStp = startsw()
+print "Runtime for all Trials ", t_runStp - t_runStr
+print F_PRENAME
+
+}

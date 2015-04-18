@@ -1,0 +1,238 @@
+
+load_file("nrngui.hoc") //load basics library
+load_file("ranstream.hoc")
+load_file("Parameters.hoc") //Parameters
+/* Parameters List
+
+*/
+load_file("CellsTemplate.hoc") // Cell Templates: C_Cell, In_spk_NetStim, In_spk_VecStim
+load_file("NetSpecIntf.hoc") // Network specification interface
+
+/////////////////////////////////////////////////////////////////////////
+MEAN  = 0// - 0.0592
+STDEV = 0.15//0.00001
+N_REPEAT = 100
+/////////////////////////////////////////////////////////////////////////
+
+
+{cells = new List() cellsIN = new List() cellsE = new List() cellsI = new List()  cellsCN = new List()
+ nclist = new List() cellsFFin= new List() }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Use in the case of individual neuron
+if(1){ //0: Not in use
+	cIDrec = -1
+	str_E = cIDrec+1  
+	Erec= -1
+	for i=0,N_REPEAT-1 {
+		cIDrec = cIDrec+1 
+		Erec=Erec+1
+		cell_append(new C_Cell(),50,50, 0,cIDrec, Erec,1)
+		cellsE.append(cells.object(cIDrec))
+		cellsCN.append(cells.object(cIDrec)) //cellsCN contains cortical neurons (exclude input cells)
+	}
+	ZdiffEI =10 
+
+	str_I = cIDrec+1  
+	Irec= -1
+	for i=0,N_REPEAT-1 {
+		cIDrec = cIDrec+1 
+		Irec=Irec+1
+		cell_append(new C_Cell(),100,100, ZdiffEI,cIDrec, Irec,2)
+		cellsI.append(cells.object(cIDrec))
+		cellsCN.append(cells.object(cIDrec))
+	}	
+}	
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+objref rseed
+rseed = new Random()
+rseed.negexp(500)
+rseed.Random123()
+
+objref seedlist
+seedlist = new Vector()
+proc seedGen() { local i, seed //$1 = total number of seed //Before run
+   seedlist = new Vector($1)
+   for i = 0,$1-1 {
+      seed = rseed.repick
+	  seedlist.x(i) = seed
+      }
+}
+seedGen(cellsCN.count) //generate seeds (# seed = # of cells) //Have to double if also use the random12 generator in poissoin
+
+
+
+objref rslist, inlist
+rslist = new List()
+inlist = new List()
+proc gaussian_noise_current(){local i localobj in
+
+for i = 0, cellsCN.count-1 {
+	access cellsCN.o(i).soma 
+
+	in = new InGauss(0.5) // add background noise to the cell 
+	in.mean = MEAN // nA
+	in.stdev = STDEV // nA
+	in.del = 0 // ms
+	in.dur = 1e9 // "forever"
+	inlist.append(in)
+	rslist.append(new Random(seedlist.x(i)))
+	rslist.o(i).normal(0,1) // mean 0, variance 1
+	inlist.o(i).noiseFromRandom(rslist.o(i))
+}	
+}
+gaussian_noise_current() 
+
+
+
+objref injectI_List, injectI
+injectI_List = new List()
+injectI= new Vector()
+
+proc VectorRecord() {local id //localobj vVec, i_capVec, injectI
+//Record all V in all cells 
+for id=0, cellsCN.count-1 {
+	injectI = new Vector()
+	injectI.record(&inlist.o(id).i,RESOLUTION)
+	injectI_List.append(injectI)
+}
+}
+VectorRecord()
+
+strdef saveVecFName, dirLoc
+dirLoc = "SimulationResult/TestRand123/"
+saveVecFName = ""
+//sprint(saveVecFName, "%s/Random%2.2f", dirLoc, startsw()%1e4)
+
+
+
+
+proc save_vectors_to_file(){local i,j localobj fout,id strdef fname
+//sprint(fname,"%s_id%g",saveVecFName,$1)
+sprint(saveVecFName, "%s/Random%g.txt", dirLoc, nthrun)
+fout = new File()
+fout.wopen(saveVecFName)
+fout.printf("%g\t%g\t%g",cellsE.count,cellsI.count, tstop) //#E, #I, tstop[ms]  (E cells' ID always go first)
+for i = 0,$o1.count-4{
+	fout.printf("\t%g",0)
+}
+fout.printf("\n")
+
+id = new Vector()
+id.indgen(0, $o1.count-1,1)
+id.printf(fout,"%g\t",0,id.size-1)
+//fout.printf("%g\n",id.x(id.size-1))
+
+for i = 0, $o1.o(0).size-1{
+	for j = 0, $o1.count-2 {
+		fout.printf("%g\t",$o1.o(j).x(i))
+	}
+	fout.printf("%g\n",$o1.o($o1.count-1).x(i))
+}
+fout.close()
+}
+
+///////////////////////////////////////////////////////////////
+injectIID = 0
+proc plot_injectI_info() { //panel to choose cell's ID to plot
+xpanel("Setting cell ID for plotting")
+xvalue("Set ID","injectIID ",1,"injectIID ",0,1)
+xbutton("plot inject current I(t)", "plot_injectI(injectIID)")
+xbutton("plot inject current I(t) on the previous graph", "plot_injectI_same_g(injectIID)")
+xpanel()
+}
+
+// i_cap_List, injectI_List
+objref ginjectI_List
+ginjectI_List = new List()
+proc plot_injectI(){localobj ginjectI strdef labell
+ginjectI = new Graph()
+ginjectI.size(0,tstop,-100,50)
+if($1 >= str_I){ 
+injectI_List.o($1).plot(ginjectI,1/steps_per_ms,3,1)  //color ID : 2 = red, 3 = blue 
+}else{injectI_List.o($1).plot(ginjectI,1/steps_per_ms,2,1)  
+}
+sprint(labell,"Cells#%g injectI(t)",$1)
+ginjectI.label(labell)
+ginjectI.exec_menu("View = plot")
+ginjectI_List.append(ginjectI)
+}
+
+proc plot_injectI_same_g(){local gIid localobj gI strdef labell
+gIid = ginjectI_List.count-1
+gI = ginjectI_List.o(gIid)
+//gV = new Graph()
+//gV.size(0,tstop,-100,50)
+if($1 >= str_I){ 
+injectI_List.o($1).plot(gI,1/steps_per_ms,3,1)  //color ID : 2 = red, 3 = blue 
+}else{injectI_List.o($1).plot(gI,1/steps_per_ms,2,1)  
+}
+sprint(labell,"Cells#%g injectI(t)",$1)
+gI.label(labell)
+gI.exec_menu("View = plot")
+//gV_List.append(gV)
+}
+///////////////////////////////////////////////////////////////
+histID = 0
+proc plot_injectI_hist() { //panel to choose cell's ID to plot
+xpanel("Setting cell ID for histogram")
+xvalue("Set ID","histID",1,"histID",0,1)
+xbutton("plot histogram of I(t)", "genhist(injectI_List.o(histID), MEAN-3*STDEV, MEAN+3*STDEV, 6*STDEV/20)")
+//xbutton("plot inject current I(t) on the previous graph", "plot_injectI_same_g(injectIID )")
+xpanel()
+}
+
+
+
+
+//xopen("hist.hoc")
+objref ghist_List, g
+objref hist, indx, yval
+ghist_List = new List()
+proc genhist() { local total
+    hist = new Vector()
+    hist = $o1.histogram($2,$3,$4)
+    // convert count histogram to estimate of probability density function
+    total = hist.sum()
+    hist.div(total)
+    // plot it as a series of bars
+    // create an index vector with 0,0, 1,1, 2,2, 3,3, ...
+    indx = new Vector(2*hist.size())
+    indx.indgen(0.5)
+    indx.apply("int")
+    // use the index vector
+    yval = new Vector(1)
+    yval.index(hist, indx)
+    yval.rotate(-1)   // so different y's within each pair
+    yval.x[0] = 0
+    // scale and translate index vector to correspond to min..max
+    // indx.mul(binwidth).add(min)
+    indx.mul($4).add($2)
+    g = new Graph(0)
+    yval.plot(g, indx)
+    g.view(-0.11, 0, 0.22, 0.2, 656, 25, 300.48, 200.32)
+    g.exec_menu("View = plot")
+	ghist_List.append(g)
+}
+
+
+cnt = 1
+nthrun = 0
+proc myrun() {
+ nthrun = nthrun + 1
+  tstop = $1
+  run()
+  plot_injectI_info()
+  plot_injectI_hist() 
+  save_vectors_to_file(injectI_List)
+//  genhist(ivec, MEAN-3*STDEV, MEAN+3*STDEV, 6*STDEV/20)
+}
+
+myrun(100)
+
+
+print "Use RunControl to set simulation parameters (Tstop etc.)"
+print "then execute myrun() to see empirical probability density function."
+
+

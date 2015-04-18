@@ -1,0 +1,177 @@
+//tmp_paramOpt002  --  attempt with multiple trial per simulation
+
+// Parameter optimization   // put code in several sub files
+
+
+load_file("nrngui.hoc") //load basics library
+load_file("ranstream.hoc")
+
+load_file("Parameters.hoc") //Parameters
+/* Parameters List
+
+*/
+load_file("CellsTemplate.hoc") // Cell Templates: C_Cell, In_spk_NetStim, In_spk_VecStim
+
+load_file("NetSpecIntf.hoc") // Network specification interface
+
+
+load_file("load_position_file.hoc") //Now do not read INpos.txt 
+printf("Done Download position")  // posEx, posEy, posIx, posIy
+
+/// Object declaration 
+load_file("ObjrefDeclare.hoc")
+/////////////////////////////////////////////////////////////////////////
+//Defined the unified for all other spatial parameters 
+//patchsize = 1000 //1000um by 1000, Unit:um , shape always in square 
+//nEcells = 2500 //Redundant: nE in load position
+//Edens = nEcells / patchsize^2 //Unit : cells per um^2
+//d0E = 1/sqrt(Edens) //reference distance unit [um.cells^-0.5] ~ [um]
+//nIcells = 841  //Redundant: nI in load position
+//Idens = nIcells / patchsize^2 
+//d0I = 1/sqrt(Idens) ///////////////////////// Put it after reading cells position 
+
+V1SIZE = 1500
+
+/////////////////////////////////////////////////////////////////////////
+MEAN  = 0// - 0.0592
+STDEV = 0.15 //0.15//0.00001
+N_REPEAT = 10
+/////////////////////////////////////////////////////////////////////////
+
+strdef postfixTxt, dirLoc, core 
+POSTFIX = 1
+//postfixTxt = "one-thirdReciprocal10s _newRun" 
+//postfixTxt = "E156I53ceilSorted_test2"
+//postfixTxt = "IndividualCells10s_header"
+postfixTxt = "" //testingSixtyWIIWEE5s_restart
+
+core = "Regular_specified_12_12_18_19" //"Regular_ratio1_W_MULT1" // "Regular_specified_1_9_15.6_140" //specified ratio WEE_WEI_WIE_WII
+
+dirLoc = "SimulationResult/SfN_ctrlParamters/" 
+
+TRIAL_NO = 1
+/////////////////////////////////////////////////////////////////////////
+//load_file("NetSimRec.hoc")
+
+LOCAL_CONNECT = 1
+INDV_NEURON = 0
+INSERT_SPK_INPUT = 1
+INSERT_SPK_to_E = 1
+INSERT_SPK_to_I = 0
+INSERT_I_INPUT = 0
+INSERT_I_to_E = 0
+INSERT_I_to_I = 0
+
+MULT_TRIAL = 0 
+N_TRIAL = 5
+cntTrial = 1 
+////////////////////////////////////////////////////////////////////////////
+RANDOM123_ID1_POISSONSPK = 1 
+RANDOM123_ID3_RUN_POISSONSPK = TRIAL_NO //For  multiple trials (trial#)
+////////////////////////////////////////////////////////////////////////////
+// Idea : May put the above lines together with other parameters ex. tstop on xpanel 
+// 		  Do it after you have done parameter optimizations, so that, user do not have to specified those parameters
+objref genseedlist
+genseedlist = new Vector()
+
+proc spont_act() {
+//MEAN = $1
+//STDEV = $2
+//N_REPEAT = $3
+//Input_I_Amp = $1 // [nA] 
+Input_I_Amp = 0
+Input_spk_avg_fr = $1 // [Hz]
+tstop = $2 // Have to set tstop here because the random_stream_offset_ setting need the tstop for parameter setting
+steps_per_ms = 1    // -----------> set resolution and then use the variable in all references for unified process
+v_init = -70
+
+//sprint(postfixTxt,"%s_%2.2fnA",core,Input_I_Amp)
+sprint(postfixTxt,"%s_%2.2fHz",core,Input_spk_avg_fr)
+if(MULT_TRIAL){
+sprint(postfixTxt,"%s_trial%g",postfixTxt,cntTrial)
+}
+if(POSTFIX){
+	printf( "/////////////// %s /////////////////", postfixTxt)
+}
+ 
+xopen("NetGenn.hoc")
+xopen("NetSimRec.hoc")
+t1 = startsw()
+print "tstop = ",tstop
+printf("random_stream_offset_ = (tstop+1000)*1/dt = %f\n",random_stream_offset_ ) 
+
+///////// Connection Specification ///////// 
+if(LOCAL_CONNECT){
+RUN_WEE = 1
+RUN_WEI = 1
+RUN_WIE = 1
+RUN_WII = 1
+}else{
+RUN_WEE = 0
+RUN_WEI = 0
+RUN_WIE = 0
+RUN_WII = 0
+}
+
+W_MULT = 1
+W_SCALE = 0.00001
+
+xopen("LocalConn.hoc")
+t2 = startsw()
+print "Runtime for local connection ", t2-t1
+
+
+VectorRecord() 
+spikerecord()
+//spikerecordEI()
+load_file("PrmOptSes2.ses")
+
+tstop = $2 // Need to set simulation parameters here again because some parameters are change during downloading session file
+steps_per_ms = 1    // -----------> set resolution and then use the variable in all references for unified process
+v_init = -70
+print "Calling run()"
+//printf("Before Run :random_stream_offset_ = %f\n",random_stream_offset_ ) 
+run_all(tstop)
+//printf("After Run :random_stream_offset_ = %f\n",random_stream_offset_ ) 
+t3 = startsw()
+print "Runtime for simulation ", t3-t2
+//graphList[0].o(0).exec_menu("View = plot")
+//graphList[1].o(0).exec_menu("View = plot")
+//graphList[2].o(0).exec_menu("View = plot")
+
+//rasterplot()
+print "Runtime for raster plot ", startsw()-t3
+t4 = startsw()
+//rasterplotEI()
+saveSpikesToFile()
+
+//saveSomaVolt()
+save_all_soma_rec_vec()
+create_sim_profile() 
+//if(cntTrial ==1){ saveGenSeedlist()}
+//saveSeedlist()
+print "Runtime for saving vectors ", startsw()-t4
+print "Done the simulation for input current amplitude = ", $1 
+print ":::Simulation Setting::::"
+print "INSERT_SPK_INPUT = ", INSERT_SPK_INPUT
+print "INSERT_SPK_to_E = ", INSERT_SPK_to_E
+print "INSERT_SPK_to_I = ", INSERT_SPK_to_I
+print "INSERT_I_INPUT = ", INSERT_I_INPUT
+print "INSERT_I_to_E = ",INSERT_I_to_E
+print "INSERT_I_to_I = ",INSERT_I_to_I
+print "LOCAL_CONNECT = ",LOCAL_CONNECT
+print "INDV_NEURON = ",INDV_NEURON
+print "postfixTxt = ",postfixTxt
+}
+
+TSTOP = 5000
+PoisSpkHz = 0
+
+
+spont_act(PoisSpkHz,TSTOP)
+
+saveRecordSeed()
+
+if(INSERT_I_INPUT){
+plot_input_current_info()
+}

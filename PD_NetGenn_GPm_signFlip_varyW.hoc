@@ -1,0 +1,230 @@
+//////////////////* GPm Network Generation *//////////////////
+
+// cType : #0 = Artificial Input cell, #1 = E cell of VL, #2 = I cell of VL, #3 = E cell of M1, #4 = I cell of M1, #5 = E cell of GPm, #6 = I cell of GPm
+//////////////////Make the network cells///////////////
+objref cellsI_GPm,cellsCN_GPm //VL received inhibition input from GPm --> only I cell is enough for GPm layer
+//cellsE_GPm = new List() 
+cellsI_GPm = new List() 
+cellsCN_GPm = new List()
+
+// Use the specified cells position
+/*
+//E cells 
+str_E_GPm = cIDrec+1  
+Erec_GPm= -1
+for (i=0;i<nE_GPm;i=i+1){
+	cIDrec = cIDrec+1 
+	Erec_GPm=Erec_GPm+1
+	cell_append(new M1_Cell(),posEx_GPm.x(i),posEy_GPm.x(i), 0,cIDrec, Erec_GPm,5) // cType:E of M1  = 5
+	cellsE_GPm.append(cells.object(cIDrec))
+	cellsCN_GPm.append(cells.object(cIDrec))
+} //End generate E
+ZdiffEI =10 //Distance difference in Z-axis between E plane and I plane 
+*/
+
+//I cells of GPm -----> now assume, they are given to E cells in VL only --> same number as VL -> use posE
+nI_GPm = nE
+str_I_GPm = cIDrec+1  
+Irec_GPm= -1
+for (i=0;i<nI_GPm; i=i+1){
+	cIDrec = cIDrec+1 
+	Irec_GPm=Irec_GPm+1
+	cell_append(new GPm_Cell(),posEx.x(i),posEy.x(i), -ZdiffEI,cIDrec, Irec_GPm,6) // cType: I of GPm   = 6
+	
+	cellsI_GPm.append(cells.object(cIDrec))
+	cellsCN_GPm.append(cells.object(cIDrec))
+} //End generate I
+
+//Save cells position
+objref fout
+strdef fname
+if (POSTFIX){
+sprint(fname,"%sNeurons_location_GPm_%s.txt",dirLoc,postfixTxt) 
+}else{
+sprint(fname,"%sNeurons_location_GPm.txt",dirLoc)
+}
+fout = new File()
+fout.wopen(fname)
+for i = 0, cellsCN_GPm.count-1{
+	fout.printf("%g\t%g\t%g\t%g\n", cellsCN_GPm.o(i).cID,cellsCN_GPm.o(i).x,cellsCN_GPm.o(i).y,cellsCN_GPm.o(i).z)
+}
+fout.close()
+
+////////////////// Add IClamp for light stimulation///////////////
+//Light_Stim_Amp = 0.25
+objref stimTmp, LightStimList
+LightStimList = new List()
+
+for i =0, cellsI_GPm.count-1{ //injected E only
+			access cellsI_GPm.o(i).soma 
+			stimTmp = new IClamp(0.5)
+			stimTmp.amp = Light_Stim_Amp //[nA]
+			stimTmp.dur = Light_Stim_Dur // // "forever"
+			stimTmp.del = Light_Stim_StartT //
+			LightStimList.append(stimTmp) // can retrieve the stim by LightStimList.o(CID)
+		}	
+
+//////////////////Background Noise of the cell///////////////
+
+objref rslist_GPm, inlist_GPm,in_GPm
+
+if (ADD_SPONTANEOUS_ACTIVITY_GPm){
+//The following segment for noise need ("ranstream.hoc") // Done it in MainCode
+random_stream_offset_ = (tstop+1000)*1/dt // assumes dt = 0.025  //////////////////////////////////////////// Check  whether the values is change every dt or point resolution, i.e. 1/dt or steps_per_ms
+inoise_random_low_start_ = 1
+mcell_ran4_init(inoise_random_low_start_)
+
+rslist_GPm = new List()
+inlist_GPm = new List()
+
+
+for i = 0, cellsCN_GPm.count-1 {
+	access cellsCN_GPm.o(i).soma 
+
+	in_GPm = new InGauss(0.5) // add background noise to the cell 
+	in_GPm.mean = -1*MEAN // nA
+	in_GPm.stdev = STDEV // nA
+	in_GPm.del = 0 // ms
+	in_GPm.dur = 1e9 // "forever"
+	inlist_GPm.append(in_GPm)
+	rslist_GPm.append(new RandomStream(i))
+	rslist_GPm.o(i).r.normal(0,1) //uniform(0,1) // mean 0, variance 1
+	rslist_GPm.o(i).start()
+	inlist_GPm.o(i).noiseFromRandom(rslist_GPm.o(i).r)
+}	
+}
+
+///////////////////////  Connect BG(GPm) to VL cells  /////////////////////////////
+W_BGinput = W_POISSPK_GPm // Weight for the connection GPm - VL ---------------------------------------------------- Find this
+objref R_W_GPm_VL 
+if(Vary_W_GPm_VL){
+		
+		R_W_GPm_VL  = new Random()
+		R_W_GPm_VL .Random123(Rand123Seed_append("Vary_W_GPm_VL"),0,TRIAL_NO)
+		R_W_GPm_VL .normal(W_GPm_VL_mean, W_GPm_VL_sigma*W_GPm_VL_sigma )
+		W_BGinput = R_W_GPm_VL.repick()
+}
+	
+//Making the connection 
+for i = 0, cellsI_GPm.count-1{
+	if(Vary_W_GPm_VL){
+	W_BGinput = R_W_GPm_VL.repick()  
+	if(W_BGinput <0){ W_BGinput = 0	}
+	}
+	
+  nc_append( cellsI_GPm.o(i).cID,   cellsE.o(i).cID, getSynInd (cellsI_GPm.o(i).cID), W_BGinput,0)  
+  //nc_append(srclist_TC.x(i),   tarlist_TC.x(i), getSynInd (srclist_TC.x(i)),  weightCal (srclist_TC.x(i),tarlist_TC.x(i),3,W_TC,W_TC,W_TC,W_TC),delayCal(srclist_TC.x(i),tarlist_TC.x(i)))  //weightCal (srclist.x(i),tarlist.x(i),flag) flag: 0 -> fixed, 1 -> spatial dependent
+}
+printf("Finished making the cells in GPm layer\n")
+
+
+/*
+///////////////////////  Poisson spikes input  /////////////////////////////
+
+RANDOM123_ID1_POISSONSPK_GPm = 2 // #1:VL (main layer), #2: GPm (I input layer), #3: M1 (Output layer to E cells)
+//RANDOM123_ID3_RUN_POISSONSPK = TRIAL_NO //For  multiple trials (trial#)
+
+obfunc  poissonGeneratorGPm() { local tmpr,p,ii localobj rr, spktrain, spktime 
+//Return vector of spiking time (in ms)
+// $1 = seed, $2 = resolution (size of one bin in ms), $3 = time (ms), $4 = average firing rate
+	rr = new Random()
+	rr.uniform(0,1)
+	rr.Random123(RANDOM123_ID1_POISSONSPK_GPm,$1,RANDOM123_ID3_RUN_POISSONSPK)
+	spktrain = new Vector($3/$2) //Not use now
+	spktime = new Vector()
+	p = $4/(1000/$2)
+	//printf("p: %f \n", p)   
+	for ii =0, spktrain.size-1 {
+		tmpr = rr.repick
+		
+		if (tmpr < p){  //spike occur
+			spktrain.x(ii) = 1
+			spktime.append($2*ii)
+		}else{
+			spktrain.x(ii) = 0
+		}
+	}
+	return spktime // spkvec, 1) the multiple arrival time in one VecStim is account as the only one spike. 2) The spike time vector need to be sort ascending(less...more).
+}
+ 
+objref NoiseSpkvec_list_GPm, cellsFFin_GPm
+//NoiseSpkvec_list_GPm.remove_all()
+//cellsFFin_GPm.remove_all()
+objref recordseed
+recordseed_GPm = new Vector()
+//recordseed_GPm.resize(0)
+
+if(NOISE_POISSONSPK_GPm){ //GPm does not need this actually.  ////// The code is not complete yet. 
+print "Called PoisSpk for noise in "
+//Generate artificial cells for input   //# = total cell
+	 // Feedforward(FF) input Poisson spikes cell
+	wFFin = 0.0005 //0.001 // weight for FF input 
+	str_FFin = cIDrec+1
+	FFinrec = -1
+	nFF = cellsE.count + cellsI.count //give FF input to E cell only
+	FFzpos = -50
+	for (i=0;i<cellsE.count + cellsI.count;i=i+1){
+		cIDrec = cIDrec+1 
+		FFinrec=FFinrec+1
+		cell_append(new In_spk_VecStim(),0,100, FFzpos,cIDrec, FFinrec,0) // cell type = 0  for FF input
+		cellsFFin.append(cells.object(cIDrec))
+	}
+	
+	
+if (INSERT_SPK_to_E && INSERT_SPK_to_I){ // Insert spike train to both E & I cells
+
+	print "Called : both E I"
+	//seedGen(cellsE.count+cellsI.count) 
+	print "spkvec_list's size = ", spkvec_list.count
+	recordseed.resize(cellsE.count + cellsI.count)
+	//Generate Poissoin in each run by time tstop
+	for i=0, cellsFFin.count-1 {
+		if(MULT_TRIAL){ 
+		spkvec_list.append( poissonGenerator(cellsFFin.o(i).cID*cntTrial,steps_per_ms,tstop,Input_spk_avg_fr ))
+		recordseed.x(i) = cellsFFin.o(i).cID*cntTrial 
+		}else{
+		spkvec_list.append( poissonGenerator(cellsFFin.o(i).cID,steps_per_ms,tstop,Input_spk_avg_fr ))
+		recordseed.x(i) = cellsFFin.o(i).cID // specified ID#2 of RANDOM123 as cell ID of that input cell--> to be sure that there is no cell with same seed
+		}
+		cellsFFin.o(i).pp.play(spkvec_list.o(i)) 
+		nc_append(str_FFin+i,str_E+i,0,wFFin,0) //srcindex, tarcelindex, synindex, weight, delay  //check the weight
+	}
+	
+	}else {
+		if (INSERT_SPK_to_E){
+			print "called INSERT_SPK_to_E only case"
+			recordseed.resize(cellsE.count)
+			//Generate Poissoin in each run by time tstop
+			for i=0, cellsE.count-1 {
+			if(MULT_TRIAL){ 
+				spkvec_list.append( poissonGenerator(cellsFFin.o(i).cID*cntTrial,steps_per_ms,tstop,Input_spk_avg_fr ))
+				recordseed.x(i) = cellsFFin.o(i).cID*cntTrial 
+			}else{
+				spkvec_list.append( poissonGenerator(cellsFFin.o(i).cID,steps_per_ms,tstop,Input_spk_avg_fr ))
+				recordseed.x(i) = cellsFFin.o(i).cID // Use cells ID as seed
+				}
+				cellsFFin.o(i).pp.play(spkvec_list.o(i)) 
+				nc_append(str_FFin+i,str_E+i,0,wFFin,0) //srcindex, tarcelindex, synindex, weight, delay 
+			}
+		}else {
+			if (INSERT_SPK_to_I){
+				//seedGen(cellsI.count) 
+				recordseed.resize(cellsI.count)
+				//Generate Poissoin in each run by time tstop
+				for i=0, cellsI.count-1 {
+					if(MULT_TRIAL){ 
+						spkvec_list.append( poissonGenerator(cellsFFin.o(nE+i).cID*cntTrial,steps_per_ms,tstop,Input_spk_avg_fr ))
+						recordseed.x(i) = cellsFFin.o(nE+i).cID*cntTrial 
+					}else{
+					spkvec_list.append( poissonGenerator(cellsFFin.o(nE+i).cID,steps_per_ms,tstop,Input_spk_avg_fr ))
+					recordseed.x(i) = cellsFFin.o(nE+i).cID
+					}
+					cellsFFin.o(nE+i).pp.play(spkvec_list.o(i)) 
+					nc_append(str_FFin+i,str_I+i,0,wFFin,0) //srcindex, tarcelindex, synindex, weight, delay 
+				}
+			}
+		}
+	}
+	
+}	
+*/
