@@ -1,7 +1,5 @@
 *.o
-*.mod
 *.csv
-*.txt
 SimResult/
 x86_64/
 .DS_Store
