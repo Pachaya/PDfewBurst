@@ -48,7 +48,7 @@ ADD_I_to_M1 = 0;
 ADD_I_to_VL = 0;
 
 FIG_ALL = 0;
-dirFig = 'specified_wmTC0.002div/';
+dirFig = 'TCconvergence/';
 mkdir([dirLoc dirFig])
 TSTOP = 4000;
 
@@ -447,37 +447,45 @@ saveas(tmpf,[dirLoc dirFig figname '.jpg'],'jpg')
 % y2 = 0.8*exp(-0.5*x).*sin(10*x);
 % [AX,H1,H2] = plotyy(x,y1,x,y2,'plot');
 %%
-% ##################################################################################################
-%{
-RangeTC		  numVL/M1		 expected sumW		 sumW		 maxW	
-  10		 1.0000		0.001454		0.001454		1.4540e-03
-  20		 1.0854		0.001454		0.001454		1.4302e-03
-  30		 1.5217		0.001454		0.001454		1.2642e-03
-  40		 2.3062		0.001454		0.001454		1.0076e-03
-  50		 3.5758		0.001454		0.001454		7.3636e-04
-  60		 5.0060		0.001454		0.001454		5.4917e-04
-  70		 6.8675		0.001454		0.001454		4.0593e-04
-  80		 8.7831		0.001454		0.001454		3.1868e-04
-  90		11.0301		0.001454		0.001454		2.5621e-04
- 100		13.7651		0.001454		0.001454		2.0936e-04
- 110		16.6687		0.001454		0.001454		1.7293e-04
- 120		19.6386		0.001454		0.001454		1.4598e-04
- 130		23.2711		0.001454		0.001454		1.2415e-04
- 140		26.9578		0.001454		0.001454		1.0725e-04
- 150		31.0000		0.001454		0.001454		9.3594e-05
- 160		35.1928		0.001454		0.001454		8.2275e-05
- 170		39.4699		0.001454		0.001454		7.2991e-05
- 180		44.4157		0.001454		0.001454		6.5027e-05
- 190		49.3916		0.001454		0.001454		5.8587e-05
- 200		54.7892		0.001454		0.001454		5.2864e-05
- 210		60.3795		0.001454		0.001454		4.7914e-05
- 220		65.9157		0.001454		0.001454		4.3799e-05
- 230		71.8614		0.001454		0.001454		4.0139e-05
- 240		78.1205		0.001454		0.001454		3.6864e-05
- 250		84.7771		0.001454		0.001454		3.3990e-05
- 260		91.6867		0.001454		0.001454		3.1464e-05
- 270		99.2108		0.001454		0.001454		2.9185e-05
- 280		106.2892		0.001454		0.001454		2.7161e-05
- 290		114.3614		0.001454		0.001454		2.5320e-05
- 300		122.6084		0.001454		0.001454		2.3617e-05
-%}
+
+%% Parameters Matrix  rangeTC vs. weighing Factor
+
+pmfg = figure; set(pmfg, 'position',[  27    183    1243   470]);   set(gcf,'PaperPositionMode','auto')
+subplot(121); imagesc(maxW_LST); 
+set(gca, 'YTickLabel', PARAM1, 'XTickLabel', PARAM2 )
+axis xy;
+xlabel('Expected sumW'); ylabel('Range TC'); colorbar();
+%title('Maximum W for each parameter set')
+subplot(122); imagesc(maxW_LST); 
+VLperM1 = numVL_M1_LST(:,1);
+set(gca, 'YTickLabel', PARAM1, 'XTickLabel', PARAM2 )
+axis xy; xlabel('Expected sumW'); ylabel('Number of VL per M1');
+colorbar();
+suptitle('Maximum Weighting factor for each parameter set')
+
+if(SAVE_FIG) 
+figname = 'CombineParametersMatrix';
+saveas(pmfg,[dirLoc dirFig figname '.fig'],'fig');
+saveas(pmfg,[dirLoc dirFig figname '.jpg'],'jpg');
+end
+
+tmpf=figure; 
+PARAM  = PARAMETERS{2};
+LEG= cell(length(PARAM.PARAM),1);
+numVL_perM1 = numVL_M1_LST(:,1); 
+for ii = 1 : length(PARAM.PARAM)
+scatter(rTC_LST, maxW_LST(:,ii)); hold on;
+LEG{ii} = [ PARAM.titleTxt ' = ' num2str(PARAM.PARAM(ii))] ;
+end
+xticklabels = cell(length(rTC_LST),1);
+for jj = 1: length(rTC_LST)
+   xticklabels{jj} = [ num2str(rTC_LST(jj)) ] ; % ',' '#VL/M1=' num2str(numVL_perM1(ii))
+end
+ylabel('Maximum W'); xlabel('Range of TC');
+set(gca, 'XTick', PARAM1, 'XTickLabel',  xticklabels  );
+legend(LEG,'location','best');
+if(SAVE_FIG) 
+figname = 'CurrentParameters';
+saveas(tmpf,[dirLoc dirFig figname '.fig'],'fig');
+saveas(tmpf,[dirLoc dirFig figname '.jpg'],'jpg');
+end

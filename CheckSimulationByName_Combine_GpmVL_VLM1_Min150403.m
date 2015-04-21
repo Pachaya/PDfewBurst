@@ -52,14 +52,14 @@ dirFig = '';
 
 TSTOP = 4000;
 
+%SomaVolt_M1_PDfewBurst_GPmVLmd1_rTC120_wmTC50_KO_GPmInput_Amp0.5_Dur1000_GPmVLw_m0.3_sig0_InGauss0.2_IGmean0_IGmeanSig0_W0.029_SpecifiedPoisSpk_sig0.00Hz_T4000_trial1
+rTC_LST = 120; %[10 25 50 75 100];
+wmTC_LST = 50; %[20 30 40 50];
 
-rTC_LST = [120; 150; ];
-wmTC_LST = [50 ];
 
-
-LightAmp_LST = [0.4];
-GPmVLw_mean_LST = [0.2 0.3 0.4 0.5];    
-GPmVLw_sig_LST =[0 0.05 0.1];
+LightAmp_LST = [0.5];
+GPmVLw_mean_LST = [ 0.3];    
+GPmVLw_sig_LST =[0];
 % 
 
 % Candidates Model 1 :
