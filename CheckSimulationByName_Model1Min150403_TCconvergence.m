@@ -53,9 +53,8 @@ dirFig = '';
 TSTOP = 4000;
 
 %SomaVolt_M1_PDfewBurst_GPmVLmd1_rTC120_wmTC50_KO_GPmInput_Amp0.5_Dur1000_GPmVLw_m0.3_sig0_InGauss0.2_IGmean0_IGmeanSig0_W0.029_SpecifiedPoisSpk_sig0.00Hz_T4000_trial1
-
-rTC_LST = [50 55 60 65 70 75 ]; %[10 25 50 75 100];
-wmTC_LST = [20 21 22.5 24 25  30];
+rTC_LST = [25 50 75 100 150 200 250]; %
+wmTC_LST = [20 30 40 50 60]; %[10 25 50 75 100];
 
 
 LightAmp_LST = [0.5];

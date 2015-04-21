@@ -39,8 +39,12 @@ ncells = 1150;
 M1_ncells = 166;
 TRIAL_LST = 1 : NUM_TRIAL;
 
-rTC_LST = [25 50 75 100 150 200 250]; %
-wmTC_LST = [20 30 40 50 60]; %[10 25 50 75 100];
+rTC_LST = [10 50:50:300];
+wmTC_LST = [1];
+
+sumW = 0.001454;
+specified_wmTC_LST = sumW./[1 0.8 0.6 0.4 0.2 0.1];
+
 
 LightAmp_LST = [0.5 ];
 GPmVLw_mean_LST = [0.5];
@@ -50,10 +54,10 @@ PARAM1 = rTC_LST;
 lblTxt1 = 'Range of thalamocortical connection';
 saveTxt1 = 'rTC';
 titleTxt1 = 'Range_T_C';
-PARAM2 = wmTC_LST;
-lblTxt2 = 'Weight of thalamocortical connection';
-saveTxt2 = 'wmTC';
-titleTxt2 = 'W_T_C';
+PARAM2 = specified_wmTC_LST;
+lblTxt2 = 'Specified summation of weight of thalamorcortical connection'; %'Weight of thalamocortical connection';
+saveTxt2 = 'specified_wmTC';
+titleTxt2 = 'sum W_T_C';
 PARAM3 = LightAmp_LST; % TRIAL_LST;
 lblTxt3 = 'Light Stimulus amplitude (nA)'; %'Trial'; %
 saveTxt3 = 'GPmAmp'; %'trial';
@@ -82,7 +86,8 @@ ACT_Record = cell(ACT_Rec_size);
 
 % Directory
 
-dirLoc = 'Model1Min150403_TCconvergence/' ;
+dirLoc = 'Min150403_SumWTC/' ;
+
 [s,computername] = dos('ECHO %COMPUTERNAME%');
 switch computername
     case 'USER-PC'
@@ -104,17 +109,19 @@ for p1_ii = 1 : length(PARAM1)
             for p4_ii = 1 : length(PARAM4)
                 for p5_ii = 1 : length(PARAM5)
                     
-                    r_ii = p1_ii; wm_ii = p2_ii;
+                    r_ii = p1_ii; swm_ii = p2_ii;
                     la_ii = p3_ii;  m_ii = p4_ii; s_ii = p5_ii;
                     TRIAL_NO = 1;
                     
                     for cell_type = 1 : 2
-                        tmp = [];
+                        
                         if (cell_type == 1)
                             cTxt = 'WT';
                         elseif (cell_type == 2)
                             cTxt = 'KO';
                         end
+                        
+                        % PDfewBurst_GPmVLmd1_rTC120_wmTC10_WT_GPmInput_Amp0.3_Dur1000_GPmVLw_m0.06_sig0.01_InGauss0.2_IGmean-0.15_IGmeanSig0_W0.0015_SpecifiedPoisSpk_sig0.00Hz_T4000_trial3
                         
                         coreFileName = 'PDfewBurst_GPmVLmd1_0del' ;
                         
@@ -126,17 +133,21 @@ for p1_ii = 1 : length(PARAM1)
                         TSTOP = 4000;
                         GPmLightDur = 1000;
                         
-                        rTC = rTC_LST(r_ii);
-                        wmTC = wmTC_LST(wm_ii);
+                        rTC =rTC_LST(r_ii);
+                        %                         wmTC = wmTC_LST(wm_ii);
+                        specified_wmTC = specified_wmTC_LST(swm_ii);
+                        
                         
                         GPmLight = LightAmp_LST(la_ii);
                         GPm_w_mn = GPmVLw_mean_LST(m_ii);
                         GPm_w_sg = GPmVLw_sig_LST(s_ii);
                         
                         
-                        Simulation_Code = [coreFileName '_rTC' num2str(rTC) '_wmTC' num2str(wmTC) '_' cTxt '_' 'GPmInput_Amp' num2str(GPmLight) '_Dur' num2str(GPmLightDur) '_GPmVLw_m' num2str(GPm_w_mn) '_sig' num2str(GPm_w_sg) ...
+                        tmpstrW = sprintf('%g',specified_wmTC);
+                        Simulation_Code = [coreFileName '_rTC' num2str(rTC) '_specified_wmTC' tmpstrW '_' cTxt '_' 'GPmInput_Amp' num2str(GPmLight) '_Dur' num2str(GPmLightDur) '_GPmVLw_m' num2str(GPm_w_mn) '_sig' num2str(GPm_w_sg) ...
                             '_InGauss' num2str(InGauss_STDEV) '_IGmean' num2str(NoiseMEAN) '_IGmeanSig' num2str(IGmeanSig) '_W' num2str(W_Weight) '_SpecifiedPoisSpk_sig0.00Hz_T' num2str(TSTOP) '_trial' num2str(TRIAL_NO)];
-                        % PDfewBurst_GPmVLmd1_0del_rTC120_wmTC4_KO_GPmInput_Amp0.3_Dur1000_GPmVLw_m0.04_sig0_InGauss0.2_IGmean-0.15_IGmeanSig0_W0.0012_SpecifiedPoisSpk_sig0.00Hz_T4000_trial1
+                        % PDfewBurst_GPmVLmd1_0del_rTC300_specified_wmTC0.001454_KO_GPmInput_Amp0.5_Dur1000_GPmVLw_m0_sig0.5_InGauss0.2_IGmean0_IGmeanSig0_W0.029_SpecifiedPoisSpk_sig0.00Hz_T40_trial1
+                        
                         disp('==================================================================================================')
                         disp(Simulation_Code)
                         disp('######  Download M1 ')
@@ -242,7 +253,7 @@ end
 %%
 if(SAVE_BASAL_ACT)
     save([dirLoc dirFig 'Saved_Activity_result_' SPECIFIED_BASAL_ACT_CODENAME date '.mat' ], 'ACT_Record','PARAMETERS','-v7.3');
-  
+    
 end
 %%
 %% Plot the instantaneous average firing rate
@@ -347,7 +358,7 @@ for p1_ii = 1 : length(PARAM1)
     for p2_ii = 1 : length(PARAM2)
         
         BasalAct = ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii}.M1; %% for M1
-
+        
         M1_burstSpkWT(p1_ii,p2_ii) = mean(BasalAct.WT.All.BurstSpk)./BurstRange*1000;
         M1_burstSpkKO(p1_ii,p2_ii) = mean(BasalAct.KO.All.BurstSpk)./BurstRange*1000;
         
@@ -389,7 +400,7 @@ for p1_ii = 1 : length(PARAM1)
         tmpRebound_KO = tmpRebound_KO(tmpRebound_KO ~= 0); % Contain data of first spike latency
         
         hbin =5;
-        histBin = 1:hbin:size(BasalAct.WT.All.BurstSpkTrain,2); 
+        histBin = 1:hbin:size(BasalAct.WT.All.BurstSpkTrain,2);
         
         figure(fRB);
         
@@ -397,35 +408,35 @@ for p1_ii = 1 : length(PARAM1)
         [N,X] = hist(tmpRebound_WT,histBin );
         pH=bar(X,N/M1_ncells*100,'FaceColor','k','EdgeColor','k'); hold on; %Percent of Total Neuron
         cH = get(pH,'Children');
-            set(cH,'FaceAlpha',0.5); % 0 = transparent, 1 = opaque.
+        set(cH,'FaceAlpha',0.5); % 0 = transparent, 1 = opaque.
         [N,X] = hist(tmpRebound_KO,histBin );
         pH=bar(X,N/M1_ncells*100,'FaceColor','r','EdgeColor','r'); hold on;
         cH = get(pH,'Children');
-            set(cH,'FaceAlpha',0.5); % 0 = transparent, 1 = opaque.
+        set(cH,'FaceAlpha',0.5); % 0 = transparent, 1 = opaque.
         ylabel('% Neurons'); xlabel('Time(ms)'); xlim([0  BurstRange]);
         title(get_Parameters_titleText(PARAMETERS, [1,2], [ p1_ii,p2_ii]))
         
         % Distribution of spikes in bursting range
         
-        tmpRebound_WT = sum(BasalAct.WT.All.BurstSpkTrain); %# of spike at particular time 
+        tmpRebound_WT = sum(BasalAct.WT.All.BurstSpkTrain); %# of spike at particular time
         tmpRebound_KO = sum(BasalAct.KO.All.BurstSpkTrain);
         ll =length(tmpRebound_WT);
-        if mod(ll,hbin) == 0 
-           % Can use reshape fn. 
-           tmpRebound_WT = sum(reshape(tmpRebound_WT,[hbin ll/hbin]));
-           tmpRebound_KO = sum(reshape(tmpRebound_KO,[hbin ll/hbin]));
-           xx = histBin; 
+        if mod(ll,hbin) == 0
+            % Can use reshape fn.
+            tmpRebound_WT = sum(reshape(tmpRebound_WT,[hbin ll/hbin]));
+            tmpRebound_KO = sum(reshape(tmpRebound_KO,[hbin ll/hbin]));
+            xx = histBin;
         else %If not, just set bin to 1
             xx = 1:1:size(BasalAct.KO.All.BurstSpkTrain,2);
         end
         figure(fBspk);
         subplot(nR,nC,cnt);
-        pH=bar(xx,tmpRebound_WT/M1_ncells*100,'FaceColor','k','EdgeColor','k'); hold on; 
+        pH=bar(xx,tmpRebound_WT/M1_ncells*100,'FaceColor','k','EdgeColor','k'); hold on;
         cH = get(pH,'Children');
-            set(cH,'FaceAlpha',0.5); % 0 = transparent, 1 = opaque.
+        set(cH,'FaceAlpha',0.5); % 0 = transparent, 1 = opaque.
         pH=bar(xx,tmpRebound_KO/M1_ncells*100,'FaceColor','r','EdgeColor','r');
         cH = get(pH,'Children');
-            set(cH,'FaceAlpha',0.5); % 0 = transparent, 1 = opaque.
+        set(cH,'FaceAlpha',0.5); % 0 = transparent, 1 = opaque.
         ylabel('% Neurons'); xlabel('Time(ms)'); xlim([0  BurstRange]);
         title(get_Parameters_titleText(PARAMETERS, [1,2], [ p1_ii,p2_ii]))
         
@@ -445,7 +456,7 @@ if (SAVE_FIG)
     saveas(fBspk, [ffig '.jpg'] , 'jpg');
     
     if (Close_Fig_aftr_save)
-         close(fRB); close(fBspk);
+        close(fRB); close(fBspk);
     end
     
 end
@@ -453,17 +464,17 @@ end
 
 
 
-%% Parameters Matrix  rangeTC vs. weighing Factor for normFR_atBursting 
+%% Parameters Matrix  rangeTC vs. weighing Factor for normFR_atBursting
 %----- consider using Z-score with baseline activity as mean here
 % %// Sample data
 % matrix = rand(10, 10);
-% testData = rand(10, 10); 
-% 
+% testData = rand(10, 10);
+%
 % %// Obtain mu and sigma
 % mu = mean(matrix, 1);
 % sigma = std(matrix, [], 1);
 % %// or use: [Z, mu, sigma] = zscore(matrix);
-% 
+%
 % %// Convert into z-scores using precalculated mu and sigma
 % C = bsxfun(@rdivide, bsxfun(@minus, testData, mu), sigma);
 
@@ -497,7 +508,7 @@ if(SAVE_FIG)
     saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
 end
 
-%% M1 raw activity 
+%% M1 raw activity
 
 M1_burstSpkWT = zeros(length(PARAM1),length(PARAM2));
 M1_burstSpkKO = zeros(length(PARAM1),length(PARAM2));
@@ -505,7 +516,7 @@ for p1_ii = 1 : length(PARAM1)
     for p2_ii = 1 : length(PARAM2)
         BasalAct = ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii}.M1; %% for M1
         M1_burstSpkWT(p1_ii,p2_ii) = mean(BasalAct.WT.All.BurstSpk)./BurstRange*1000;
-        M1_burstSpkKO(p1_ii,p2_ii) = mean(BasalAct.KO.All.BurstSpk)./BurstRange*1000; 
+        M1_burstSpkKO(p1_ii,p2_ii) = mean(BasalAct.KO.All.BurstSpk)./BurstRange*1000;
     end
 end
 

@@ -168,8 +168,17 @@ CELL_TYPE = 1 //1 = WT, 2 = KO  ////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////
 //////////  Setting Directories 
-strdef postfixTxt, dirLoc, core 
-dirLoc ="SimResult/Min150403_SumWTC/" 
+strdef postfixTxt, dirLoc, core, hname
+
+dirLoc ="SimResult/Model1Min150403_TCconvergence/" 
+
+system("hostname",name)      
+if(strcmp("user-PC\n",name) == 0){ // Exp machine
+sprint(dirLoc,"/cygdrive/d/Pachaya/150313 Code/%s",dirLoc)
+} else{strcmp("VS lab-PC\n",name) == 0){ // office's machine
+sprint(dirLoc,"/cygdrive/e/PDmodelFewBurst/%s",dirLoc) // or chdir("/cygdrive/e/PDmodelFewBurst/")
+}
+
 
 /////////////////////////////////////////////////////////////////////////
 objref genseedlist
@@ -188,7 +197,7 @@ proc run_simulation() { ////////////////////// Simulation Function
 
 	if(MAKE_M1_LAYER ){
 	sprint(core,"%s_rTC%g",core,RANGE_TC )
-	sprint(core,"%s_specified_wmTC%.7f",core,SPECIFIED_W_TC)  //////////
+	sprint(core,"%s_wmTC%g",core,W_MULT_TC)
 	}
 
 
@@ -300,7 +309,7 @@ proc run_simulation() { ////////////////////// Simulation Function
 	}
 	
 	if(MAKE_M1_LAYER){ ///////////////////////////////////////////////////////////////
-	xopen("PD_thalamocorticalConn_normW_0delay.hoc") }
+	xopen("PD_thalamocorticalConn_0delay.hoc") }
 
 
 	if(POSTFIX){
@@ -476,27 +485,31 @@ W_GPm_VL_mean = W_POISSPK_GPm  // 0.04 :0.002 :0.10
 W_GPm_VL_sigma = 0.02 // 0.005 0.01 0.02 0.03
 */
 // Note rTC = 120 , wTC = 10
-/*
+
 objref W_GPm_VL_mean_LST,W_GPm_VL_sigma_LST 
 strdef CELLtxt
 
-Light_Stim_Amp = 0.5
+Light_Stim_Amp = 0.5 //0.4
 
 W_GPm_VL_mean_LST = new Vector(1) // 3
 //W_GPm_VL_mean_LST.indgen(0.5,0.3,-0.1) // .3 .4 .5 //0 0.05 0.15 0.2 
 W_GPm_VL_mean_LST.x(0) = 0.5
 
-W_GPm_VL_sigma_LST  = new Vector(1) // 3
-//W_GPm_VL_sigma_LST.indgen(0,0.1,0.05) // 0 0.05 0.1
-W_GPm_VL_sigma_LST.x(0) = 0
-
+W_GPm_VL_sigma_LST  = new Vector(1) // 
+//W_GPm_VL_sigma_LST.indgen(0.05,0,-0.01) // 0 0.05 0.1
+W_GPm_VL_sigma_LST.x(0) = 0 
 
 // TC conn
-W_MULT_TC = 1  /// 10 ..... 100   60 40 30
-W_SCALE_TC = W_SCALE 
-RANGE_TC = 120 // 120 = 20VL/M1 150= 30VL/M1  170=40VL/M1  190=50VL/M1  210=60VL/M1 
-sigTC = RANGE_TC/sqrt(2) /// Ex. RANGE_E = 200 , sigTC =  141.4214  // Ref: McLaughlin paper
+//W_MULT_TC = 21 /// 21 22.5 24 25  //20' 30' 40 50  -
+//W_SCALE_TC = W_SCALE 
+//RANGE_TC = 75 // '25 '50 55 60 65 70 '75  //10 25 50 75 100 150?
 
+W_MULT_TC = 60 // 20' 30' 40' 50'  : 60
+W_SCALE_TC = W_SCALE 
+RANGE_TC =  250  // 150 200 250    : 25' 50' 75' 100' 
+// start at rTC 75 wmTC 30    --> wmTC from 20 - 30 , rTC 50  -75
+
+sigTC = RANGE_TC/sqrt(2) /// Ex. RANGE_E = 200 , sigTC =  141.4214  // Ref: McLaughlin paper
 
 objref PARAM1, PARAM2
 PARAM1 =  W_GPm_VL_mean_LST
@@ -535,25 +548,21 @@ printf("========================= Finished all ========================\n")
 print "Total Runtime :: ", startsw()-t_loop
 print "\n"
 print "Time for everything = ",  startsw() - T_everythng
-*/
 
 
-objref RANGE_TC_LST
+
+/*
+objref RANGE_TC_LST,W_MULT_TC_LST 
 strdef CELLtxt
 
 RANGE_TC_LST = new Vector(1) 
-//RANGE_TC_LST.indgen(0,300,50) // 0 50 100
-RANGE_TC_LST.x(0) = 300
-//RANGE_TC_LST.x(0) = 150 // 120 130 140 150 
 
-
-Light_Stim_Amp = 0.5
-W_GPm_VL_sigma = 0
-W_GPm_VL_mean = 0.5
-
-SPECIFIED_W_TC = 0.002 /0.6
-//SPECIFIED_W_TC = 0.001454  /////////////////// one spike in VL drive M1 
-//SPECIFIED_W_TC = 0.001453 /////////////////// the weight just before one spike in VL drive M1 
+RANGE_TC_LST.x(0) = 150 // 120 130 140 150 
+//{ RANGE_TC_LST.x(0) =70   RANGE_TC_LST.x(1) = 100  RANGE_TC_LST.x(2) =150  RANGE_TC_LST.x(3) =200}
+W_MULT_TC_LST = new Vector(1)
+W_MULT_TC_LST.x(0) = 10// 4 5 6 7 8 10
+//W_MULT_TC_LST.indgen(0,150,50) // 0 50 100
+//W_MULT_TC_LST.x(0) =10 // 10 50 100
 
 CNT = 0
 t_loop = startsw()
@@ -562,24 +571,30 @@ RANGE_TC = RANGE_TC_LST.x(r_ii)
 printf("==========================================================\n")
 printf("RANGE of Thalamocortical connection #%g : %g\n", r_ii, RANGE_TC_LST.x(r_ii))
 printf("==========================================================\n")
+	for w_ii = 0 ,W_MULT_TC_LST.size-1 {
+	W_MULT_TC = W_MULT_TC_LST.x(w_ii) W_SCALE = 0.00001
+	printf("==========================================================\n")
+	printf("\tWEIGHT of Thalamocortical connection #%g Mult = %g  , Weight = %g\n", w_ii, W_MULT_TC_LST.x(w_ii), W_MULT_TC*W_SCALE_TC)
+	printf("==========================================================\n")
 		for CELL_TYPE = 1, 2{
 		if (CELL_TYPE == 1){
 		sprint(CELLtxt,"WT")
 		}else{ sprint(CELLtxt,"KO") }
 		printf("\t\t Cell type #%g : %s\n", CELL_TYPE, CELLtxt)
-		TSTOP =  4000 // tstop = 40 -> get TC conn info only
-		PoisSpkHz = 0
+		TSTOP = 3000
+		PoisSpkHz = 3
 
 		run_simulation(PoisSpkHz,TSTOP)
 		//rasterplot()
 		CNT = CNT + 1
 		printf("######################  Simulation#%g : RANGE_TC = %g\t,  W_MULT_TC = %g\t ###################### \n", CNT, RANGE_TC, W_MULT_TC)
-		
+		}
 	}
 printf("=========================End one big Loop ========================\n")
 }	
 printf("========================= Finished all ========================\n")
 
-print "Total Runtime :: ", startsw()- t_loop
+print "Total Runtime :: ", startsw()-t_loop
 print "\n"
 
+*/
