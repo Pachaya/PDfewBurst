@@ -1,5 +1,5 @@
 ////////////////// Local Cortical Connection in VL layer///////////////
-printf("Start Local Connection generation in M1 layer")
+printf("Start Local Connection generation in M1 layer\n")
 
 objref tmpVec, srclist_M1, tarlist_M1, conlist_M1, typelist_M1, ConMat_M1
 ConMat_M1 = new List()
@@ -321,6 +321,7 @@ strdef fname
 fout = new File()
 if (POSTFIX){
 sprint(fname,"%sSpatialConnectionParam_M1%s.txt",dirLoc,postfixTxt) 
+//sprint(fname,"%sSpatConnParam_M1%s.txt",dirLoc,postfixTxt) 
 }else{
 sprint(fname,"%sSpatialConnectionParam_M1.txt",dirLoc)
 }
@@ -330,6 +331,7 @@ fout.printf("%d\n",srclist_M1.size) //total number of connection
 foutWD = new File()
 if (POSTFIX){
 sprint(fname,"%sSpatialConnectionWDParam_M1%s.txt",dirLoc,postfixTxt) 
+//sprint(fname,"%sSpatialConnWD_M1%s.txt",dirLoc,postfixTxt) 
 }else{
 sprint(fname,"%sSpatialConnectionWDParam_M1.txt",dirLoc)
 }

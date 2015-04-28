@@ -181,7 +181,7 @@ proc run_simulation() { ////////////////////// Simulation Function
 	cIDrec = -1
 	//// * Make simulation's name
 	postfixTxt = ""
-	core = "PDfewBurst_GPmVLmd1_0del"
+	core = "PDfewBurst_GPmVLmd1_test"
 	if(MULT_PULSE){
 	sprint(core,"%s_%gHz_amp%g_dur%g_N%g",core,PulseHz, Input_I_Amp,Input_I_Dur,N_Pulses)
 	}
@@ -287,20 +287,21 @@ proc run_simulation() { ////////////////////// Simulation Function
 	{RUN_WEE = 0 RUN_WEI = 0 RUN_WIE = 0 RUN_WII = 0}
 	}
 
-	xopen("PD_LocalConn_SeparateItype.hoc")
+	xopen("PD_LocalConn_SeparateItype.hoc") printf( "////// Setting Local VL Connection /////")
 
 	if(MAKE_M1_LAYER){
 	if(LOCAL_CONNECT_M1){
 	{RUN_WEE_M1 = 1 RUN_WEI_M1 = 1 RUN_WIE_M1 = 1 RUN_WII_M1 = 1 }
-	xopen("PD3_LocalConn_M1_SeparateItype.hoc")
+	xopen("PD3_LocalConn_M1_SeparateItype.hoc") printf( "////// Setting Local M1 Connection /////")
 	}else{
 	{RUN_WEE_M1 = 0 RUN_WEI_M1 = 0 RUN_WIE_M1 = 0 RUN_WII_M1 = 0}
-	xopen("PD3_LocalConn_M1_SeparateItype.hoc")
+	xopen("PD3_LocalConn_M1_SeparateItype.hoc") printf( "////// Setting Local M1 Connection /////")
 	} 
 	}
 	
 	if(MAKE_M1_LAYER){ ///////////////////////////////////////////////////////////////
-	xopen("PD_thalamocorticalConn_normW_0delay.hoc") }
+	xopen("PD_thalamocorticalConn_normW_0delay.hoc")  printf( "////// Setting Thalamocortical Connection /////")
+	}
 
 
 	if(POSTFIX){

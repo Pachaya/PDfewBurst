@@ -1,0 +1,106 @@
+
+//Main Code
+load_file("nrngui.hoc") //load basics library
+T_everythng = startsw()
+load_file("ranstream.hoc") //for InGauss random seed
+load_file("PD_Parameters.hoc") //Parameters
+////////////////////////////////////////////////////
+// Make M1 layer or not? , Add I cells to VL and M1 or not?
+MAKE_M1_LAYER = 1  
+ADD_I_to_M1 = 0
+ADD_I_to_VL = 0
+////////////////////////////////////////////////////////
+load_file("PDfb_CellsTemplate_FewBurstModel1.hoc") //load basics library  Note: Parameters for Cells template are specified inside
+
+
+
+objref spkTrain, spkTrainI
+objref InSpk,InSpkI, WT, WTdelCaT, KO , KOaddCaT
+
+WT = new WT_Cell()
+WTdelCaT = new WT_Cell()
+WTdelCaT.soma.gmax_CaT = 0
+
+KO = new KO_Cell()
+KOaddCaT = new KO_Cell()
+access KOaddCaT.soma
+insert CaT
+	KOaddCaT.soma.gmax_CaT = GCaMAX_CaT
+	KOaddCaT.soma.eca= ECa_CaT
+
+
+InSpk = new In_spk_VecStim()
+InSpkI = new In_spk_VecStim()
+spkTrain = new Vector()
+spkTrain.indgen(15,500,100) //  10      25      40      55      70
+spkTrainI = new Vector()
+
+spkTrainI = spkTrain.c 
+spkTrainI.add(50)
+//spkTrainI.indgen(15,500,100)
+tstop = 500
+
+InSpk.pp.play(spkTrain)
+InSpkI.pp.play(spkTrainI)
+
+// Connection
+
+objref connlist
+connlist = new List()
+
+connlist.append(InSpk.connect2target(WT.synlist.o(0)))
+connlist.append(InSpk.connect2target(WTdelCaT.synlist.o(0)))
+connlist.append(InSpk.connect2target(KO.synlist.o(0)))
+connlist.append(InSpk.connect2target(KOaddCaT.synlist.o(0)))
+
+connlist.append(InSpkI.connect2target(WT.synlist.o(1)))
+connlist.append(InSpkI.connect2target(WTdelCaT.synlist.o(1)))
+connlist.append(InSpkI.connect2target(KO.synlist.o(1)))
+connlist.append(InSpkI.connect2target(KOaddCaT.synlist.o(1)))
+
+load_file("TestNetconnW_plot.ses")
+
+WW = 0.029
+WW_I = 0.029
+double WA[tstop] // array with 1ms resolution
+for ii = 0, tstop /2 {
+WA[ii] = WW
+}
+for ii = tstop / 2 + 1 , tstop -1 {
+WA[ii] = -WW
+}
+
+
+
+
+proc setW(){local ii
+for ii = 0, connlist.count-1 {
+connlist.o(ii).weight = WW
+connlist.o(ii).delay = 0
+}
+}
+
+proc setW_Exc(){local ii
+for ii = 0, 3 {
+connlist.o(ii).weight = WW
+connlist.o(ii).delay = 0
+}
+}
+setW_Exc()
+
+proc setW_Inh(){local ii
+for ii = 4, 7 {
+connlist.o(ii).weight = WW_I
+connlist.o(ii).delay = 0
+}
+}
+setW_Inh()
+
+proc setWA(){local ii
+for ii = 0, connlist.count-1 {
+connlist.o(ii).weight = WA
+connlist.o(ii).delay = 0
+}
+}
+
+

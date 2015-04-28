@@ -78,6 +78,12 @@ PoisSpkHz = 0
 VARIE_FR_POISSPK = 1 // Vary input spike frequency
 FR_POISSPK_VL_mean = PoisSpkHz //** Done Implementation **
 FR_POISSPK_VL_sigma = 0
+OSCILLATE_IN_SPKTRAIN = 1  
+// meanFR =  PoisSpkHz or read from file in the case of specified input for each cell
+OSC_F = 10 //40 = gamma, 20 = beta
+PHASE = 0 // in radians
+// osc_amp =  meanFR / 3
+
 
 ////* ICLamp = Current Clamp :: Photoactivation modeled as IClamp // If inject to VL -> Cell is hyperpolarized
 INSERT_I_INPUT = 0 // Insert photoactivation or not
@@ -170,7 +176,7 @@ CELL_TYPE = 1 //1 = WT, 2 = KO  ////////////////////////////////////////////////
 //////////  Setting Directories 
 strdef postfixTxt, dirLoc, core, hname
 
-dirLoc ="SimResult/Model1Min150403_TCconvergence/" 
+dirLoc ="SimResult/Test_Osc_Input/" 
 
 system("hostname",hname)      
 if(strcmp("user-PC\n",hname) == 0){ // Exp machine
@@ -192,7 +198,7 @@ proc run_simulation() { ////////////////////// Simulation Function
 	cIDrec = -1
 	//// * Make simulation's name
 	postfixTxt = ""
-	core = "PDfewBurst_GPmVLmd1_0del"
+	core = "GPmVLmd1_0del"
 	if(MULT_PULSE){
 	sprint(core,"%s_%gHz_amp%g_dur%g_N%g",core,PulseHz, Input_I_Amp,Input_I_Dur,N_Pulses)
 	}
@@ -257,6 +263,11 @@ proc run_simulation() { ////////////////////// Simulation Function
 				 printf("******************************************* LOAD ********************************************")
 				 }
 			}
+			
+				if(OSCILLATE_IN_SPKTRAIN){
+				sprint(postfixTxt,"%s_oscF%gHz_phase%g",postfixTxt,OSC_F, PHASE)
+				}
+	
 	}
 
 	/*if(MULT_TRIAL){
@@ -273,22 +284,22 @@ proc run_simulation() { ////////////////////// Simulation Function
 	}
     //// * Finish Making file name *////
 	// xopen("PD_NetGenn.hoc") printf( "////// Generate VL network /////")
-	xopen("PD4_NetGenn_param_SpecifiedFr_VarySig.hoc") printf( "////// Generate VL network /////")
+	xopen("PD4_NetGenn_param_SpecifiedFr_VarySig_oscIn.hoc") printf( "////// Generate VL network /////")
 
 	if(GPM_INPUT_to_VL){
-	xopen("PD_NetGenn_GPm_signFlip_varyW.hoc")   printf( "////// Generate GPm network /////")
+	xopen("PD_NetGenn_GPm_signFlip_varyW.hoc")   printf( "////// Generate GPm network /////\n")
 	}
 	if(MAKE_M1_LAYER){
-	xopen("PD3_NetGenn_M1_separateI_signFlip.hoc")   printf( "////// Generate M1 network /////") 
+	xopen("PD3_NetGenn_M1_separateI_signFlip.hoc")   printf( "////// Generate M1 network /////\n") 
 	}
-	xopen("PD_NetSimRec_pulses.hoc")  printf( "////// Generate vector recordings in VL network simulation /////")
+	xopen("PD_NetSimRec_pulses.hoc")  printf( "////// Generate vector recordings in VL network simulation /////\n")
 	if(MAKE_M1_LAYER){
-	xopen("PD_NetSimRec_M1.hoc")  printf( "////// Generate vector recordings in M1 network simulation /////")
+	xopen("PD_NetSimRec_M1.hoc")  printf( "////// Generate vector recordings in M1 network simulation /////\n")
 	}
 
 	t1 = startsw()
 	print "tstop = ",tstop
-	printf("random_stream_offset_ = (tstop+1000)*1/dt = %f\n",random_stream_offset_ ) 
+	printf("\nrandom_stream_offset_ = (tstop+1000)*1/dt = %f\n",random_stream_offset_ ) 
 
 	///////// Connection Specification ///////// 
 
@@ -298,20 +309,20 @@ proc run_simulation() { ////////////////////// Simulation Function
 	{RUN_WEE = 0 RUN_WEI = 0 RUN_WIE = 0 RUN_WII = 0}
 	}
 
-	xopen("PD_LocalConn_SeparateItype.hoc")
+	xopen("PD_LocalConn_SeparateItype.hoc")  printf( "////// Finish Setting Local VL Connection /////\n")
 
 	if(MAKE_M1_LAYER){
 	if(LOCAL_CONNECT_M1){
 	{RUN_WEE_M1 = 1 RUN_WEI_M1 = 1 RUN_WIE_M1 = 1 RUN_WII_M1 = 1 }
-	xopen("PD3_LocalConn_M1_SeparateItype.hoc")
+	xopen("PD3_LocalConn_M1_SeparateItype.hoc")   printf( "////// Finish Setting Local M1 Connection /////\n")
 	}else{
 	{RUN_WEE_M1 = 0 RUN_WEI_M1 = 0 RUN_WIE_M1 = 0 RUN_WII_M1 = 0}
-	xopen("PD3_LocalConn_M1_SeparateItype.hoc")
+	xopen("PD3_LocalConn_M1_SeparateItype.hoc")  printf( "////// Finish Setting Local M1 Connection /////\n")
 	} 
 	}
 	
 	if(MAKE_M1_LAYER){ ///////////////////////////////////////////////////////////////
-	xopen("PD_thalamocorticalConn_0delay.hoc") }
+	xopen("PD_thalamocorticalConn_0delay.hoc") printf( "////// Setting Thalamocortical Connection /////\n") }
 
 
 	if(POSTFIX){
@@ -419,7 +430,7 @@ PoisSpkHz = 0 //25 50 75 100 200
 /////////////////////////////////// Uncomment the following line for one time run 
 //run_simulation(PoisSpkHz,TSTOP)   
 
-objref avgFrVec
+//objref avgFrVec
 //avgFrVec = GetAvgFr_VL_All()
 //saveRecordSeed()
 //rasterplot()
@@ -488,11 +499,26 @@ W_GPm_VL_sigma = 0.02 // 0.005 0.01 0.02 0.03
 */
 // Note rTC = 120 , wTC = 10
 
-objref W_GPm_VL_mean_LST,W_GPm_VL_sigma_LST 
-strdef CELLtxt
 
-Light_Stim_Amp = 0.6 //0.4 0.03 0.5'
+
+
+objref W_GPm_VL_mean_LST,W_GPm_VL_sigma_LST , OSC_F_LST, OSC_phase_LST
+strdef CELLtxt
+objref PARAM1, PARAM2
+
+
+OSC_F_LST  = new Vector(2)
+OSC_F_LST.x(0) = 20 //40 = gamma, 20 = beta
+OSC_F_LST.x(1) = 40 //40 = gamma, 20 = beta
+
+OSC_phase_LST  = new Vector(1)
+OSC_phase_LST.x(0) = 0 //40 = gamma, 20 = beta
+
+Light_Stim_Amp = 0.5 //0.4 0.03 0.5' 0.6
 Light_Stim_Dur = 500 // 500 , 1000
+
+W_GPm_VL_mean = 0.5
+W_GPm_VL_sigma = 0
 
 W_GPm_VL_mean_LST = new Vector(1) // 3
 //W_GPm_VL_mean_LST.indgen(0.5,0.3,-0.1) // .3 .4 .5 //0 0.05 0.15 0.2 
@@ -502,39 +528,41 @@ W_GPm_VL_sigma_LST  = new Vector(1) //
 //W_GPm_VL_sigma_LST.indgen(0.05,0,-0.01) // 0 0.05 0.1
 W_GPm_VL_sigma_LST.x(0) = 0 
 
-// TC conn
-//W_MULT_TC = 21 /// 21 22.5 24 25  //20' 30' 40 50  -
-//W_SCALE_TC = W_SCALE 
-//RANGE_TC = 75 // '25 '50 55 60 65 70 '75  //10 25 50 75 100 150?
-
-//W_MULT_TC = 60 // 20' 30' 40' 50'  : 60
-//W_SCALE_TC = W_SCALE 
-//RANGE_TC =  250  // 150 200 250    : 25' 50' 75' 100' 
-// start at rTC 75 wmTC 30    --> wmTC from 20 - 30 , rTC 50  -75
-
-// 250 20 , 250 30 , 200 30, 150 40
-W_MULT_TC = 20
+W_MULT_TC = 50 //20 30 40 50
 W_SCALE_TC = W_SCALE 
-RANGE_TC = 150
+RANGE_TC =  150 // 25 75 100 150 200 250 <50?>
 
-// 150 20  , 75 60, 100 40 
+//(r 250&20)  (r 100&50)   (r 150&50)
+
+
 sigTC = RANGE_TC/sqrt(2) /// Ex. RANGE_E = 200 , sigTC =  141.4214  // Ref: McLaughlin paper
 
-objref PARAM1, PARAM2
-PARAM1 =  W_GPm_VL_mean_LST
-PARAM2 = W_GPm_VL_sigma_LST 
+
+PARAM1 =  OSC_F_LST
+PARAM2 =  OSC_phase_LST // meanFR =  PoisSpkHz or read from file in the case of specified input for each cell
 
 CNT = 0
 t_loop = startsw()
+/*
+// Run one parameter set
+OSC_F = 20 //40
+PHASE =0 
+CELL_TYPE = 2 //2
+TSTOP = 4000
+PoisSpkHz = 0
+*/
+//run_simulation(PoisSpkHz,TSTOP)
+	
+
 for p1_ii = 0 ,PARAM1.size-1 {
-W_GPm_VL_mean = PARAM1.x(p1_ii)
+OSC_F = PARAM1.x(p1_ii)
 printf("==========================================================\n")
-printf("Mean of weight of GPm - VL connection #%g : %g\n", p1_ii, PARAM1.x(p1_ii))
+printf("Frequency of oscillating input #%g : %g\n", p1_ii, PARAM1.x(p1_ii))
 printf("==========================================================\n")
 	for p2_ii = 0 ,PARAM2.size-1 {
-	W_GPm_VL_sigma = PARAM2.x(p2_ii)
+	 PHASE = PARAM2.x(p2_ii)
 	printf("==========================================================\n")
-	printf("\tSigma of weight of GPm - VL connection #%g : %g\n" , p2_ii, PARAM2.x(p2_ii))
+	printf("\tPhase of oscillating input #%g : %g\n" , p2_ii, PARAM2.x(p2_ii))
 	printf("==========================================================\n")
 		for CELL_TYPE = 1, 2{
 		if (CELL_TYPE == 1){
@@ -553,6 +581,7 @@ printf("==========================================================\n")
 printf("=========================End one big Loop ========================\n")
 }	
 printf("========================= Finished all ========================\n")
+
 
 print "Total Runtime :: ", startsw()-t_loop
 print "\n"

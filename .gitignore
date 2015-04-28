@@ -6,6 +6,9 @@ special
 *.c
 *.o
 *.csv
+*.stackdump
+*.dll
 SimResult/
 x86_64/
 .DS_Store
+
