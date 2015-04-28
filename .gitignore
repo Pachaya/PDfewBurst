@@ -8,6 +8,7 @@ special
 *.csv
 *.stackdump
 *.dll
+*.zip
 SimResult/
 x86_64/
 .DS_Store
