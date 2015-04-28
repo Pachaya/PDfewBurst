@@ -320,7 +320,7 @@ obfunc  poissonGenerator() { local tmpr,ii localobj rr, spktrain, spktime, p
 	p = new Vector(spktrain.size, $4/(1000/$2))
 	if(OSCILLATE_IN_SPKTRAIN ) { 
 	// FR = A sin(2*pi*f + phase)
-	p = OscilatingInputFR(OSC_F, PHASE,$4/,$4, $2, $3) // // $1 = osc_f, $2 = phase (in rad), $3 = osc_amp, $4 = meanFR, $5 = resolution/ steps_per_ms , $6 = time = tstop 
+	p = OscilatingInputFR(OSC_F, PHASE,$4/OSC_rltAmp,$4, $2, $3) // // $1 = osc_f, $2 = phase (in rad), $3 = osc_amp, $4 = meanFR, $5 = resolution/ steps_per_ms , $6 = time = tstop 
 	p.div(1000/$2) // chance of spike to happen 
 	}
 	//p = $4/(1000/$2)
