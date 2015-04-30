@@ -393,7 +393,7 @@ if (INSERT_SPK_to_E && INSERT_SPK_to_I){ // Insert spike train to both E & I cel
 				Input_spk_avg_fr = R_FR_POISSPK_VL.repick() 
 				if(Input_spk_avg_fr < 0 ){ Input_spk_avg_fr = 0}
 			}else{
-					R_FR_POISSPK_VL.normal(Specified_Spk_Input_Fr.x(i), FR_POISSPK_VL_sigma*FR_POISSPK_VL_sigma )
+					R_FR_POISSPK_VL.normal(Specified_Spk_Input_Fr.x(i), FR_POISSPK_VL_sigma*FR_POISSPK_VL_sigma ) // Warning : If do not specified spike input for each cell -> declare Specified_Spk_Input_Fr  as Vector in maincode first
 					Input_spk_avg_fr = R_FR_POISSPK_VL.repick()
 					if(Input_spk_avg_fr < 0 ){ Input_spk_avg_fr = 0}
 				 }
