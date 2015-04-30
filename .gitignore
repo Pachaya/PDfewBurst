@@ -5,10 +5,11 @@ special
 *.lo
 *.c
 *.o
-*.csv
+*.asv
 *.stackdump
 *.dll
 *.zip
+*.csv
 SimResult/
 x86_64/
 .DS_Store

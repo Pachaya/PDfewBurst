@@ -2,9 +2,11 @@
 close all
 clear all
 
-dirLoc = 'ResFunc_cellType/';
+PATH= SetPath();
+dirLoc = [PATH 'ResFunc_cellType/'];
 dirFig = 'Fig150430/';
 mkdir([dirLoc dirFig])
+
 simCode  = 'ResFunc';
 CoreName = '';
 
@@ -21,7 +23,7 @@ W_SPK = 0.029;
 W_VL_M1 = 0.002/Nsample ;
 
 
-InputFR_LST = [5:5:100];
+InputFR_LST = [5 10:15 20:5:35 ]; % [5:5:100];
 SynchLvl_LST = [0];%[0:1/Nsample:1];
 W_VL_M1_LST = [0.0001 : 0.0002 : 0.0001*Nsample]; %[0.0001 : 0.0001 : 0.0001*Nsample];
 
