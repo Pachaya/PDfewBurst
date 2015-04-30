@@ -237,13 +237,13 @@ for p1_ii = 1 : length(PARAM1)
                     
                     Basal_Act.VL = VL;
                     Basal_Act.M1 = M1;
+                    ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii } = Basal_Act;
                     
                     % T-Test goes here // Remove in load_and_$$$$ series
                     % for faster runtime
-                    
                 end
                 
-                ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii } = Basal_Act;
+                
                 
                 clear Basal_Act
             end

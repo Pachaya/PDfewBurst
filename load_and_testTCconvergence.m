@@ -532,6 +532,41 @@ if(SAVE_FIG)
     saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
 end
 
+%% No Text 
+
+M1_burstSpkWT = zeros(length(PARAM1),length(PARAM2));
+M1_burstSpkKO = zeros(length(PARAM1),length(PARAM2));
+for p1_ii = 1 : length(PARAM1)
+    for p2_ii = 1 : length(PARAM2)
+        BasalAct = ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii}.M1; %% for M1
+        M1_burstSpkWT(p1_ii,p2_ii) = mean(BasalAct.WT.All.BurstSpk)./BurstRange*1000;
+        M1_burstSpkKO(p1_ii,p2_ii) = mean(BasalAct.KO.All.BurstSpk)./BurstRange*1000; 
+    end
+end
+
+SAVE_FIG = 1;
+xt = PARAM2; yt = PARAM1;
+xl = titleTxt2; yl =titleTxt1;
+suptitleTxt = 'Average firing rate of M1 during bursting range';
+[ fg_M1FR ] = plotFigure_paramMat_noTxt( M1_burstSpkWT,M1_burstSpkKO, tt1,tt2, xl,yl, xt,yt, suptitleTxt,figLoc );
+if(SAVE_FIG)
+    fg = fg_M1FR;
+    figname = ['M1FR_atBursting' get_Parameters_RangeTxt( PARAMETERS,[1,2])];
+    saveas(fg,[dirLoc dirFig figname '.fig'],'fig');
+    saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
+end
+
+xt = PARAM2; yt = round(VLperM1);
+xl = titleTxt2; yl =  'Average number of VL per M1 (cell)';
+suptitleTxt = 'Average firing rate of M1 during bursting range';
+[ fg_M1FRnumVL ] = plotFigure_paramMat_noTxt( M1_burstSpkWT,M1_burstSpkKO, tt1,tt2, xl,yl, xt,yt, suptitleTxt,figLoc );
+if(SAVE_FIG)
+    fg = fg_M1FRnumVL;p
+    figname = ['M1FR_atBurstingNumVL' get_Parameters_RangeTxt( PARAMETERS,[1,2])];
+    saveas(fg,[dirLoc dirFig figname '.fig'],'fig');
+    saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
+end
+
 
 %%
 if(SAVE_WORKSPACE)

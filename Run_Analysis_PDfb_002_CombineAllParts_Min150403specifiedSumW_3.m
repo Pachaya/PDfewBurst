@@ -47,7 +47,7 @@ ADD_I_to_M1 = 0;
 ADD_I_to_VL = 0;
 
 FIG_ALL = 0;
-dirFig = 'specified_wmTC0.002div_forVL/';
+dirFig = 'TestRunDelete/' ; %'specified_wmTC0.002div_forVL/';
 mkdir([dirLoc dirFig])
 TSTOP = 4000;
 

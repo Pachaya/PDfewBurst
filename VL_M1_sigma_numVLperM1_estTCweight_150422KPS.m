@@ -59,7 +59,9 @@ subplot(212)
 hist(nearestVLofM1,100); title(['Distribution of nearest VL of each M1 cell (E cell only), average = ' num2str(mean(nearestVLofM1))]);
 
 %% Get Center Cell ID 
+if(0)
 RangeTC_List = 10 :10:320; %max about 300
+% RangeTC_List = 150;
 avgVL_M1 = zeros(length(RangeTC_List),1);
 for isig = 1 : length(RangeTC_List)
     
@@ -113,7 +115,7 @@ axis equal xy
 
 end
 %% 
-
+end
 % TC range = 10 after sqrt2 =7.0711
 % Average number of VL connection to M1 is approximately = 0.13368
 % TC range = 20 after sqrt2 =14.1421
@@ -191,6 +193,27 @@ xlabel('Thalamocortical connection range(um)')
 ylabel('average #VL/M1')
 title('TC range VS. average # of VL connection per M1')
 
+%% for Center ID
+
+bordersize = 622;
+ssize = 1500; LowerBorder = bordersize ; UpperBorder = ssize-bordersize ;
+THRESHOLD = -55; RES = 1; %temporal resolution of one bin
+CUTTIME = 500;
+% VL to     M1  : 60 ----> 210
+% VL to     M1  : 50 ----> 190
+% VL to     M1  : 40 ----> 170
+if(LowerBorder > ssize/2)
+    disp(['Error:: The sigma is too big for this neural patch'] )
+end
+getCenterPart = 1;
+
+if(getCenterPart)
+%get Center Part
+centerID_VL = find((VL_Epos(:,1) > LowerBorder) & (VL_Epos(:,1) <UpperBorder)&(VL_Epos(:,2) > LowerBorder) & (VL_Epos(:,2) <UpperBorder));
+centerID_M1 = find((M1_Epos(:,1) > LowerBorder) & (M1_Epos(:,1) <UpperBorder)&(M1_Epos(:,2) > LowerBorder) & (M1_Epos(:,2) <UpperBorder));
+NcenterE_VL = length(centerID_VL); NcenterE_M1 = length(centerID_M1); 
+end
+disp(NcenterE_M1)
 %% get center ID VL
 figure; 
 scatter(VL_Epos(:,1), VL_Epos(:,2),20,'r'); axis square
@@ -213,6 +236,10 @@ for ii = 1:length(centerID_M1)
     title(['#' num2str(ii) ': ' num2str(centerID_M1(ii))])
     k = waitforbuttonpress;
 end
+
+figure; 
+    scatter(M1_Epos(centerID_M1,1), M1_Epos(centerID_M1,2),'.k'); axis square    ; hold on;
+    scatter(NNloc_M1(:,2,1), NNloc_M1(:,3,1),'.g'); axis square    
 %%% Center ID = centerID_M1(87) => 2816
 % scatter(VL_Epos(:,1), VL_Epos(:,2),50,'b'); axis square
 % scatter(VL_Epos(centerID_VL(19),1), VL_Epos(centerID_VL(19),2),'.g'); axis square

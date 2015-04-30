@@ -1,5 +1,6 @@
 %%%%%%%% Experimental Data Analysis
 %%% Experiment data of base line activity (200 s during light off)
+close all
 WTWT_MS = [25.74821853	27.39890124
 16.52706588	25.9163684
 3.50543818	11.93101112
@@ -227,7 +228,7 @@ X= KOKO;
 KO_Expected_input = 64.78 * exp(0.0147*X) - 64.67 ; 
 
 
- Codename = 'PoisInputFr150403_leastW_newExp';
+ Codename = 'deltThisFold'; %'PoisInputFr150403_leastW_newExp';
  dirLoc = [Codename '\'];
  mkdir(dirLoc)
 % distribution of expected input
@@ -259,8 +260,8 @@ for nn = 1 : N_TRIAL
 
 TRIAL = nn;
 
-dlmwrite([dirLoc Codename '_WT_' num2str(TRIAL) '.txt'],[N_CELL; Input_FR_WT(:,nn)],'delimiter','\n')
-dlmwrite([dirLoc Codename '_KO_' num2str(TRIAL) '.txt'],[N_CELL; Input_FR_KO(:,nn)],'delimiter','\n')
+% dlmwrite([dirLoc Codename '_WT_' num2str(TRIAL) '.txt'],[N_CELL; Input_FR_WT(:,nn)],'delimiter','\n')
+% dlmwrite([dirLoc Codename '_KO_' num2str(TRIAL) '.txt'],[N_CELL; Input_FR_KO(:,nn)],'delimiter','\n')
 disp('WRITE')
 
 myl = 50;

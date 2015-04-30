@@ -56,7 +56,7 @@ rTC_LST = [10 50:50:300];
 wmTC_LST = [1];
 
 sumW = 0.001454;
-specified_wmTC_LST = sumW./[0.4];
+specified_wmTC_LST = sumW./[1 0.8 0.6 0.4 0.2 0.1];
 
 LightAmp_LST = [0.5; ];
 GPmVLw_mean_LST = [0.5;];
