@@ -561,6 +561,8 @@ CNT = 0
 t_loop = startsw()
 
 INPUT_POISSON = 10
+MEAN = 0
+
 
 /*
 // Run one parameter set

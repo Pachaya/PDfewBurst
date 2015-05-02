@@ -509,7 +509,7 @@ objref PARAM1, PARAM2
 
 
 OSC_F_LST  = new Vector(1)
-OSC_F_LST.x(0) = 20 //40 = gamma, 20 = beta
+OSC_F_LST.x(0) = 40 //40 = gamma, 20 = beta
 //OSC_F_LST.x(1) = 40 //40 = gamma, 20 = beta
 
 OSC_rltAmp_LST = new Vector(4) 
@@ -537,7 +537,7 @@ W_GPm_VL_sigma_LST.x(0) = 0
 
 W_MULT_TC = 50 //20 30 40 50
 W_SCALE_TC = W_SCALE 
-RANGE_TC =  250 // 25 75 100 150 200 250 <50?>
+RANGE_TC =  250// 25 75 100 150 200 250 <50?>
 
 //(r 250&20)  (r 100&50)   (r 150&50)
 
@@ -552,6 +552,7 @@ CNT = 0
 t_loop = startsw()
 
 INPUT_POISSON = 10
+MEAN = -10 // -0.01 -0.1 -0.5 -1 -5 -10 
 
 /*
 // Run one parameter set
@@ -563,9 +564,9 @@ PoisSpkHz = 0
 */
 //run_simulation(PoisSpkHz,TSTOP)
 	
-N_Trial = 10
+N_Trial = 1
 SHOW_GUI = 0
-for TRIAL_NO = 6 , N_Trial {	
+for TRIAL_NO = 1 , N_Trial {	
 	printf("==========================================================\n")
 	printf("\tTRIAL NO = %g\n" , TRIAL_NO)
 	printf("==========================================================\n")
