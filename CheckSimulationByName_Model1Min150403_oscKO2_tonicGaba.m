@@ -39,8 +39,8 @@ ncells = 1150;
 M1_ncells = 166;
 TRIAL_LST = 1 : NUM_TRIAL;
 
-rTC_LST = 250; % [50 100 150 200 250 ]; %
-wmTC_LST = 50; %[20 30 40 50 100]; %[10 25 50 75 100];
+rTC_LST = 100; % [50 100 150 200 250 ]; %
+wmTC_LST = 40; %[20 30 40 50 100]; %[10 25 50 75 100];
 
 LightAmp_LST = [0.5];
 LightDur_LST = [1000];
@@ -48,11 +48,11 @@ GPmVLw_mean_LST = [ 0.5];
 GPmVLw_sig_LST =[0];
 
 OSC_F_LST = [20 40];
-OSC_Amp_LST = [0 1/3 1/2 1];
+OSC_Amp_LST = [0 1/2 1];
 OSC_phase_LST = 0;
 
 TRIAL_NO_LST = 1;
-Noise_MEAN_LST = [ -0.01 -0.1 -0.5 -1 -5 -10];
+Noise_MEAN_LST = [ -0.5 -1 -1.4 -1.5 -1.6 -2 ];
 
 PARAM1 = rTC_LST;
 lblTxt1 = 'Range of thalamocortical connection';
@@ -144,7 +144,7 @@ for p1_ii = 1 : length(PARAM1)
                         NoiseMEAN = Noise_MEAN_LST(g_ii);
                         IGmeanSig = 0;
                         W_Weight = 0.029;
-                        PoisInputFr = 10;
+                        PoisInputFr = 20;
                         TSTOP = 3000;
 %                         GPmLightDur = LightDur_LST(ld_ii);
                         

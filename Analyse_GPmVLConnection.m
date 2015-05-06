@@ -184,7 +184,7 @@ for p3_ii = 1 : length(PARAM3)
             la_ii = p4_ii; m_ii = p3_ii; s_ii = 1; ld_ii = p5_ii;
             
             cnt = cnt +1;
-            BasalAct = ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii}.VL;
+  BasalAct = ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii}.VL;
             hbin = 2 ;
             histBin = 1:hbin:size(BasalAct.WT.All.BurstSpkTrain,2); 
           
