@@ -17,7 +17,7 @@ title(tt1);
 txtshift = 0.3;
 for ii = 1 : length(yt)
     for jj = 1 : length(xt)       
-        tmpTxt = num2str(data1(ii,jj));
+        tmpTxt = sprintf('%2.4f', data1(ii,jj));
         if(data1(ii,jj) > caxis2/2)
         text(jj-txtshift,ii,tmpTxt,'Color','k','FontSize', 12)
         else 
@@ -36,7 +36,7 @@ title(tt2);
 
 for ii = 1 : length(yt)
     for jj = 1 : length(xt)       
-        tmpTxt = num2str(data2(ii,jj));
+         tmpTxt = sprintf('%2.4f', data2(ii,jj));
         if(data2(ii,jj) > caxis2/2)
         text(jj-txtshift,ii,tmpTxt,'Color','k','FontSize', 12)
         else 

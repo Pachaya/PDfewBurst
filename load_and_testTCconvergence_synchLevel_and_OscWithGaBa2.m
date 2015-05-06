@@ -1,0 +1,536 @@
+
+clc
+close all
+clear all
+WT = [];
+KO = [];
+tmp = [];
+%NoiseSTDEV_List = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+RES = 1; %1 bin = 1 ms
+
+% Controlling saveing
+SAVE_WORKSPACE = 1;
+SAVE_BASAL_ACT = 1; SPECIFIED_BASAL_ACT_CODENAME = '';
+SAVE_FIG = 1; Close_Fig_aftr_save = 1;
+% Statistical - Test
+DoTTest = 0;
+%raster plot
+plotSampleV = 0;
+
+
+% Simulation setting
+avgFR_CUTTIME = 500;
+% PhotoInjT = 1500;
+% InjStopT = PhotoInjT+Input_I_dur;
+% DelayT = 0;
+% BurstRange = 100;
+% CUTTIME = avgFR_CUTTIME;
+TSTOP = 3000;
+
+CUTTIME = 500;
+PhotoInjT = 500;% 1500;
+PhotoStop = 2000;
+DelayT = 0;
+BurstRange = 0;
+BaselineT = 3000;
+% Parameters setting
+NUM_TRIAL = 5;
+ncells = 1150;
+M1_ncells = 166;
+TRIAL_LST = 1 : NUM_TRIAL;
+
+rTC_LST = 100; % [50 100 150 200 250 ]; %
+wmTC_LST = 40; %[20 30 40 50 100]; %[10 25 50 75 100];
+
+LightAmp_LST = [0.5];
+LightDur_LST = [1000];
+GPmVLw_mean_LST = [ 0.5];
+GPmVLw_sig_LST =[0];
+
+OSC_F_LST = [20 40];
+OSC_Amp_LST = [0 1/2 1];
+OSC_phase_LST = 0;
+
+TRIAL_NO_LST = 1;
+Noise_MEAN_LST = [-0.5 -1 -1.4 -1.5 -1.6 -2]; % %[ -0.1 -0.5 -0.6 -0.7 -0.8 -0.9 -1 -1.1 -1.2 -1.3 -1.4 -1.5 -1.6 -1.7 -1.8 -1.9 -2 ];
+
+PARAM1 = rTC_LST;
+lblTxt1 = 'Range of thalamocortical connection';
+saveTxt1 = 'rTC';
+titleTxt1 = 'Range_T_C';
+PARAM2 = wmTC_LST;
+lblTxt2 = 'Weight of thalamocortical connection';
+saveTxt2 = 'wmTC';
+titleTxt2 = 'W_T_C';
+PARAM3 = Noise_MEAN_LST ;
+lblTxt3 = 'Tonic GABA level (nA)';
+saveTxt3 = 'meanInGauss';
+titleTxt3 = 'Tonic I';
+PARAM4 = OSC_F_LST;
+lblTxt4 = 'Oscillation Frequency (Hz)';
+saveTxt4 = 'OSC_F';
+titleTxt4 = 'Osc Freq';
+PARAM5 = OSC_Amp_LST;
+lblTxt5 = 'Oscillation Amplitude relative to mean FR';
+saveTxt5 = 'OSC_amp';
+titleTxt5 = 'Osc Amp';
+
+
+
+% PARAM5 = OSC_phase_LST; % TRIAL_LST;
+% lblTxt5 = 'Phase of oscillating input (Hz)';
+% saveTxt5 = 'OscPhase'; %'trial';
+% titleTxt5 = 'Osc Phase';
+
+% PARAM4 = LightAmp_LST; % TRIAL_LST;
+% lblTxt4 = 'Light Stimulus amplitude (nA)'; %'Trial'; %
+% saveTxt4 = 'GPmAmp'; %'trial';
+% titleTxt4 = 'Light Amp';
+% PARAM5 = LightDur_LST; % TRIAL_LST;
+% lblTxt5 = 'Light Stimulus duration (ms)'; %'Trial'; %
+% saveTxt5 = 'GPmDur'; %'trial';
+% titleTxt5 = 'Light Dur';
+
+N_Param = 5;
+ACT_Rec_size = zeros(1,N_Param);
+for ii = 1 : N_Param
+    PARAMETERS{ii}.PARAM = eval(sprintf('PARAM%d',ii)) ;
+    PARAMETERS{ii}.lblTxt = eval(sprintf('lblTxt%d',ii));
+    PARAMETERS{ii}.titleTxt = eval(sprintf('titleTxt%d',ii));
+    PARAMETERS{ii}.saveTxt = eval(sprintf('saveTxt%d',ii));
+    ACT_Rec_size(ii) = eval(sprintf('length(PARAM%d)',ii));
+end
+ACT_Record = cell(ACT_Rec_size);
+% ACT_Rec_size = [ACT_Rec_size 2];
+% Check_Status = zeros(ACT_Rec_size);
+
+% Directory
+
+
+PATH = SetPath;
+dirLoc = [PATH 'OscInput_Sim/'];
+dirFig = ['Fig_TonicGaba_' get_Parameters_RangeTxt( PARAMETERS,[1,2,3,4,5]) '/'];
+mkdir([dirLoc dirFig])
+
+
+
+for p1_ii = 1 : length(PARAM1)
+    for p2_ii = 1 : length(PARAM2)
+        for p3_ii = 1 : length(PARAM3)
+            for p4_ii = 1 : length(PARAM4)
+                for p5_ii = 1 : length(PARAM5)
+                    
+                    r_ii = p1_ii; wm_ii = p2_ii; g_ii = p3_ii;
+                    la_ii = 1;  m_ii = 1; s_ii = 1; ld_ii= 1;
+                    of_ii = p4_ii; oa_ii = p5_ii; op_ii = 1;
+                    TRIAL_NO = 1;
+                    %                     cell_type = 1;
+                    for cell_type = 1 : 2
+                        
+                        if (cell_type == 1)
+                            cTxt = 'WT';
+                        elseif (cell_type == 2)
+                            cTxt = 'KO';
+                        end
+                        
+                        % PDfewBurst_GPmVLmd1_rTC120_wmTC10_WT_GPmInput_Amp0.3_Dur1000_GPmVLw_m0.06_sig0.01_InGauss0.2_IGmean-0.15_IGmeanSig0_W0.0015_SpecifiedPoisSpk_sig0.00Hz_T4000_trial3
+                        
+                        coreFileName = 'GPmVLmd1_0del_KO2' ;
+                        
+                        InGauss_STDEV = 0.2; %0.2;, 0.3
+                        NoiseMEAN = Noise_MEAN_LST(g_ii);
+                        IGmeanSig = 0;
+                        W_Weight = 0.029;
+                        PoisInputFr = 20;
+                        TSTOP = 3000;
+                        %                         GPmLightDur = LightDur_LST(ld_ii);
+                        
+                        rTC =rTC_LST(r_ii);
+                        wmTC = wmTC_LST(wm_ii);
+                        osc_f = OSC_F_LST(of_ii);
+                        osc_amp =OSC_Amp_LST(oa_ii);
+                        osc_phase = OSC_phase_LST(op_ii);
+                        
+                        
+                        %                         GPmLight = LightAmp_LST(la_ii);
+                        %                         GPm_w_mn = GPmVLw_mean_LST(m_ii);
+                        %                         GPm_w_sg = GPmVLw_sig_LST(s_ii);
+                        
+                        txtFR = sprintf('%2.2f',PoisInputFr); txtAmp = sprintf('%2.2f',osc_amp);
+                        Simulation_Code = [coreFileName '_rTC' num2str(rTC) '_wmTC' num2str(wmTC) '_' cTxt '_InGauss' num2str(InGauss_STDEV) '_IGmean' num2str(NoiseMEAN) '_IGmeanSig' num2str(IGmeanSig) ...
+                            '_W' num2str(W_Weight) '_' txtFR 'Hz_oscF' num2str(osc_f) 'Hz_amp' txtAmp '_phase' num2str(osc_phase) '_T' num2str(TSTOP) '_trial' num2str(TRIAL_NO)];
+                        %                         GPmVLmd1_0del_KO2_rTC250_wmTC50_KO_InGauss0.2_IGmean0_IGmeanSig0_W0.029_10.00Hz_oscF40Hz_amp0.00_phase0_T3000_trial1
+                        disp('==================================================================================================')
+                        disp(Simulation_Code)
+                        
+                        disp('######  Download M1 ')
+                        %M1
+                        Name_postfix = [ 'M1_' Simulation_Code];
+                        getCenterPart = 1; % Only at center to avoide the border problem
+                        PhotoactivationAll
+                        
+                        tmp.E = E;      tmp.I = I;  tmp.All = All; %tmp.VL = VL; tmp.M1 = M1;
+                        tmp.Simulation_Code = Name_postfix; % for M1, simulation code has initial 'M1_'
+                        if (cell_type == 1)
+                            M1.WT = tmp;
+                            cTxt = 'WT';
+                        elseif (cell_type == 2)
+                            M1.KO = tmp;
+                            cTxt = 'KO';
+                        end
+                        clear tmp
+                        %                 CheckFileExist( dirLoc, Name_postfix  )
+                        disp('######  Download VL ')
+                        Name_postfix = [ Simulation_Code];
+                        getCenterPart = 0;
+                        PhotoactivationAll       
+                        %                 if(0)                  
+                        tmp.E = E;      tmp.I = I;  tmp.All = All; %tmp.VL = VL; tmp.M1 = M1;
+                        tmp.Simulation_Code = Name_postfix;
+                        if (cell_type == 1)
+                            VL.WT = tmp;
+                            cTxt = 'WT'; Name_postfix_WT = Name_postfix;
+                        elseif (cell_type == 2)
+                            VL.KO = tmp;
+                            cTxt = 'KO'; Name_postfix_KO = Name_postfix;
+                        end
+                        clear tmp
+                        
+                    end
+                    
+                    if (plotSampleV)
+                        %soma's volt
+                        tt= tic();
+                        
+                        samVL = 385;
+                        samM1 = 87;
+                        samTstr = PhotoInjT-100; samTstp = PhotoStop + DelayT+BurstRange+100;
+                        fgSmpl = figure; set(fgSmpl,'position',[  377          94        1310         894]);  set(gcf,'PaperPositionMode','auto')
+                        subplot(221);
+                        [NEcell,NIcell, Tstop,somaVallWT] = get_save_vec_file_BigNet([dirLoc 'SomaVolt_M1_' Name_postfix_WT '.txt'] );
+                        plot(samTstr:samTstp, somaVallWT(samM1,samTstr:samTstp), 'r'); hold on;
+                        plot(samTstr:samTstp, somaVallWT(samM1+1,samTstr:samTstp), 'm');
+                        ylim([-90 50]); xlim([samTstr samTstp]);
+                        title(['WT M1']);
+                        subplot(222);
+                        [NEcell,NIcell, Tstop,somaVallWT] = get_save_vec_file_BigNet([dirLoc 'SomaVolt_M1_' Name_postfix_KO '.txt'] );
+                        plot(samTstr:samTstp, somaVallWT(samM1,samTstr:samTstp), 'r'); hold on;
+                        plot(samTstr:samTstp, somaVallWT(samM1+1,samTstr:samTstp), 'm');
+                        ylim([-90 50]); xlim([samTstr samTstp]);
+                        title(['KO M1']);
+                        subplot(223);
+                        [NEcell,NIcell, Tstop,somaVallWT] = get_save_vec_file_BigNet([dirLoc 'SomaVolt_' Name_postfix_WT '.txt'] );
+                        plot(samTstr:samTstp, somaVallWT(samVL,samTstr:samTstp), 'r'); hold on;
+                        plot(samTstr:samTstp, somaVallWT(samVL+1,samTstr:samTstp), 'm');
+                        ylim([-90 50]); xlim([samTstr samTstp]);
+                        title(['WT VL']);
+                        subplot(224);
+                        [NEcell,NIcell, Tstop,somaVallWT] = get_save_vec_file_BigNet([dirLoc 'SomaVolt_' Name_postfix_KO '.txt'] );
+                        plot(samTstr:samTstp, somaVallWT(samVL,samTstr:samTstp), 'r'); hold on;
+                        plot(samTstr:samTstp, somaVallWT(samVL+1,samTstr:samTstp), 'm');
+                        ylim([-90 50]); xlim([samTstr samTstp]);
+                        title(['KO VL']);
+                        simTxt = get_Parameters_titleText(PARAMETERS, [1:5], [p1_ii p2_ii p3_ii p4_ii p5_ii]);
+                        suptitle(simTxt)
+                        disp('Finish plot sample membrain voltage');
+                        toc(tt);
+                        if(SAVE_FIG)
+                            simTxt =  get_Parameters_saveText(PARAMETERS, [1:5], [p1_ii p2_ii p3_ii p4_ii p5_ii]);
+                            saveas(fgSmpl, [dirLoc dirFig 'SamV' simTxt '.fig'], 'fig')
+                            saveas(fgSmpl, [dirLoc dirFig 'SamV' simTxt '.jpg'], 'jpg')
+                            if(Close_Fig_aftr_save)
+                                close(fgSmpl);
+                            end
+                        end
+                        
+                        disp('Finish plot sample membrain voltage');
+                        toc(tt)
+                    end
+                    
+                    
+                    
+                    Basal_Act.VL = VL;
+                    Basal_Act.M1 = M1;
+                    
+                    % T-Test goes here // Remove in load_and_$$$$ series
+                    % for faster runtime
+                    ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii } = Basal_Act;
+                    
+                    clear Basal_Act
+                end
+                
+                
+            end
+        end
+    end
+end
+%%
+if(SAVE_BASAL_ACT)
+    save([dirLoc dirFig 'Saved_Activity_result_' SPECIFIED_BASAL_ACT_CODENAME date '.mat' ], 'ACT_Record','PARAMETERS','-v7.3');
+end
+%%
+%% VL baseline activity to check effect of tonic GABA current
+figSize = [ 1         681        1280         683];
+fg = figure; set(gcf, 'position',figSize); set(gcf,'PaperPositionMode','auto');
+  cntcnt = 0;
+      nR = length(PARAM5); nC = length(PARAM4);
+for p5_ii = 1 : length(PARAM5) % Osc F
+    for p4_ii = 1 : length(PARAM4)
+          VL_baselineWT = zeros(length(PARAM3),1);
+          VL_baselineKO = zeros(length(PARAM3),1);
+          
+        for p3_ii = 1 : length(PARAM3) % Current
+            tmpT = CUTTIME +1 : BaselineT;
+            normalActrange =  length(tmpT);
+            BasalAct = ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii}.VL; %% for VL
+            disp(num2str([p1_ii,p2_ii,p3_ii,p4_ii,p5_ii ]))
+            VL_baselineWT(p3_ii) = mean(mean(BasalAct.WT.All.spktrain(:,tmpT))).*1000;
+            VL_baselineKO(p3_ii) = mean(mean(BasalAct.KO.All.spktrain(:,tmpT))).*1000;
+        end
+
+    
+        cntcnt = cntcnt + 1;
+        subplot(nR,nC, cntcnt); 
+        plot( VL_baselineWT, '.-k');  hold on;  plot( VL_baselineKO, '.-r');
+%         LEG{2*ii-1} = ['WT:' get_Parameters_titleText(PARAMETERS,5,ii) ];
+%         LEG{2*ii} = ['KO:' get_Parameters_titleText(PARAMETERS,5,ii) ];
+    legend( ['WT:' get_Parameters_titleText(PARAMETERS,5,p5_ii) ], ['KO:' get_Parameters_titleText(PARAMETERS,5,p5_ii) ],'location','best');
+    set(gca,'XTick', 1:length(PARAM3));
+    set(gca, 'XTickLabel', PARAM3); 
+%     xlabel(lblTxt3); 
+    ylabel('<Firing Rate(Hz)>');
+    title([ get_Parameters_titleText(PARAMETERS,[4,5],[p4_ii, p5_ii])]);
+    disp(['End cnt# ' num2str(cntcnt)])
+    end
+end
+xlabel(lblTxt3);     legend( ['WT:' get_Parameters_titleText(PARAMETERS,5,p5_ii) ], ['KO:' get_Parameters_titleText(PARAMETERS,5,p5_ii) ],'location','best');
+suptitle(['Baseline activity of VL : ' get_Parameters_titleText(PARAMETERS,[1,2],[p1_ii, p2_ii])])
+
+if(SAVE_FIG)
+            tmpTxt = get_Parameters_saveText(PARAMETERS, [1,2, 4,5], [p1_ii, p2_ii, p4_ii p5_ii]);
+            fg = fg;
+            figname = ['TonicBaselineAct' tmpTxt];
+            saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
+end
+%%
+stylelst= {'k','b', 'r','m','c','g'};
+ for p4_ii = 1 : length(PARAM4) % Osc F
+    %     figSize =  [ 16         138        2551        1158];
+    %     fCombine1 =  figure; set(gcf, 'position',figSize); set(gcf,'PaperPositionMode','auto');
+    cntcnt = 0;
+    VL_baselineWT = zeros(length(PARAM5),length(PARAM3));
+    VL_baselineKO = zeros(length(PARAM5),length(PARAM3));
+    nR = length(PARAM5); nC = length(PARAM3);
+    for p5_ii = 1 : length(PARAM5) % Osc Amp
+        for p3_ii = 1 : length(PARAM3) % Current
+            tmpT = CUTTIME +1 : BaselineT;
+            normalActrange =  length(tmpT);
+            BasalAct = ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii}.VL; %% for VL
+            VL_baselineWT(p5_ii,p3_ii) = mean(mean(BasalAct.WT.All.spktrain(:,tmpT))).*1000;
+            VL_baselineKO(p5_ii,p3_ii) = mean(mean(BasalAct.KO.All.spktrain(:,tmpT))).*1000;
+        end
+    end
+    fg=figure;  stylelst1= {'k','b', 'c', '-k'}; styelst2= {'r','m','g','r'};
+    hold on;
+    for ii = 1 : length(PARAM5)
+        plot( VL_baselineWT(ii,:), ['.-' stylelst1{ii}]);  hold on;  plot( VL_baselineKO(ii,:), ['.-' styelst2{ii} ]);
+        title(num2str(PARAM5(ii)))
+        k = waitforbuttonpress;
+    end
+    set(gca,'XTick', 1:length(PARAM3));
+    set(gca, 'XTickLabel', PARAM3);
+    xlabel(lblTxt3); 
+    ylabel('<Firing Rate(Hz)>');
+    title(['Baseline activity of VL : ' get_Parameters_titleText(PARAMETERS,[1,2,4],[1,1,p4_ii])]);
+end
+%% Check the membrane potential for each case 
+figSize =  [ 16         138        2551        1158];
+fsmplV = figure;  set(fsmplV, 'position',figSize); set(gcf,'PaperPositionMode','auto');
+n1 = length(PARAM4);  n2 = length(PARAM5);
+somaVall_Record = cell(ACT_Rec_size);
+cnt = 0;
+p1_ii =1; p2_ii =1;
+for p4_ii = 1 : length(PARAM4) % Osc F
+    for p5_ii = 1 : length(PARAM5) % Osc Amp
+        figure(fsmplV);
+        cnt = cnt +1;
+        subplot(n1,n2,cnt);
+        
+        tmpff = figure;  set(tmpff,'position', [ 72          93        1131         559]);  set(gcf,'PaperPositionMode','auto');
+        stylelst= {'k','b', 'r','m','c','g'};
+        Clist  = 0 : 1/length(PARAM3):1;
+        LEG = cell(length(PARAM3)*2,1);
+        for p3_ii = 1 : length(PARAM3) % Current
+            
+            if ~isempty(somaVall_Record{p1_ii, p2_ii,p3_ii,p4_ii,p5_ii})
+                somaVallWT = somaVall_Record{p1_ii, p2_ii,p3_ii,p4_ii,p5_ii}.WT;
+                somaVallKO = somaVall_Record{p1_ii, p2_ii,p3_ii,p4_ii,p5_ii}.KO;
+            else
+                BasalAct = ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii}.VL; %% for M1
+                Name_postfix_WT = BasalAct.WT.Simulation_Code; Name_postfix_KO = BasalAct.KO.Simulation_Code;
+                [NEcell,NIcell, Tstop,somaVallWT] = get_save_vec_file_BigNet([dirLoc 'SomaVolt_' Name_postfix_WT '.txt'] );
+                somaVall_Record{p1_ii, p2_ii,p3_ii,p4_ii,p5_ii}.WT = somaVallWT;
+                [NEcell,NIcell, Tstop,somaVallKO] = get_save_vec_file_BigNet([dirLoc 'SomaVolt_' Name_postfix_KO '.txt'] );
+                somaVall_Record{p1_ii, p2_ii,p3_ii,p4_ii,p5_ii}.KO = somaVallKO;
+            end
+            samTstr = CUTTIME; samTstp =TSTOP;  samVL = size(somaVallWT,1) / 2;
+%             figure(tmpff); plot(samTstr:samTstp, somaVallWT(samVL,samTstr:samTstp), [':' stylelst{p3_ii}]); hold on;
+%             figure(tmpff); plot(samTstr:samTstp, somaVallKO(samVL,samTstr:samTstp), ['-' stylelst{p3_ii}]); hold on;
+            figure(tmpff); plot(samTstr:samTstp, somaVallWT(samVL,samTstr:samTstp), ':','Color', [0 0 1-Clist(p3_ii)]); hold on;
+            figure(tmpff); plot(samTstr:samTstp, somaVallKO(samVL,samTstr:samTstp), '-','Color',[Clist(p3_ii) 0 0]); hold on;
+
+%             figure(fsmplV);  plot(samTstr:samTstp, somaVallWT(samVL,samTstr:samTstp), [':' stylelst{p3_ii}]); hold on;
+%             figure(fsmplV);   plot(samTstr:samTstp, somaVallKO(samVL,samTstr:samTstp), ['-' stylelst{p3_ii}]); hold on;
+            figure(fsmplV);  plot(samTstr:samTstp, somaVallWT(samVL,samTstr:samTstp), ':','Color', [0 0 Clist(p3_ii)]); hold on;
+            figure(fsmplV);   plot(samTstr:samTstp, somaVallKO(samVL,samTstr:samTstp),'-','Color', [Clist(p3_ii) 0 0]); hold on;
+            
+            LEG{2*p3_ii-1} = ['WT:' get_Parameters_titleText(PARAMETERS,3,p3_ii) ];
+            LEG{2*p3_ii} = ['KO:' get_Parameters_titleText(PARAMETERS,3,p3_ii) ];
+            
+        end
+        simTxt = get_Parameters_titleText(PARAMETERS, [1,2, 4,5], [p1_ii, p2_ii, p4_ii p5_ii]);
+        figure(fsmplV);         title(get_Parameters_titleText(PARAMETERS, [4,5], [p4_ii p5_ii]));        xlabel('time(ms)'); ylabel('Membrane Potential(mV)');       
+        figure(tmpff);         title(simTxt);        xlabel('time(ms)'); ylabel('Membrane Potential(mV)');        legend(LEG, 'location','best');
+        if(SAVE_FIG)
+            tmpTxt = get_Parameters_saveText(PARAMETERS, [1,2, 4,5], [p1_ii, p2_ii, p4_ii p5_ii]);
+            fg = tmpff;
+            figname = ['TonicGabaSampleV' tmpTxt];
+            saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
+        end
+        
+    end
+end
+if(SAVE_FIG)
+    tmpTxt = get_Parameters_saveText(PARAMETERS, [1,2], [p1_ii, p2_ii]);
+    fg = fsmplV;
+    figname = ['CombineSampleV' tmpTxt];
+    saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
+end
+
+%%  Get instantaneous firing rate  for each Tonic GABA level 
+SIGMA_fr_All = 30; 
+figSize =  [ 16         138        2551        1158];
+fsmplV = figure;  set(fsmplV, 'position',figSize); set(gcf,'PaperPositionMode','auto');
+n1 = length(PARAM4);  n2 = length(PARAM5);
+somaVall_Record = cell(ACT_Rec_size);
+cnt = 0;
+p1_ii =1; p2_ii =1;
+for p4_ii = 1 : length(PARAM4) % Osc F
+    for p5_ii = 1 : length(PARAM5) % Osc Amp
+        figure(fsmplV);
+        cnt = cnt +1;
+        subplot(n1,n2,cnt);
+        
+        
+        tmpff = figure;  set(tmpff,'position', [  91         694        1131         559]);  set(gcf,'PaperPositionMode','auto');
+        stylelst= {'k','b', 'r','m','c','g'};
+        Clist  = 0 : 1/length(PARAM3):1;
+        LEG = cell(length(PARAM3)*2,1);
+        for p3_ii = 1 : length(PARAM3) % Tonic GABA Current
+            
+                    %%% for VL
+                    tmpWTtrain_VL =  ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii}.VL.WT.All.spktrain;
+                    tmpKOtrain_VL =  ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii}.VL.KO.All.spktrain;
+                    %Compare WT and KO
+                    avgFR_WT_VL = getInstantaneousFiringRate(tmpWTtrain_VL, SIGMA_fr_All, RES);
+                    avgFR_KO_VL = getInstantaneousFiringRate(tmpKOtrain_VL, SIGMA_fr_All, RES);
+                    
+                     figure(tmpff); plot(avgFR_WT_VL, '-','Color', [0 1 1-Clist(p3_ii)]); hold on;
+                     figure(tmpff); plot(avgFR_KO_VL, ':','Color',[Clist(p3_ii) 0 0]); hold on;
+                     
+                     figure(fsmplV); plot(avgFR_WT_VL, '-','Color', [0 0 1-Clist(p3_ii)]); hold on;
+            figure(fsmplV);   plot(avgFR_KO_VL, ':','Color',[Clist(p3_ii) 0 0]); hold on;
+            
+            LEG{2*p3_ii-1} = ['WT:' get_Parameters_titleText(PARAMETERS,3,p3_ii) ];
+            LEG{2*p3_ii} = ['KO:' get_Parameters_titleText(PARAMETERS,3,p3_ii) ];
+           figure(tmpff); title(get_Parameters_titleText(PARAMETERS,3,p3_ii));  %k = waitforbuttonpress;
+            
+        end
+        simTxt = get_Parameters_titleText(PARAMETERS, [1,2, 4,5], [p1_ii, p2_ii, p4_ii p5_ii]);
+        figure(fsmplV);         title(get_Parameters_titleText(PARAMETERS, [4,5], [p4_ii p5_ii]));        xlabel('time(ms)'); ylabel('Membrane Potential(mV)');       
+        figure(tmpff);         title(simTxt);        xlabel('Time(ms)'); ylabel('Average Firing rate (Hz)');        legend(LEG, 'location','best');
+        if(SAVE_FIG)
+            
+            tmpTxt = get_Parameters_saveText(PARAMETERS, [1,2, 4, 5], [p1_ii, p2_ii, p4_ii p5_ii]);
+            fg = tmpff;
+            figname = ['TonicGaba_AvgFrVL' tmpTxt];
+            saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
+        end
+        
+    end
+end
+if(SAVE_FIG)
+    tmpTxt = get_Parameters_saveText(PARAMETERS, [1,2], [p1_ii, p2_ii]);
+    fg = fsmplV;
+    figname = ['CombineTonicAvgFrVL' tmpTxt];
+    saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
+end
+%
+%                         baseline_fr_WT = get_avg_baseline(spkBin, CUTTIME, PhotoInjT);
+%                         [freq_all_WT,spkTime_all_WT, fg_handle_WT ] = raster_from_spkbin_BurstRange( spkBin,PhotoStop, Tstop,PhotoInjT, PhotoStop, DelayT, BurstRange, [ simTxt ' : WT']);
+%                         set(fg_handle_WT, 'position',[  449   450   791   528])
+
+%%  Level of Oscillation f and amp for GABA (P3)
+% for p3_ii = 1 : length(PARAM3)
+    figSize =  [  16          49        2551        1307];
+    fComOSC =  figure; set(gcf, 'position',figSize); set(gcf,'PaperPositionMode','auto');
+    cntcnt = 0;
+%     nR = length(PARAM1); nC = length(PARAM2);
+nR  = 2; nC  = ceil(length(PARAM3) /nR); 
+%     for p1_ii = 1 : length(PARAM1)
+%         for p2_ii = 1 : length(PARAM2)
+ for p3_ii = 1 :   length(PARAM3)
+            M1_baselineWT = zeros(length(PARAM4),length(PARAM5));
+            M1_baselineKO = zeros(length(PARAM4),length(PARAM5));
+            tmpT = CUTTIME +1 : BaselineT;
+            normalActrange =  length(tmpT);
+            % Get Cell activity
+            for p4_ii = 1 : length(PARAM4)
+                for p5_ii = 1 : length(PARAM5)
+                    BasalAct = ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii}.M1; %% for M1
+                    M1_baselineWT(p4_ii,p5_ii) = mean(mean(BasalAct.WT.All.spktrain(:,tmpT))).*1000;
+                    M1_baselineKO(p4_ii,p5_ii) = mean(mean(BasalAct.KO.All.spktrain(:,tmpT))).*1000;
+                end
+            end
+            cntcnt = cntcnt +1;
+            subplot(nR,nC,cntcnt);
+            
+            LEG = cell(length(PARAM4)*2,1); Clist1 = ['k','b','c'];  Clist2 = ['r','m','y'];
+            for p4_ii = 1 : length(PARAM4)
+                plot( M1_baselineWT(p4_ii,:),['*-' Clist1(p4_ii)]); hold on;  LEG{2*p4_ii-1} = ['WT: ' get_Parameters_titleText( PARAMETERS, 4, p4_ii )];
+                plot( M1_baselineKO(p4_ii,:),['*-' Clist2(p4_ii)]); hold on;  LEG{2*p4_ii} = ['KO: ' get_Parameters_titleText( PARAMETERS, 4, p4_ii )];
+            end
+            xt = PARAM5; xl =  PARAMETERS{5}.lblTxt;
+            yl = '<Firing rate> (Hz)';
+            set(gca,'XTick', 1:length(xt))
+            set(gca, 'XTickLabel', xt)
+            %             xlabel(xl);
+            ylabel(yl); title( get_Parameters_titleText(PARAMETERS, [3], [p3_ii]));
+          if(cntcnt ==1)
+             legend(LEG,'location','northwestoutside' );
+          end
+            
+        end
+%     end
+
+    
+    txtp3 = get_Parameters_titleText(PARAMETERS, [3], [p3_ii]);
+    stt = 'Average firing rate of M1 baseline activity';
+    figure(fComOSC);  suptitle({stt})
+    
+    
+    
+    if(SAVE_FIG)
+        tmpTxt = get_Parameters_saveText(PARAMETERS, [3], [ p3_ii]);
+        fg = fComOSC;
+        figname = ['CombineM1FR_atBaselineOSC' tmpTxt];
+        saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
+    end
+    
+
+
+
+%%
+if(SAVE_WORKSPACE)
+    save([dirLoc dirFig 'Saved_Workspace_result_' SPECIFIED_BASAL_ACT_CODENAME date '.mat' ],'-v7.3');
+end

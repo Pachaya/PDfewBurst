@@ -20,7 +20,7 @@ for p3_ii = 1 : length(PARAM3)
     nR = length(PARAM4); nC = length(PARAM5);
     for p4_ii = 1 : length(PARAM4)
         for p5_ii = 1 : length(PARAM5)
-%             la_ii = p4_ii; m_ii = p3_ii; s_ii = 1; ld_ii = p5_ii;
+
             
             BasalAct = ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii}.VL;
             
@@ -66,26 +66,26 @@ for p3_ii = 1 : length(PARAM3)
             [nb,xb]=hist(BasalAct.WT.All.fr_AfterLightOff,10); bh=bar(xb,nb); hold on;
             set(bh,'facecolor',[0 0 0]);
             xlim([0 max(xb)+1])
-            title([ 'mean = ' num2str(GPm_w_mn) ', sig = ' num2str(GPm_w_sg)])
+            title( get_Parameters_titleText(PARAMETERS, [4,5], [ p4_ii, p5_ii ]))
             figure(fLA2);
             subplot( nR,nC,cnt)
             [nb,xb]=hist(BasalAct.KO.All.fr_AfterLightOff,10); bh=bar(xb,nb); hold on;
             set(bh,'facecolor',[1 0 0]);
             xlim([0 max(xb)+1])
-            title([ 'mean = ' num2str(GPm_w_mn) ', sig = ' num2str(GPm_w_sg)])
+            title( get_Parameters_titleText(PARAMETERS, [4,5], [ p4_ii, p5_ii ]))
             
             figure(fB1);
             subplot( nR,nC,cnt)
             [nb,xb]=hist(BasalAct.WT.All.BurstSpk); bh=bar(xb,nb); hold on;
             set(bh,'facecolor',[0 0 0]);
             xlim([0 max(xb)+1])
-            title([ 'mean = ' num2str(GPm_w_mn) ', sig = ' num2str(GPm_w_sg)])
+            title( get_Parameters_titleText(PARAMETERS, [4,5], [ p4_ii, p5_ii ]))
             figure(fB2);
             subplot( nR,nC,cnt)
             [nb,xb]=hist(BasalAct.KO.All.BurstSpk,10); bh=bar(xb,nb); hold on;
             set(bh,'facecolor',[1 0 0]);
             xlim([0 max(xb)+1])
-            title([ 'mean = ' num2str(GPm_w_mn) ', sig = ' num2str(GPm_w_sg)])
+            title( get_Parameters_titleText(PARAMETERS, [4,5], [ p4_ii, p5_ii ]))
                      
             clear BasalAct spkBin
         end
@@ -162,7 +162,7 @@ end
 
 %%
 %Make only the neuron activity during burst of VL layer
-Close_Fig_aftr_save = 0;
+Close_Fig_aftr_save = 1;
 
 p1_ii = 1; p2_ii=1;
 for p3_ii = 1 : length(PARAM3)
@@ -184,7 +184,7 @@ for p3_ii = 1 : length(PARAM3)
             la_ii = p4_ii; m_ii = p3_ii; s_ii = 1; ld_ii = p5_ii;
             
             cnt = cnt +1;
-            BasalAct = ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii}.VL;
+  BasalAct = ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii}.VL;
             hbin = 2 ;
             histBin = 1:hbin:size(BasalAct.WT.All.BurstSpkTrain,2); 
           

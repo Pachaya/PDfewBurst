@@ -512,11 +512,11 @@ OSC_F_LST  = new Vector(1)
 OSC_F_LST.x(0) = 20 //40 = gamma, 20 = beta
 //OSC_F_LST.x(1) = 40 //40 = gamma, 20 = beta
 
-OSC_rltAmp_LST = new Vector(4) 
-OSC_rltAmp_LST.x(0) = 0 // A = 0  =  No oscillation  -> 5 Trials
-OSC_rltAmp_LST.x(1) = 1 // 1 , 1/2 , 1/3 
-OSC_rltAmp_LST.x(2) = 1 / 2 // 1 , 1/2 , 1/3 
-OSC_rltAmp_LST.x(3) = 1 / 3 // 1 , 1/2 , 1/3
+OSC_rltAmp_LST = new Vector(1) 
+OSC_rltAmp_LST.x(0) = 1/2 // A = 0  =  No oscillation  -> 5 Trials
+//OSC_rltAmp_LST.x(1) = 1 // 1 , 1/2 , 1/3 
+//OSC_rltAmp_LST.x(2) = 1 / 2 // 1 , 1/2 , 1/3 
+//OSC_rltAmp_LST.x(3) = 1 / 3 // 1 , 1/2 , 1/3
 
 OSC_phase_LST  = new Vector(1)
 OSC_phase_LST.x(0) = 0 //40 = gamma, 20 = beta
@@ -535,11 +535,11 @@ W_GPm_VL_sigma_LST  = new Vector(1) //
 //W_GPm_VL_sigma_LST.indgen(0.05,0,-0.01) // 0 0.05 0.1
 W_GPm_VL_sigma_LST.x(0) = 0 
 
-W_MULT_TC = 50 //20 30 40 50
+W_MULT_TC = 40 //20 30 40 50
 W_SCALE_TC = W_SCALE 
-RANGE_TC =  250 // 25 75 100 150 200 250 <50?>
+RANGE_TC =  100// 25 75 100 150 200 250 <50?>
 
-//(r 250&20)  (r 100&50)   (r 150&50)
+//(r 250&50)  (r 100&40) 
 
 sigTC = RANGE_TC/sqrt(2) /// Ex. RANGE_E = 200 , sigTC =  141.4214  // Ref: McLaughlin paper
 
@@ -552,6 +552,7 @@ CNT = 0
 t_loop = startsw()
 
 INPUT_POISSON = 10
+MEAN = -1.5 //  -0.5 -1 -1.4 -1.5 -1.6 -2   \\ -0.01 -0.1 -0.5 -1 -5 -10 
 
 /*
 // Run one parameter set
@@ -563,9 +564,9 @@ PoisSpkHz = 0
 */
 //run_simulation(PoisSpkHz,TSTOP)
 	
-N_Trial = 10
+N_Trial = 1
 SHOW_GUI = 0
-for TRIAL_NO = 6 , N_Trial {	
+for TRIAL_NO = 1 , N_Trial {	
 	printf("==========================================================\n")
 	printf("\tTRIAL NO = %g\n" , TRIAL_NO)
 	printf("==========================================================\n")
@@ -587,7 +588,7 @@ for TRIAL_NO = 6 , N_Trial {
 			}else{ sprint(CELLtxt,"KO") }
 			printf("\t\t Cell type #%g : %s\n", CELL_TYPE, CELLtxt)
 			TSTOP = 3000
-			PoisSpkHz = 10
+			PoisSpkHz = 20
 
 			run_simulation(PoisSpkHz,TSTOP)
 			//rasterplot()
