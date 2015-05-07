@@ -287,10 +287,10 @@ load_file("Res_func.ses")
 
 
 objref InputFR_LST
-InputFR_LST = new Vector()
+InputFR_LST = new Vector(1)
 //InputFR_LST.indgen(5,100,5)
-InputFR_LST.indgen(11,14,1)
-//InputFR_LST.x(0) = 5
+//InputFR_LST.indgen(11,14,1)
+InputFR_LST.x(0) = 10
 //InputFR_LST.x(0) = 10
 //InputFR_LST.x(2) = 15
 cnt_run = 0
@@ -299,7 +299,7 @@ tloop = startsw()
 for p3_ii = 0,  InputFR_LST.size-1 {
 		InputFR = InputFR_LST.x(p3_ii)
 		print "\t\t#",p3_ii," Input Frequency = ", InputFR
-		//Run_All()					
+		Run_All()					
 			cnt_run = cnt_run + 1
 			print"\t\t\t### End one set :: cnt = ", cnt_run," ###"
 }
