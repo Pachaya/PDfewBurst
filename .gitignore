@@ -1,9 +1,9 @@
 special
 .libs/
-*.mod
 *.la
 *.lo
 *.c
+*.mod
 *.o
 *.asv
 *.stackdump
