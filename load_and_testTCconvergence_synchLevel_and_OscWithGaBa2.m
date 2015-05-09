@@ -13,9 +13,9 @@ SAVE_WORKSPACE = 1;
 SAVE_BASAL_ACT = 1; SPECIFIED_BASAL_ACT_CODENAME = '';
 SAVE_FIG = 1; Close_Fig_aftr_save = 1;
 % Statistical - Test
-DoTTest = 0;
+DoTTest = 1;
 %raster plot
-plotSampleV = 0;
+plotSampleV = 1;
 
 
 % Simulation setting
@@ -29,10 +29,10 @@ TSTOP = 3000;
 
 CUTTIME = 500;
 PhotoInjT = 500;% 1500;
-PhotoStop = 2000;
+PhotoStop = 500;
 DelayT = 0;
 BurstRange = 0;
-BaselineT = 3000;
+
 % Parameters setting
 NUM_TRIAL = 5;
 ncells = 1150;
@@ -47,12 +47,13 @@ LightDur_LST = [1000];
 GPmVLw_mean_LST = [ 0.5];
 GPmVLw_sig_LST =[0];
 
-OSC_F_LST = [20 40];
+OSC_F_LST = [20 40 ];
 OSC_Amp_LST = [0 1/2 1];
 OSC_phase_LST = 0;
 
 TRIAL_NO_LST = 1;
-Noise_MEAN_LST = [-0.5 -1 -1.4 -1.5 -1.6 -2]; % %[ -0.1 -0.5 -0.6 -0.7 -0.8 -0.9 -1 -1.1 -1.2 -1.3 -1.4 -1.5 -1.6 -1.7 -1.8 -1.9 -2 ];
+Noise_MEAN_LST = [0 -0.5 -1 -1.5 -2 ];
+InGauss_STDEV_LST = [ 0 0.2 0.5 1 ];
 
 PARAM1 = rTC_LST;
 lblTxt1 = 'Range of thalamocortical connection';
@@ -63,19 +64,21 @@ lblTxt2 = 'Weight of thalamocortical connection';
 saveTxt2 = 'wmTC';
 titleTxt2 = 'W_T_C';
 PARAM3 = Noise_MEAN_LST ;
-lblTxt3 = 'Tonic GABA level (nA)';
+lblTxt3 = 'Tonic GABA level';
 saveTxt3 = 'meanInGauss';
 titleTxt3 = 'Tonic I';
 PARAM4 = OSC_F_LST;
-lblTxt4 = 'Oscillation Frequency (Hz)';
+lblTxt4 = 'Oscillation Frequency';
 saveTxt4 = 'OSC_F';
 titleTxt4 = 'Osc Freq';
 PARAM5 = OSC_Amp_LST;
 lblTxt5 = 'Oscillation Amplitude relative to mean FR';
 saveTxt5 = 'OSC_amp';
 titleTxt5 = 'Osc Amp';
-
-
+PARAM6 = InGauss_STDEV_LST;
+lblTxt6 = 'Noise of Tonic GABA level';
+saveTxt6 = 'noiseInGauss';
+titleTxt6 = 'sigma I_n_o_i_s_e';
 
 % PARAM5 = OSC_phase_LST; % TRIAL_LST;
 % lblTxt5 = 'Phase of oscillating input (Hz)';
@@ -91,7 +94,7 @@ titleTxt5 = 'Osc Amp';
 % saveTxt5 = 'GPmDur'; %'trial';
 % titleTxt5 = 'Light Dur';
 
-N_Param = 5;
+N_Param = 6;
 ACT_Rec_size = zeros(1,N_Param);
 for ii = 1 : N_Param
     PARAMETERS{ii}.PARAM = eval(sprintf('PARAM%d',ii)) ;
@@ -102,27 +105,26 @@ for ii = 1 : N_Param
 end
 ACT_Record = cell(ACT_Rec_size);
 % ACT_Rec_size = [ACT_Rec_size 2];
-% Check_Status = zeros(ACT_Rec_size);
+Check_Status = zeros(ACT_Rec_size);
 
 % Directory
- PoisInputFr = 10;
-SimCode = ['InputFR' num2str( PoisInputFr) 'Hz'];
+
+
 PATH = SetPath;
 dirLoc = [PATH 'OscInput_Sim/'];
-dirFig = ['Fig_TonicGaba_' SimCode '_' get_Parameters_RangeTxt( PARAMETERS,[1,2,3,4,5]) '/'];
+dirFig = ['Fig' get_Parameters_RangeTxt( PARAMETERS,[1,2,4,5]) '/'];
 mkdir([dirLoc dirFig])
-
-
 
 for p1_ii = 1 : length(PARAM1)
     for p2_ii = 1 : length(PARAM2)
         for p3_ii = 1 : length(PARAM3)
             for p4_ii = 1 : length(PARAM4)
                 for p5_ii = 1 : length(PARAM5)
-                    
-                    r_ii = p1_ii; wm_ii = p2_ii; g_ii = p3_ii;
-                    la_ii = 1;  m_ii = 1; s_ii = 1; ld_ii= 1;
+                     for p6_ii = 1 : length(PARAM6)
+                    r_ii = p1_ii; wm_ii = p2_ii; g_ii = p3_ii; gn_ii = p6_ii;
+                    la_ii = 1;  m_ii = 1; s_ii = 1; ld_ii= 1;   
                     of_ii = p4_ii; oa_ii = p5_ii; op_ii = 1;
+                    
                     TRIAL_NO = 1;
                     %                     cell_type = 1;
                     for cell_type = 1 : 2
@@ -528,7 +530,7 @@ for p4_ii = 1 : length(PARAM4) % Osc F
             
         end
         simTxt = get_Parameters_titleText(PARAMETERS, [1,2, 4,5], [p1_ii, p2_ii, p4_ii p5_ii]);
-        figure(fsmplV);         title(get_Parameters_titleText(PARAMETERS, [4,5], [p4_ii p5_ii]));        xlabel('time(ms)'); ylabel('Membrane Potential(mV)');         legend(LEG, 'location','best');
+        figure(fsmplV);         title(get_Parameters_titleText(PARAMETERS, [4,5], [p4_ii p5_ii]));        xlabel('time(ms)'); ylabel('Firing rate(Hz)');         legend(LEG, 'location','best');
         figure(tmpff);         title(simTxt);        xlabel('Time(ms)'); ylabel('Average Firing rate (Hz)');        legend(LEG, 'location','best');
         if(SAVE_FIG)
             
