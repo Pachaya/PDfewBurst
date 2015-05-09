@@ -528,8 +528,8 @@ for p4_ii = 1 : length(PARAM4) % Osc F
         for p3_ii = 1 : length(PARAM3) % Tonic GABA Current
             
             %%% for VL
-            tmpWTtrain_VL =  ACT_Record{p1_ii, p2_ii,p3_ii,p4_ii,p5_ii, p6_ii}.VL.WT.All.spktrain;
-            tmpKOtrain_VL =  ACT_Record{p1_ii, p2_ii,p3_ii,p4_ii,p5_ii, p6_ii}.VL.KO.All.spktrain;
+            tmpWTtrain_VL =  ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii}.VL.WT.All.spktrain;
+            tmpKOtrain_VL =  ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii}.VL.KO.All.spktrain;
             %Compare WT and KO
             avgFR_WT_VL = getInstantaneousFiringRate(tmpWTtrain_VL, SIGMA_fr_All, RES);
             avgFR_KO_VL = getInstantaneousFiringRate(tmpKOtrain_VL, SIGMA_fr_All, RES);
@@ -545,8 +545,8 @@ for p4_ii = 1 : length(PARAM4) % Osc F
             figure(tmpff); title(get_Parameters_titleText(PARAMETERS,3,p3_ii));  %k = waitforbuttonpress;
             
         end
-        simTxt = get_Parameters_titleText(PARAMETERS, [1,2, 4,5, 6], [p1_ii, p2_ii, p4_ii, p5_ii, p6_ii]);
-        figure(fsmplV);         title(get_Parameters_titleText(PARAMETERS, [4,5,6], [p4_ii p5_ii p6_ii]));        xlabel('time(ms)'); ylabel('Firing rate(Hz)');         legend(LEG, 'location','best');
+        simTxt = get_Parameters_titleText(PARAMETERS, [1,2, 4,5], [p1_ii, p2_ii, p4_ii p5_ii]);
+        figure(fsmplV);         title(get_Parameters_titleText(PARAMETERS, [4,5], [p4_ii p5_ii]));        xlabel('time(ms)'); ylabel('Firing rate(Hz)');         legend(LEG, 'location','best');
         figure(tmpff);         title(simTxt);        xlabel('Time(ms)'); ylabel('Average Firing rate (Hz)');        legend(LEG, 'location','best');
         if(SAVE_FIG)
             
@@ -586,7 +586,7 @@ for p3_ii = 1 :   length(PARAM3)
     % Get Cell activity
     for p4_ii = 1 : length(PARAM4)
         for p5_ii = 1 : length(PARAM5)
-            BasalAct = ACT_Record{p1_ii, p2_ii,p3_ii,p4_ii,p5_ii, p6_ii}.M1; %% for M1
+            BasalAct = ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii}.M1; %% for M1
             M1_baselineWT(p4_ii,p5_ii) = mean(mean(BasalAct.WT.All.spktrain(:,tmpT))).*1000;
             M1_baselineKO(p4_ii,p5_ii) = mean(mean(BasalAct.KO.All.spktrain(:,tmpT))).*1000;
         end

@@ -550,7 +550,7 @@ for p4_ii = 1 : length(PARAM4) % Osc F
         figure(tmpff);         title(simTxt);        xlabel('Time(ms)'); ylabel('Average Firing rate (Hz)');        legend(LEG, 'location','best');
         if(SAVE_FIG)
             
-            tmpTxt = get_Parameters_saveText(PARAMETERS, [1,2, 4, 5], [p1_ii, p2_ii, p4_ii p5_ii]);
+            tmpTxt = get_Parameters_saveText(PARAMETERS, [1,2, 4, 5,6], [p1_ii, p2_ii, p4_ii, p5_ii,p6_ii]);
             fg = tmpff;
             figname = ['TonicGaba_AvgFrVL' tmpTxt];
             saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
@@ -559,18 +559,16 @@ for p4_ii = 1 : length(PARAM4) % Osc F
     end
 end
 if(SAVE_FIG)
-    tmpTxt = get_Parameters_saveText(PARAMETERS, [1,2], [p1_ii, p2_ii]);
+    tmpTxt = get_Parameters_saveText(PARAMETERS, [1,2,6], [p1_ii, p2_ii, p6_ii]);
     fg = fsmplV;
     figname = ['CombineTonicAvgFrVL' tmpTxt];
     saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
 end
-%
-%                         baseline_fr_WT = get_avg_baseline(spkBin, CUTTIME, PhotoInjT);
-%                         [freq_all_WT,spkTime_all_WT, fg_handle_WT ] = raster_from_spkbin_BurstRange( spkBin,PhotoStop, Tstop,PhotoInjT, PhotoStop, DelayT, BurstRange, [ simTxt ' : WT']);
-%                         set(fg_handle_WT, 'position',[  449   450   791   528])
+end
 
 %%  Level of Oscillation f and amp for GABA (P3)
 % for p3_ii = 1 : length(PARAM3)
+p6_ii =1; p1_ii = 1; p2_ii = 1;
 figSize =  [  16          49        2551        1307];
 fComOSC =  figure; set(gcf, 'position',figSize); set(gcf,'PaperPositionMode','auto');
 cntcnt = 0;
