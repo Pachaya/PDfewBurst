@@ -47,12 +47,13 @@ LightDur_LST = [1000];
 GPmVLw_mean_LST = [ 0.5];
 GPmVLw_sig_LST =[0];
 
-OSC_F_LST = [20 40];
+OSC_F_LST = [20 40 ];
 OSC_Amp_LST = [0 1/2 1];
 OSC_phase_LST = 0;
 
 TRIAL_NO_LST = 1;
-Noise_MEAN_LST = [ -0.5 -1 -1.4 -1.5 -1.6 -2 ];
+Noise_MEAN_LST = [0 -0.5 -1 -1.5 -2 ];
+InGauss_STDEV_LST = [ 0 0.2 0.5 1 ];
 
 PARAM1 = rTC_LST;
 lblTxt1 = 'Range of thalamocortical connection';
@@ -74,8 +75,10 @@ PARAM5 = OSC_Amp_LST;
 lblTxt5 = 'Oscillation Amplitude relative to mean FR';
 saveTxt5 = 'OSC_amp';
 titleTxt5 = 'Osc Amp';
-
-
+PARAM6 = InGauss_STDEV_LST;
+lblTxt6 = 'Noise of Tonic GABA level';
+saveTxt6 = 'noiseInGauss';
+titleTxt6 = 'sigma I_n_o_i_s_e';
 
 % PARAM5 = OSC_phase_LST; % TRIAL_LST;
 % lblTxt5 = 'Phase of oscillating input (Hz)';
@@ -91,7 +94,7 @@ titleTxt5 = 'Osc Amp';
 % saveTxt5 = 'GPmDur'; %'trial';
 % titleTxt5 = 'Light Dur';
 
-N_Param = 5;
+N_Param = 6;
 ACT_Rec_size = zeros(1,N_Param);
 for ii = 1 : N_Param
     PARAMETERS{ii}.PARAM = eval(sprintf('PARAM%d',ii)) ;
@@ -122,8 +125,8 @@ for p1_ii = 1 : length(PARAM1)
         for p3_ii = 1 : length(PARAM3)
             for p4_ii = 1 : length(PARAM4)
                 for p5_ii = 1 : length(PARAM5)
-                    
-                    r_ii = p1_ii; wm_ii = p2_ii; g_ii = p3_ii;
+                     for p6_ii = 1 : length(PARAM6)
+                    r_ii = p1_ii; wm_ii = p2_ii; g_ii = p3_ii; gn_ii = p6_ii;
                     la_ii = 1;  m_ii = 1; s_ii = 1; ld_ii= 1;   
                     of_ii = p4_ii; oa_ii = p5_ii; op_ii = 1;
                     TRIAL_NO = 1;
@@ -140,7 +143,7 @@ for p1_ii = 1 : length(PARAM1)
                         
                         coreFileName = 'GPmVLmd1_0del_KO2' ;
                         
-                        InGauss_STDEV = 0.2; %0.2;, 0.3
+                        InGauss_STDEV = InGauss_STDEV_LST(gn_ii); %0.2;, 0.3
                         NoiseMEAN = Noise_MEAN_LST(g_ii);
                         IGmeanSig = 0;
                         W_Weight = 0.029;
@@ -160,8 +163,13 @@ for p1_ii = 1 : length(PARAM1)
 %                         GPm_w_sg = GPmVLw_sig_LST(s_ii);
                         
                         txtFR = sprintf('%2.2f',PoisInputFr); txtAmp = sprintf('%2.2f',osc_amp);
-                        Simulation_Code = [coreFileName '_rTC' num2str(rTC) '_wmTC' num2str(wmTC) '_' cTxt '_InGauss' num2str(InGauss_STDEV) '_IGmean' num2str(NoiseMEAN) '_IGmeanSig' num2str(IGmeanSig) ...
+                        if(InGauss_STDEV ==0)
+                        Simulation_Code = [coreFileName '_rTC' num2str(rTC) '_wmTC' num2str(wmTC) '_' cTxt '_IGmean' num2str(NoiseMEAN) '_IGmeanSig' num2str(IGmeanSig) ...
                             '_W' num2str(W_Weight) '_' txtFR 'Hz_oscF' num2str(osc_f) 'Hz_amp' txtAmp '_phase' num2str(osc_phase) '_T' num2str(TSTOP) '_trial' num2str(TRIAL_NO)];
+                        else
+                             Simulation_Code = [coreFileName '_rTC' num2str(rTC) '_wmTC' num2str(wmTC) '_' cTxt '_InGauss' num2str(InGauss_STDEV) '_IGmean' num2str(NoiseMEAN) '_IGmeanSig' num2str(IGmeanSig) ...
+                            '_W' num2str(W_Weight) '_' txtFR 'Hz_oscF' num2str(osc_f) 'Hz_amp' txtAmp '_phase' num2str(osc_phase) '_T' num2str(TSTOP) '_trial' num2str(TRIAL_NO)];
+                        end
 %                         GPmVLmd1_0del_KO2_rTC250_wmTC50_KO_InGauss0.2_IGmean0_IGmeanSig0_W0.029_10.00Hz_oscF40Hz_amp0.00_phase0_T3000_trial1
                         disp('==================================================================================================')
                         disp(Simulation_Code)
@@ -169,16 +177,16 @@ for p1_ii = 1 : length(PARAM1)
                                                 
                         figNameCode = [ saveTxt1 num2str(PARAM1(p1_ii))  '_' saveTxt2 num2str(PARAM2(p2_ii)) '_' cTxt];
                         
-                        
-                        
+%                        GPmVLmd1_0del_KO2_rTC250_wmTC50_WT_IGmean-2_IGmeanSig0_W0.029_20.00Hz_oscF40Hz_amp0.50_phase0_T3000_trial1                   
+%                        GPmVLmd1_0del_KO2_rTC100_wmTC40_WT_InGauss1_IGmean-2_IGmeanSig0_W0.029_10.00Hz_oscF40Hz_amp0.50_phase0_T3000_trial1 
                         Name_postfix = [ Simulation_Code];
 %                         Check_Status(p1_ii,p2_ii,p3_ii,p4_ii,p5_ii,cell_type) = CheckFileExist( dirLoc, Name_postfix  );
-                        Check_Status(p1_ii,p2_ii,p3_ii,p4_ii,p5_ii) = CheckFileExist( dirLoc, Name_postfix  );
+                        Check_Status(p1_ii,p2_ii,p3_ii,p4_ii,p5_ii,p6_ii) = CheckFileExist( dirLoc, Name_postfix  );
                         %VL_PhotoactivationAll
                         
                         
                         
-%                     end
+                     end
                 end
             end
         end
