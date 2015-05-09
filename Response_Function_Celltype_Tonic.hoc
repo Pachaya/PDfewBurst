@@ -1,6 +1,5 @@
 load_file("nrngui.hoc") //load basics library
 load_file("PDfb_CellsTemplate_FewBurstModel1.hoc")
-ttotal =  startsw()
 load_file("ranstream.hoc") //for InGauss random seed
 
 ttotal = startsw()
@@ -282,7 +281,7 @@ xbutton("Run", "Run_All()")
 xpanel()
 }
 
-panel_button()
+//panel_button()
 //load_file("Res_func.ses")
 
 
@@ -303,13 +302,13 @@ tloop = startsw()
 
 
 NOISE_STDEV  = 0.5 // 0  0.2  0.5 1 
-NOISE_MEAN = 0 // 0 -0.1 -0.5 -1 -1.5
-W_SPK  = 0.001 // 0.001 0.0015 0.0020 0.0025 0.0030  0.0050   ||0.01 015 0.02 
-//WSPKmul = 0.001 
-//TestW = 1 // 1 1.5  2 .5 3 5 
-//W_SPK = NOISE_MEAN*-10*WSPKmul*TestW // Only when mean != 0
+NOISE_MEAN = -1.5 // 0 -0.1 -0.5 -1 -1.5
+//W_SPK  = 0.005 // 0.001 0.0015 0.0020 0.0025 0.0030  0.0050   ||0.01 015 0.02 
+WSPKmul = 0.001 
+TestW = 5 // 1 1.5  2 2.5 3 5 
+W_SPK = NOISE_MEAN*-10*WSPKmul*TestW // Only when mean != 0
 
-
+ 
 for p3_ii = 0,  InputFR_LST.size-1 {
 		InputFR = InputFR_LST.x(p3_ii)
 		print "\t\t#",p3_ii," Input Frequency = ", InputFR
