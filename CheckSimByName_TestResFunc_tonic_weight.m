@@ -1,4 +1,4 @@
-% Quantitatively Test Synchronization Level
+% Response Function
 clc
 close all
 clear all
@@ -7,7 +7,7 @@ clear all
 simCode  = 'ResFunc';
 CoreName = '';
 
-SAVE_FIG =1; Close_Fig_aftr_save = 1;
+SAVE_FIG = 0 ; Close_Fig_aftr_save = 1;
 
 Nsample = 100;
 SynchLvl = 0;
