@@ -39,8 +39,8 @@ ncells = 1150;
 M1_ncells = 166;
 TRIAL_LST = 1 : NUM_TRIAL;
 
-rTC_LST = 100; % [50 100 150 200 250 ]; %
-wmTC_LST = 40; %[20 30 40 50 100]; %[10 25 50 75 100];
+rTC_LST = 250; % [50 100 150 200 250 ]; %
+wmTC_LST = 50; %[20 30 40 50 100]; %[10 25 50 75 100];
 
 LightAmp_LST = [0.5];
 LightDur_LST = [1000];
@@ -104,15 +104,15 @@ for ii = 1 : N_Param
     ACT_Rec_size(ii) = eval(sprintf('length(PARAM%d)',ii));
 end
 ACT_Record = cell(ACT_Rec_size);
-% ACT_Rec_size = [ACT_Rec_size 2];
-Check_Status = zeros(ACT_Rec_size);
 
+
+PoisInputFr = 20;
+ 
 % Directory
-
 
 PATH = SetPath;
 dirLoc = [PATH 'OscInput_Sim/'];
-dirFig = ['Fig' get_Parameters_RangeTxt( PARAMETERS,[1,2,4,5]) '/'];
+dirFig = ['Fig_' num2str( PoisInputFr) 'Hz_' get_Parameters_RangeTxt( PARAMETERS,[1,2,4,5,6]) '/'];
 mkdir([dirLoc dirFig])
 
 for p1_ii = 1 : length(PARAM1)
@@ -130,42 +130,52 @@ for p1_ii = 1 : length(PARAM1)
                         TRIAL_NO = 1;
                         %                     cell_type = 1;
                         for cell_type = 1 : 2
-                            
-                            if (cell_type == 1)
-                                cTxt = 'WT';
-                            elseif (cell_type == 2)
-                                cTxt = 'KO';
-                            end
-                            
-                            % PDfewBurst_GPmVLmd1_rTC120_wmTC10_WT_GPmInput_Amp0.3_Dur1000_GPmVLw_m0.06_sig0.01_InGauss0.2_IGmean-0.15_IGmeanSig0_W0.0015_SpecifiedPoisSpk_sig0.00Hz_T4000_trial3
-                            
-                            coreFileName = 'GPmVLmd1_0del_KO2' ;
-                            
-                            InGauss_STDEV = 0.2; %0.2;, 0.3
-                            NoiseMEAN = Noise_MEAN_LST(g_ii);
-                            IGmeanSig = 0;
-                            W_Weight = 0.029;
-                            %                         PoisInputFr = 10;
-                            TSTOP = 3000;
-                            %                         GPmLightDur = LightDur_LST(ld_ii);
-                            
-                            rTC =rTC_LST(r_ii);
-                            wmTC = wmTC_LST(wm_ii);
-                            osc_f = OSC_F_LST(of_ii);
-                            osc_amp =OSC_Amp_LST(oa_ii);
-                            osc_phase = OSC_phase_LST(op_ii);
-                            
-                            
-                            %                         GPmLight = LightAmp_LST(la_ii);
-                            %                         GPm_w_mn = GPmVLw_mean_LST(m_ii);
-                            %                         GPm_w_sg = GPmVLw_sig_LST(s_ii);
-                            
-                            txtFR = sprintf('%2.2f',PoisInputFr); txtAmp = sprintf('%2.2f',osc_amp);
-                            Simulation_Code = [coreFileName '_rTC' num2str(rTC) '_wmTC' num2str(wmTC) '_' cTxt '_InGauss' num2str(InGauss_STDEV) '_IGmean' num2str(NoiseMEAN) '_IGmeanSig' num2str(IGmeanSig) ...
-                                '_W' num2str(W_Weight) '_' txtFR 'Hz_oscF' num2str(osc_f) 'Hz_amp' txtAmp '_phase' num2str(osc_phase) '_T' num2str(TSTOP) '_trial' num2str(TRIAL_NO)];
-                            %                         GPmVLmd1_0del_KO2_rTC250_wmTC50_KO_InGauss0.2_IGmean0_IGmeanSig0_W0.029_10.00Hz_oscF40Hz_amp0.00_phase0_T3000_trial1
-                            disp('==================================================================================================')
-                            disp(Simulation_Code)
+                                      if (cell_type == 1)
+                            cTxt = 'WT';
+                        elseif (cell_type == 2)
+                            cTxt = 'KO';
+                        end
+                        
+                        % PDfewBurst_GPmVLmd1_rTC120_wmTC10_WT_GPmInput_Amp0.3_Dur1000_GPmVLw_m0.06_sig0.01_InGauss0.2_IGmean-0.15_IGmeanSig0_W0.0015_SpecifiedPoisSpk_sig0.00Hz_T4000_trial3
+                        
+                        coreFileName = 'GPmVLmd1_0del_KO2' ;
+                        
+                        InGauss_STDEV = InGauss_STDEV_LST(gn_ii); %0.2;, 0.3
+                        NoiseMEAN = Noise_MEAN_LST(g_ii);
+                        IGmeanSig = 0;
+                        W_Weight = 0.029;
+                        PoisInputFr = 20;
+                        TSTOP = 3000;
+%                         GPmLightDur = LightDur_LST(ld_ii);
+                        
+                        rTC =rTC_LST(r_ii);
+                        wmTC = wmTC_LST(wm_ii);
+                        osc_f = OSC_F_LST(of_ii);
+                        osc_amp =OSC_Amp_LST(oa_ii);
+                        osc_phase = OSC_phase_LST(op_ii);
+                                                
+                        
+%                         GPmLight = LightAmp_LST(la_ii);
+%                         GPm_w_mn = GPmVLw_mean_LST(m_ii);
+%                         GPm_w_sg = GPmVLw_sig_LST(s_ii);
+                        
+                        txtFR = sprintf('%2.2f',PoisInputFr); txtAmp = sprintf('%2.2f',osc_amp);
+                        if(InGauss_STDEV ==0)
+                        Simulation_Code = [coreFileName '_rTC' num2str(rTC) '_wmTC' num2str(wmTC) '_' cTxt '_IGmean' num2str(NoiseMEAN) '_IGmeanSig' num2str(IGmeanSig) ...
+                            '_W' num2str(W_Weight) '_' txtFR 'Hz_oscF' num2str(osc_f) 'Hz_amp' txtAmp '_phase' num2str(osc_phase) '_T' num2str(TSTOP) '_trial' num2str(TRIAL_NO)];
+                        else
+                             Simulation_Code = [coreFileName '_rTC' num2str(rTC) '_wmTC' num2str(wmTC) '_' cTxt '_InGauss' num2str(InGauss_STDEV) '_IGmean' num2str(NoiseMEAN) '_IGmeanSig' num2str(IGmeanSig) ...
+                            '_W' num2str(W_Weight) '_' txtFR 'Hz_oscF' num2str(osc_f) 'Hz_amp' txtAmp '_phase' num2str(osc_phase) '_T' num2str(TSTOP) '_trial' num2str(TRIAL_NO)];
+                        end
+%                         GPmVLmd1_0del_KO2_rTC250_wmTC50_KO_InGauss0.2_IGmean0_IGmeanSig0_W0.029_10.00Hz_oscF40Hz_amp0.00_phase0_T3000_trial1
+                        disp('==================================================================================================')
+                        disp(Simulation_Code)
+                                                                     
+                        figNameCode = [ saveTxt1 num2str(PARAM1(p1_ii))  '_' saveTxt2 num2str(PARAM2(p2_ii)) '_' cTxt];
+                        
+%                        GPmVLmd1_0del_KO2_rTC250_wmTC50_WT_IGmean-2_IGmeanSig0_W0.029_20.00Hz_oscF40Hz_amp0.50_phase0_T3000_trial1                   
+%                        GPmVLmd1_0del_KO2_rTC100_wmTC40_WT_InGauss1_IGmean-2_IGmeanSig0_W0.029_10.00Hz_oscF40Hz_amp0.50_phase0_T3000_trial1 
+                        Name_postfix = [ Simulation_Code];
                             
                             disp('######  Download M1 ')
                             %M1
@@ -316,7 +326,7 @@ for p4_ii = 1 : length(PARAM4)  % OSC F
         %         suptitle(tmpTxt)
         cnt1 = cnt1+1;
         figure(fosc); subplot(nR,nC,cnt1);
-        plot(WTfmus,'k');   hold on;  plot(KOfmus,'r'); legend('WT','KO'); title(tmpTxt);  %title('Smooth instantaneous average firing rate');
+        plot(WTfmus,'k');   hold on;  plot(KOfmus,'r'); legend('WT','KO','location','best'); title(tmpTxt);  %title('Smooth instantaneous average firing rate');
         
         % FFT
         KOfft = abs(fftshift(fft(KOfmus)));
@@ -353,7 +363,7 @@ if (SAVE_FIG)
 end
 
 %% VL baseline activity to check effect of tonic GABA current
-
+BaselineT = Tstop; 
 for p6_ii = 1 : length(PARAM6) % noise of sigma 
     
 figSize = [ 1         681        1280         683];
@@ -363,22 +373,26 @@ nR = length(PARAM5); nC = length(PARAM4);
 
 for p5_ii = 1 : length(PARAM5) % Osc F
     for p4_ii = 1 : length(PARAM4)
-        VL_baselineWT = zeros(length(PARAM3),1);
-        VL_baselineKO = zeros(length(PARAM3),1);
-        
-        for p3_ii = 1 : length(PARAM3) % Current
-            tmpT = CUTTIME +1 : BaselineT;
-            normalActrange =  length(tmpT);
-            BasalAct = ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii,p6_ii}.VL; %% for VL
-            disp(num2str([p1_ii,p2_ii,p3_ii,p4_ii,p5_ii, p6_ii ]))
-            VL_baselineWT(p3_ii) = mean(mean(BasalAct.WT.All.spktrain(:,tmpT))).*1000;
-            VL_baselineKO(p3_ii) = mean(mean(BasalAct.KO.All.spktrain(:,tmpT))).*1000;
-        end
-        
-        
+    VL_baselineWT = zeros(length(PARAM3),1); 
+    VL_baselineKO = zeros(length(PARAM3),1);
+    VL_baselineWTstd = zeros(length(PARAM3),1); 
+    VL_baselineKOstd = zeros(length(PARAM3),1);
+    tmpT = CUTTIME +1 : BaselineT;
+    normalActrange =  length(tmpT);
+    % Get Cell activity
+    for p3_ii = 1 : length(PARAM3)
+            BasalAct = ACT_Record{p1_ii, p2_ii,p3_ii,p4_ii,p5_ii, p6_ii}.VL; %% for M1
+          
+            tmpFrWT = sum(BasalAct.WT.All.spktrain(:,tmpT),2)/length(tmpT)*1000;  
+            tmpFrKO = sum(BasalAct.KO.All.spktrain(:,tmpT),2)/length(tmpT)*1000;
+            VL_baselineWT(p3_ii) = mean(tmpFrWT);     VL_baselineWTstd(p3_ii) = std(tmpFrWT);
+            VL_baselineKO(p3_ii) = mean(tmpFrKO);     VL_baselineKOstd(p3_ii) = std(tmpFrKO);
+            [ttest_res,ranksum_res,sum_sigDiffRS,sum_sigDiffTT] = sampleStatsTest( tmpFrWT,  tmpFrWT, 15, 100);
+    end
+       
         cntcnt = cntcnt + 1;
         subplot(nR,nC, cntcnt);
-        plot( VL_baselineWT, '.-k');  hold on;  plot( VL_baselineKO, '.-r');
+        errorbar( VL_baselineWT,VL_baselineWTstd ,'.-k');  hold on;  errorbar( VL_baselineKO,VL_baselineKOstd, '.-r');
         %         LEG{2*ii-1} = ['WT:' get_Parameters_titleText(PARAMETERS,5,ii) ];
         %         LEG{2*ii} = ['KO:' get_Parameters_titleText(PARAMETERS,5,ii) ];
         legend( ['WT:' get_Parameters_titleText(PARAMETERS,5,p5_ii) ], ['KO:' get_Parameters_titleText(PARAMETERS,5,p5_ii) ],'location','best');
@@ -406,43 +420,91 @@ for p4_ii = 1 : length(PARAM4) % Osc F
     %     figSize =  [ 16         138        2551        1158];
     %     fCombine1 =  figure; set(gcf, 'position',figSize); set(gcf,'PaperPositionMode','auto');
     cntcnt = 0;
-    VL_baselineWT = zeros(length(PARAM5),length(PARAM3));
+    VL_baselineWT = zeros(length(PARAM5),length(PARAM3)); 
     VL_baselineKO = zeros(length(PARAM5),length(PARAM3));
-    nR = length(PARAM5); nC = length(PARAM3);
-    for p5_ii = 1 : length(PARAM5) % Osc Amp
-        for p3_ii = 1 : length(PARAM3) % Current
-            tmpT = CUTTIME +1 : BaselineT;
-            normalActrange =  length(tmpT);
-            BasalAct = ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii,p6_ii}.VL; %% for VL
-            VL_baselineWT(p5_ii,p3_ii) = mean(mean(BasalAct.WT.All.spktrain(:,tmpT))).*1000;
-            VL_baselineKO(p5_ii,p3_ii) = mean(mean(BasalAct.KO.All.spktrain(:,tmpT))).*1000;
+    VL_baselineWTstd = zeros(length(PARAM5),length(PARAM3)); 
+    VL_baselineKOstd = zeros(length(PARAM5),length(PARAM3));
+    tmpT = CUTTIME +1 : BaselineT;
+    normalActrange =  length(tmpT);
+    % Get Cell activity
+    for p5_ii = 1 : length(PARAM5)
+        for p3_ii = 1 : length(PARAM3)
+            BasalAct = ACT_Record{p1_ii, p2_ii,p3_ii,p4_ii,p5_ii, p6_ii}.VL; %% for M1
+            tmpFrWT = sum(BasalAct.WT.All.spktrain(:,tmpT),2)/length(tmpT)*1000;  
+            tmpFrKO = sum(BasalAct.KO.All.spktrain(:,tmpT),2)/length(tmpT)*1000;
+            VL_baselineWT(p5_ii,p3_ii) = mean(tmpFrWT);     VL_baselineWTstd(p5_ii,p3_ii) = std(tmpFrWT);
+            VL_baselineKO(p5_ii,p3_ii) = mean(tmpFrKO);     VL_baselineKOstd(p5_ii,p3_ii) = std(tmpFrKO);
         end
     end
+    
     fg=figure;  stylelst1= {'k','b', 'c', '-k'}; styelst2= {'r','m','g','r'};
     hold on;
     LEG = cell(length(PARAM5)*2,1);
     for ii = 1 : length(PARAM5)
-        plot( VL_baselineWT(ii,:), ['.-' stylelst1{ii}]);  hold on;  plot( VL_baselineKO(ii,:), ['.-' styelst2{ii} ]);
+        errorbar( VL_baselineWT(ii,:),VL_baselineWTstd(ii,:), ['.-' stylelst1{ii}]);  hold on;  errorbar( VL_baselineKO(ii,:),VL_baselineKOstd(ii,:), ['.-' styelst2{ii} ]);
         title(num2str(PARAM5(ii)))
         LEG{2*ii-1} = ['WT:' get_Parameters_titleText(PARAMETERS,5,ii) ];
         LEG{2*ii} = ['KO:' get_Parameters_titleText(PARAMETERS,5,ii) ];
-        k = waitforbuttonpress;
+%         k = waitforbuttonpress;
     end
     set(gca,'XTick', 1:length(PARAM3));
     set(gca, 'XTickLabel', PARAM3);
     xlabel(lblTxt3);
     ylabel('<Firing Rate(Hz)>');
     title(['Baseline activity of VL : ' get_Parameters_titleText(PARAMETERS,[1,2,4, 6],[1,1,p4_ii, p6_ii])]);
-    legend(LEG);
+    legend(LEG,'location','best');
 end
 
 end
+
+%% When I noise sigma = 0.5 , I mean =0 ; what is the relationship between baseline activity of VL and ocillation amp
+fg = figure;
+p6_ii =3; p3_ii =1; p1_ii = 1; p2_ii =1;
+    VL_baselineWT = zeros(length(PARAM4),length(PARAM5)); 
+    VL_baselineKO = zeros(length(PARAM4),length(PARAM5));
+    VL_baselineWTstd = zeros(length(PARAM4),length(PARAM5)); 
+    VL_baselineKOstd = zeros(length(PARAM4),length(PARAM5));
+    tmpT = CUTTIME +1 : BaselineT;
+    normalActrange =  length(tmpT);
+    % Get Cell activity
+    for p4_ii = 1 : length(PARAM4)
+        for p5_ii = 1 : length(PARAM5)
+            BasalAct = ACT_Record{p1_ii, p2_ii,p3_ii,p4_ii,p5_ii, p6_ii}.VL; %% for M1
+            tmpFrWT = sum(BasalAct.WT.All.spktrain(:,tmpT),2)/length(tmpT)*1000;  
+            tmpFrKO = sum(BasalAct.KO.All.spktrain(:,tmpT),2)/length(tmpT)*1000;
+            VL_baselineWT(p4_ii,p5_ii) = mean(tmpFrWT);     VL_baselineWTstd(p4_ii,p5_ii) = std(tmpFrWT);
+            VL_baselineKO(p4_ii,p5_ii) = mean(tmpFrKO);     VL_baselineKOstd(p4_ii,p5_ii) = std(tmpFrKO);
+        end
+    end
+%     cntcnt = cntcnt +1;
+%     subplot(nR,nC,cntcnt);
+    
+    LEG = cell(length(PARAM4)*2,1); Clist1 = ['k','b','c'];  Clist2 = ['r','m','y'];
+    for p4_ii = 1 : length(PARAM4)
+        errorbar( VL_baselineWT(p4_ii,:), VL_baselineWTstd(p4_ii,:), ['*-' Clist1(p4_ii)]); hold on;  LEG{2*p4_ii-1} = ['WT: ' get_Parameters_titleText( PARAMETERS, 4, p4_ii )];
+        errorbar( VL_baselineKO(p4_ii,:), VL_baselineKOstd(p4_ii,:), ['*-' Clist2(p4_ii)]); hold on;  LEG{2*p4_ii} = ['KO: ' get_Parameters_titleText( PARAMETERS, 4, p4_ii )];
+    end
+    xt = PARAM5; xl =  PARAMETERS{5}.lblTxt;
+    yl = '<Firing rate> (Hz)';
+    set(gca,'XTick', 1:length(xt))
+    set(gca, 'XTickLabel', xt)
+                xlabel(xl);
+    
+    ylabel(yl); title( get_Parameters_titleText(PARAMETERS, [1,2,3,6], [p1_ii, p2_ii, p3_ii,p6_ii ]));
+    legend(LEG,'location','northeastoutside' );
+    
+%     if(cntcnt == 5)
+%         legend(LEG,'location','northeastoutside' );
+%     end
+    
 
 %% Check the membrane potential for each case
+
 somaVall_Record = cell(ACT_Rec_size);
 for p6_ii = 1: length(PARAM6)
 figSize =  [ 16         138        2551        1158];
 fsmplV = figure;  set(fsmplV, 'position',figSize); set(gcf,'PaperPositionMode','auto');
+
 n1 = length(PARAM4);  n2 = length(PARAM5);
 cnt = 0;
 p1_ii =1; p2_ii =1;
@@ -457,7 +519,7 @@ for p4_ii = 1 : length(PARAM4) % Osc F
         Clist  = 0 : 1/length(PARAM3):1;
         LEG = cell(length(PARAM3)*2,1);
         for p3_ii = 1 : length(PARAM3) % Current
-            
+           
             if ~isempty(somaVall_Record{p1_ii, p2_ii,p3_ii,p4_ii,p5_ii, p6_ii})
                 somaVallWT = somaVall_Record{p1_ii, p2_ii,p3_ii,p4_ii,p5_ii, p6_ii}.WT;
                 somaVallKO = somaVall_Record{p1_ii, p2_ii,p3_ii,p4_ii,p5_ii, p6_ii}.KO;
@@ -565,10 +627,11 @@ if(SAVE_FIG)
     saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
 end
 end
-
 %%  Level of Oscillation f and amp for GABA (P3)
-% for p3_ii = 1 : length(PARAM3)
-p6_ii =1; p1_ii = 1; p2_ii = 1;
+
+for p6_ii = 1 : length(PARAM6)
+
+ p1_ii = 1; p2_ii = 1;
 figSize =  [  16          49        2551        1307];
 fComOSC =  figure; set(gcf, 'position',figSize); set(gcf,'PaperPositionMode','auto');
 cntcnt = 0;
@@ -579,14 +642,18 @@ nR  = 2; nC  = ceil(length(PARAM3) /nR);
 for p3_ii = 1 :   length(PARAM3)
     M1_baselineWT = zeros(length(PARAM4),length(PARAM5));
     M1_baselineKO = zeros(length(PARAM4),length(PARAM5));
+    M1_baselineWTstd = zeros(length(PARAM4),length(PARAM5));
+    M1_baselineKOstd = zeros(length(PARAM4),length(PARAM5));
     tmpT = CUTTIME +1 : BaselineT;
     normalActrange =  length(tmpT);
     % Get Cell activity
     for p4_ii = 1 : length(PARAM4)
         for p5_ii = 1 : length(PARAM5)
             BasalAct = ACT_Record{p1_ii, p2_ii,p3_ii,p4_ii,p5_ii, p6_ii}.M1; %% for M1
-            M1_baselineWT(p4_ii,p5_ii) = mean(mean(BasalAct.WT.All.spktrain(:,tmpT))).*1000;
-            M1_baselineKO(p4_ii,p5_ii) = mean(mean(BasalAct.KO.All.spktrain(:,tmpT))).*1000;
+            tmpFrWT = sum(BasalAct.WT.All.spktrain(:,tmpT),2)/length(tmpT)*1000;  
+            tmpFrKO = sum(BasalAct.KO.All.spktrain(:,tmpT),2)/length(tmpT)*1000;
+            M1_baselineWT(p4_ii,p5_ii) = mean(tmpFrWT);     M1_baselineWTstd(p4_ii,p5_ii) = std(tmpFrWT);
+            M1_baselineKO(p4_ii,p5_ii) = mean(tmpFrKO);     M1_baselineKOstd(p4_ii,p5_ii) = std(tmpFrKO);
         end
     end
     cntcnt = cntcnt +1;
@@ -594,8 +661,8 @@ for p3_ii = 1 :   length(PARAM3)
     
     LEG = cell(length(PARAM4)*2,1); Clist1 = ['k','b','c'];  Clist2 = ['r','m','y'];
     for p4_ii = 1 : length(PARAM4)
-        plot( M1_baselineWT(p4_ii,:),['*-' Clist1(p4_ii)]); hold on;  LEG{2*p4_ii-1} = ['WT: ' get_Parameters_titleText( PARAMETERS, 4, p4_ii )];
-        plot( M1_baselineKO(p4_ii,:),['*-' Clist2(p4_ii)]); hold on;  LEG{2*p4_ii} = ['KO: ' get_Parameters_titleText( PARAMETERS, 4, p4_ii )];
+        errorbar( M1_baselineWT(p4_ii,:), M1_baselineWTstd(p4_ii,:), ['*-' Clist1(p4_ii)]); hold on;  LEG{2*p4_ii-1} = ['WT: ' get_Parameters_titleText( PARAMETERS, 4, p4_ii )];
+        errorbar( M1_baselineKO(p4_ii,:), M1_baselineKOstd(p4_ii,:), ['*-' Clist2(p4_ii)]); hold on;  LEG{2*p4_ii} = ['KO: ' get_Parameters_titleText( PARAMETERS, 4, p4_ii )];
     end
     xt = PARAM5; xl =  PARAMETERS{5}.lblTxt;
     yl = '<Firing rate> (Hz)';
@@ -603,28 +670,28 @@ for p3_ii = 1 :   length(PARAM3)
     set(gca, 'XTickLabel', xt)
     %             xlabel(xl);
     ylabel(yl); title( get_Parameters_titleText(PARAMETERS, [3], [p3_ii]));
-    if(cntcnt ==1)
-        legend(LEG,'location','northwestoutside' );
+    if(cntcnt == 5)
+        legend(LEG,'location','northeastoutside' );
     end
     
 end
 %     end
 
 
-txtp3 = get_Parameters_titleText(PARAMETERS, [3], [p3_ii]);
+txtp6 = get_Parameters_titleText(PARAMETERS, [6], [p6_ii]);
 stt = 'Average firing rate of M1 baseline activity';
-figure(fComOSC);  suptitle({stt})
+figure(fComOSC);  suptitle({stt,txtp6})
 
 
 
 if(SAVE_FIG)
-    tmpTxt = get_Parameters_saveText(PARAMETERS, [3], [ p3_ii]);
+    tmpTxt = get_Parameters_saveText(PARAMETERS, [6], [p6_ii]);
     fg = fComOSC;
     figname = ['CombineM1FR_atBaselineOSC' tmpTxt];
     saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
 end
 
-
+end
 
 
 %%
