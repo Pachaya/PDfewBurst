@@ -25,7 +25,7 @@ SynchLvl_LST = [0];%[0:1/Nsample:1];
 W_VL_M1_LST = [0.0001 : 0.0002 : 0.0001*Nsample]; %[0.0001 : 0.0001 : 0.0001*Nsample];
 
 WspkMult_LST = [1 1.5 2 2.5 3  5];
-IGmean_LST = 0; %[0 -0.1 -0.5 -1 -1.5]; % 0
+IGmean_LST = -0.5; %[0 -0.1 -0.5 -1 -1.5]; % 0
 IGsig_LST = [0 0.2 0.5 1 ];
 
 PARAM1 = InputFR_LST;
@@ -38,12 +38,12 @@ saveTxt2 = 'IGmean';
 titleTxt2 = 'IG_m_e_a_n';
 PARAM3 = IGsig_LST;
 lblTxt3 = 'Sigma of tonic current';
-titleTxt3 = 'IGsig';
-saveTxt3 = 'IG_s_i_g';
+saveTxt3 = 'IGsig';
+titleTxt3 = 'IG_s_i_g';
 PARAM4 = WspkMult_LST;
 lblTxt4 = 'Weighting factor';
-titleTxt4 = 'WspkMult';
-saveTxt4 = 'W_m_u_l_t';
+saveTxt4 = 'WspkMult';
+titleTxt4 = 'W_m_u_l_t';
 
 N_Param = 4;
 ACT_Rec_size = zeros(1,N_Param);
@@ -181,47 +181,104 @@ end
 
 
 %% Response Function 
-WspkMult_LST = [1 1.5 2 2.5 3  5];
-IGmean_LST = [0 -0.1 -0.5 -1 -1.5]; % 0
-IGsig_LST = [0 0.2 0.5 1 ];
-
-PARAM1 = InputFR_LST;
-lblTxt1 = 'Input Frequency';
-saveTxt1 = 'InputFR';
-titleTxt1 = 'Input Frequency';
-PARAM2 = IGmean_LST;
-lblTxt2 = 'Mean of tonic Current';
-saveTxt2 = 'IGmean';
-titleTxt2 = 'IG_m_e_a_n';
-PARAM3 = IGsig_LST;
-lblTxt3 = 'Sigma of tonic current';
-titleTxt3 = 'IGsig';
-saveTxt3 = 'IG_s_i_g';
-PARAM4 = WspkMult_LST;
-lblTxt4 = 'Weighting factor';
-titleTxt4 = 'WspkMult';
-saveTxt4 = 'W_m_u_l_t';
-
-% Weight and Response function 
+SAVE_FIG =1; 
+close all;
+% Weight and Response function when vary sigma 
 p2_ii = 1; p3_ii =1; 
-figure; 
+for p3_ii = 1 :  length(PARAM3)
+rf = figure;  set(gcf, 'position',[     372         -94        1160         753])
 clist = 0.5:0.5/length(PARAM4):1;
-LEG = cell(length(PARAM4)*3,1);
+% LEG = cell(length(PARAM4)*3,1);
+LEG = cell(length(PARAM4)*2,1);
 for p4_ii = 1 : length(PARAM4)
 % r [1 0 0 ]  b[0 0 1]  m[1 0 1]
 ii = p4_ii;
-errorbar(PARAM1, avgFR(:,p2_ii,p3_ii,p4_ii,1),stdFR(:,1),'x--','Color',[clist(ii) 0 0], 'LineWidth',2); hold on;
-errorbar(PARAM1, avgFR(:,p2_ii,p3_ii,p4_ii,2),stdFR(:,2),'*:','Color',[0 0 clist(ii)],'LineWidth',2); 
-errorbar(PARAM1, avgFR(:,p2_ii,p3_ii,p4_ii,3),stdFR(:,3),'o-','Color',[clist(ii) 0 clist(ii)],'LineWidth',2);
-LEG{3*ii-2} =  ['[WT] ' get_Parameters_titleText(PARAMETERS, [4], [ p4_ii])];
-LEG{3*ii-1} =  ['[KO1] ' get_Parameters_titleText(PARAMETERS, [4], [ p4_ii])];
-LEG{3*ii} =  ['[KO2] ' get_Parameters_titleText(PARAMETERS, [4], [ p4_ii])];
+errorbar(PARAM1, avgFR(:,p2_ii,p3_ii,p4_ii,1),stdFR(:,p2_ii,p3_ii,p4_ii,1),'x--','Color',[clist(ii) 0 0], 'LineWidth',2); hold on;
+% errorbar(PARAM1, avgFR(:,p2_ii,p3_ii,p4_ii,2),stdFR(:,2),'*:','Color',[0 0 clist(ii)],'LineWidth',2); 
+errorbar(PARAM1, avgFR(:,p2_ii,p3_ii,p4_ii,3),stdFR(:,p2_ii,p3_ii,p4_ii,3),'o-','Color',[clist(ii) 0 clist(ii)],'LineWidth',2);
+% LEG{3*ii-2} =  ['[WT] ' get_Parameters_titleText(PARAMETERS, [4], [ p4_ii])];
+% LEG{3*ii-1} =  ['[KO1] ' get_Parameters_titleText(PARAMETERS, [4], [ p4_ii])];
+% LEG{3*ii} =  ['[KO2] ' get_Parameters_titleText(PARAMETERS, [4], [
+% p4_ii])];\
+
+
+% m = mean(x); s = std(x);
+% n = length(x); df = n-1;
+% t = (m-m0) / (s/sqrt(n));
+% p = tcdf(t,df);
+% p = 2*min(p,1-p)
+% p =
+%     0.0184
+
+ TestW = PARAM4(p4_ii);  IGmean = PARAM2(p2_ii);
+ Wscale = 0.001;
+            if(IGmean == 0)
+                Wspk = Wscale*TestW;
+            else
+                Wspk =  IGmean*-10*Wscale*TestW;
+            end
+                        
+LEG{2*ii-1} =  ['[WT]   W_s_p_k  = ' num2str(Wspk)];
+LEG{2*ii} = ['[KO2]  W_s_p_k  = ' num2str(Wspk)];
+
 end
-xlim([0 PARAM1(end)+10]); ylim([0 max(avgFR(:,p2_ii,p3_ii,p4_ii,:))+10])
+xlim([0 PARAM1(end)+10]); ylim([0 max(avgFR(:))+10])
 % legend('WT','KO1','KO2','Linear relationship');
 ylabel('Average Output fring rate (Hz)' ); xlabel('Input Firing rate(Hz)');
 title({'Response Function of each cell type', get_Parameters_titleText(PARAMETERS, [2,3], [ p2_ii, p3_ii]) })
+ legend(LEG,'location','best');
  
+if(SAVE_FIG)
+    tmpTxt = get_Parameters_saveText(PARAMETERS,[2,3], [ p2_ii, p3_ii]);
+    fg = rf;  figName = ['ResFunc' tmpTxt];
+    saveas(fg,[dirLoc dirFig figName '.fig'],'fig'); saveas(fg, [dirLoc dirFig figName '.jpg'],'jpg');   
+end
+end
+ 
+
+%%  
+
+SAVE_FIG =0; 
+close all;
+% Weight and Response function when vary sigma 
+p2_ii = 1; p3_ii =1; 
+for p3_ii = 1 :  length(PARAM3)
+rf = figure;  set(gcf, 'position',[     372         -94        1160         753])
+clist = 0.5:0.5/length(PARAM4):1;
+% LEG = cell(length(PARAM4)*3,1);
+LEG = cell(length(PARAM4)*2,1);
+for p4_ii = 1 : length(PARAM4)
+% r [1 0 0 ]  b[0 0 1]  m[1 0 1]
+ii = p4_ii;
+errorbar(PARAM1, avgFR(:,p2_ii,p3_ii,p4_ii,1),stdFR(:,p2_ii,p3_ii,p4_ii,1),[getDotStyle(ii) getLineStyle(1) getColorCode(ii)], 'LineWidth',2); hold on;
+errorbar(PARAM1, avgFR(:,p2_ii,p3_ii,p4_ii,3),stdFR(:,p2_ii,p3_ii,p4_ii,3),[getDotStyle(ii) getLineStyle(2) getColorCode(ii)], 'LineWidth',2);
+
+
+ TestW = PARAM4(p4_ii);  IGmean = PARAM2(p2_ii);
+ Wscale = 0.001;
+            if(IGmean == 0)
+                Wspk = Wscale*TestW;
+            else
+                Wspk =  IGmean*-10*Wscale*TestW;
+            end
+                        
+LEG{2*ii-1} =  ['[WT]   W_s_p_k  = ' num2str(Wspk)];
+LEG{2*ii} = ['[KO2]  W_s_p_k  = ' num2str(Wspk)];
+
+end
+xlim([0 PARAM1(end)+10]); ylim([0 max(avgFR(:))+10])
+% legend('WT','KO1','KO2','Linear relationship');
+ylabel('Average Output fring rate (Hz)' ); xlabel('Input Firing rate(Hz)');
+title({'Response Function of each cell type', get_Parameters_titleText(PARAMETERS, [2,3], [ p2_ii, p3_ii]) })
+ legend(LEG,'location','best');
+ 
+if(SAVE_FIG)
+    tmpTxt = get_Parameters_saveText(PARAMETERS,[2,3], [ p2_ii, p3_ii]);
+    fg = rf;  figName = ['ResFunc' tmpTxt];
+    saveas(fg,[dirLoc dirFig figName '.fig'],'fig'); saveas(fg, [dirLoc dirFig figName '.jpg'],'jpg');   
+end
+end
+
  %%
 %  tmpRange = 1:7;
 %  figure;
@@ -233,47 +290,7 @@ title({'Response Function of each cell type', get_Parameters_titleText(PARAMETER
 % legend('WT','KO1','KO2','Linear relationship');
 % ylabel('Average Output fring rate (Hz)' ); xlabel('Input Firing rate(Hz)');
 %  title('Response Function of each cell type')
-%%
- if (DoTTest)
-        % two-tailed t-test % during normal
-        
-        % disp('PoisSPk')
-        % [hP,pP] = ttest(WT.PoisSpk.fr_data, KO.PoisSpk.fr_data)
-        disp('--------------------------------------------------------------------------------------------------')
-        disp('two-tailed t-test WT and KO1')
-        [hE,pE] = ttest2(avgFR(:,1), avgFR(:,2), 'Tail','both');
-        disp([ ' p-value = ' num2str(pE)])
-        if(hE)
-            disp('H0 rejected : average normal firing rate of KO significantly different from WT (p < 0.05)')
-        else
-            disp('Do not rejected H0 : average normal firing rate of KO does not significantly different from WT (p > 0.05)')
-        end
-          
-        
-        disp('--------------------------------------------------------------------------------------------------')
-        disp('two-tailed t-test WT and KO2')
-        [hE,pE] = ttest2(avgFR(:,1), avgFR(:,3), 'Tail','both');
-        disp([ ' p-value = ' num2str(pE)])
-        if(hE)
-            disp('H0 rejected : average normal firing rate of KO significantly different from WT (p < 0.05)')
-        else
-            disp('Do not rejected H0 : average normal firing rate of KO does not significantly different from WT (p > 0.05)')
-        end
-          disp('--------------------------------------------------------------------------------------------------')
-        
-          disp('two-tailed t-test KO1 and KO2')
-        [hE,pE] = ttest2(avgFR(:,2), avgFR(:,3), 'Tail','both');
-        disp([ ' p-value = ' num2str(pE)])
-        if(hE)
-            disp('H0 rejected : average normal firing rate of KO significantly different from WT (p < 0.05)')
-        else
-            disp('Do not rejected H0 : average normal firing rate of KO does not significantly different from WT (p > 0.05)')
-        end
-        
-      
-        
- end
-    
+%% 
 SAVE_NEURON_ACT =0;
 coreFileName ='';
 if (SAVE_NEURON_ACT)
