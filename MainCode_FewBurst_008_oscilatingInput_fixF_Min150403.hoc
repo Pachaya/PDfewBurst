@@ -519,7 +519,7 @@ OSC_rltAmp_LST.x(2) = 1 // 1 , 1/2 , 1/3
 //OSC_rltAmp_LST.x(3) = 1 / 3 // 1 , 1/2 , 1/3
 
 OSC_phase_LST  = new Vector(1)
-OSC_phase_LST.x(0) = 0 //40 = gamma, 20 = beta
+OSC_phase_LST.x(0) = 0 //40 = gamma, 20 = betag
 
 Light_Stim_Amp = 0.5 //0.4 0.03 0.5' 0.6
 Light_Stim_Dur = 1000 // 500 , 1000
@@ -541,7 +541,7 @@ RANGE_TC = 100 // 25 75 100 150 200 250 <50?>
 
 //(r 250&50)  (r 100&40) 
 
-sigTC = RANGE_TC/sqrt(2) /// Ex. RANGE_E = 200 , sigTC =  141.4214  // Ref: McLaughlin paper
+sigTC = RANGE_TC/sqrt(2) /// Ex. RANGE_E = 200 , sigTC =  141.4214  // Refi: McLaughlin paper
 
 PHASE = 0 
 

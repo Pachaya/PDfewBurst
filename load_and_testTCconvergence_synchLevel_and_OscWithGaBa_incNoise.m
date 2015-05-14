@@ -387,7 +387,7 @@ for p5_ii = 1 : length(PARAM5) % Osc F
             tmpFrKO = sum(BasalAct.KO.All.spktrain(:,tmpT),2)/length(tmpT)*1000;
             VL_baselineWT(p3_ii) = mean(tmpFrWT);     VL_baselineWTstd(p3_ii) = std(tmpFrWT);
             VL_baselineKO(p3_ii) = mean(tmpFrKO);     VL_baselineKOstd(p3_ii) = std(tmpFrKO);
-            [ttest_res,ranksum_res,sum_sigDiffRS,sum_sigDiffTT] = sampleStatsTest( tmpFrWT,  tmpFrWT, 15, 100);
+            [ttest_res,ranksum_res,sum_sigDiffRS,sum_sigDiffTT] = sampleStatsTest( tmpFrWT,  tmpFrKO, 15, 100);
     end
        
         cntcnt = cntcnt + 1;

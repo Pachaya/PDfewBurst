@@ -7,7 +7,9 @@ V1SIZE = NtwrkSIZE
 /////////// Cells Template /////////// 
 // public SOMA_SIZE, GNABAR_HH, GKBAR_HH, GL_HH, EL_HH , THRESHOLD, EPSP_TAU1 , EPSP_TAU2, EPSP_E_REVERSE , IPSP_TAU1 , IPSP_TAU2, IPSP_I_REVERSE 
 // These parameters cannot put outside the template. Therefore, the values here are for reference only.
-SOMA_SIZE = 25 //[um], for L and diam
+// Check the template file for the exact value
+ 
+/* SOMA_SIZE = 25 //[um], for L and diam
 //For Hodgkin-Huxley model
 GNABAR_HH = 0.12 //gnabar_hh, [mho/cm2](mho = ohm^-1)  Maximum specific sodium channel conductance
 GKBAR_HH = 0.036 //gkbar_hh, [mho/cm2]   Maximum potassium channel conductance
@@ -23,7 +25,8 @@ EPSP_E_REVERSE = 0 //[mV]
 IPSP_TAU1 = 1 //[ms]
 IPSP_TAU2 = 7 //[ms]
 IPSP_I_REVERSE = -80 //[mV]
-
+ */
+ 
 /////////// Network specification interface /////////// 
 PROP_SPEED_I = 1000 //[um/ms] speed of axonal propagation < 1 m/s >
 PROP_SPEED_E = 100  //[um/ms] speed of axonal propagation < 0.1 m/s >
