@@ -69,7 +69,7 @@ InFR_CODENAME = "PoisInputFr150403_leastW_newExp"
 NOISE_POISSONSPK_GPm = 0
 NOISE_POISSONSPK_M1 = 0
 
-W_POISSPK_VL = 0.029//Weighting Factor for spikes input  ////////////////////////////////////////
+W_POISSPK_VL = 0.0015//0.029 Weighting Factor for spikes input  ////////////////////////////////////////
 VARIE_W_POISSPK = 0 // Vary weighting factor for spikes input to each cell or not
 W_POISSPK_VL_mean = W_POISSPK_VL //** Done Implementation **
 W_POISSPK_VL_sigma = 0.001
@@ -508,9 +508,11 @@ strdef CELLtxt
 objref PARAM1, PARAM2
 
 
-OSC_F_LST  = new Vector(2)
+
+OSC_F_LST  = new Vector(3)
 OSC_F_LST.x(0) = 20 //40 = gamma, 20 = beta
 OSC_F_LST.x(1) = 40 //40 = gamma, 20 = beta
+OSC_F_LST.x(2) = 10 //40 = gamma, 20 = beta
 
 OSC_rltAmp_LST = new Vector(3) 
 OSC_rltAmp_LST.x(0) = 0 // A = 0  =  No oscillation  -> 5 Trials
@@ -535,9 +537,9 @@ W_GPm_VL_sigma_LST  = new Vector(1) //
 //W_GPm_VL_sigma_LST.indgen(0.05,0,-0.01) // 0 0.05 0.1
 W_GPm_VL_sigma_LST.x(0) = 0 
 
-W_MULT_TC = 40  //20 30 40 50
+W_MULT_TC = 100  //20 30 40 50
 W_SCALE_TC = W_SCALE 
-RANGE_TC = 100 // 25 75 100 150 200 250 <50?>
+RANGE_TC = 50 // 25 75 100 150 200 250 <50?>
 
 //(r 250&50)  (r 100&40) 
 
@@ -551,9 +553,11 @@ PARAM2 =  OSC_rltAmp_LST // meanFR =  PoisSpkHz or read from file in the case of
 CNT = 0
 t_loop = startsw()
 
-INPUT_POISSON = 10
-MEAN = -2 //  0 -0.5 -1 -1.5 -2  : -1.4 -1.6   \\ -0.01 -0.1 -0.5 -1 -5 -10 
-STDEV  = 1 // 0 0.2' 0.5 1 Noise by InGauss
+W_POISSPK_VL = 0.0030 //0.0015 0.0030
+
+INPUT_POISSON = 50
+MEAN = 0 //  0 -0.5 -1 -1.5 -2  : -1.4 -1.6   \\ -0.01 -0.1 -0.5 -1 -5 -10 
+STDEV  = 0 // 0 0.2' 0.5 1 Noise by InGauss
 /*
 // Run one parameter set
 OSC_F = 20 //40
@@ -588,7 +592,7 @@ for TRIAL_NO = 1 , N_Trial {
 			}else{ sprint(CELLtxt,"KO") }
 			printf("\t\t Cell type #%g : %s\n", CELL_TYPE, CELLtxt)
 			TSTOP = 3000
-			PoisSpkHz = 20
+			PoisSpkHz = 450 // 50 100 250 450
 
 			run_simulation(PoisSpkHz,TSTOP)
 			//rasterplot()
