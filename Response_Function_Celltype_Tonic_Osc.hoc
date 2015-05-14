@@ -303,8 +303,8 @@ save_vectors_to_file(Rec_VL_K)
 sprint(saveVecFName,"%sSomaVolt_KOp_VL_%s.txt",dirLoc,simCode) 
 save_vectors_to_file(Rec_VL_Kp)
 
-sprint(saveVecFName,"%sRecordSpkTime_VL_%s.txt",dirLoc,simCode) 
-save_vectors_to_file(RecordSpkTime)
+//sprint(saveVecFName,"%sRecordSpkTime_VL_%s.txt",dirLoc,simCode) 
+//save_vectors_to_file(RecordSpkTime) // the size for each vector is varies, therefore it can't be save with the current function
 
 sprint(saveVecFName,"%sRecordSpkTrain_VL_%s.txt",dirLoc,simCode) 
 save_vectors_to_file(RecordSpkTrain)
@@ -370,7 +370,7 @@ xpanel()
 
 objref InputFR_LST
 InputFR_LST = new Vector()
-InputFR_LST.indgen(0,500,50)
+InputFR_LST.indgen(0,450,50)
 InputFR_LST.x(0) = 10
 //InputFR_LST.indgen(11,14,1)
 //InputFR_LST.x(0) = 5
@@ -379,15 +379,26 @@ InputFR_LST.x(0) = 10
 cnt_run = 0
 tloop = startsw()
 
+<<<<<<< HEAD
+OSC_F = 40 //40 = gamma, 20 = beta, 10 = mu/alpha
+OSC_rltAmp = 0.1// 0.5 1 0.1  amplitude relative to its mean firing rate  A = OSC_rltAmp * meanFR
+=======
 OSC_F = 40 //40 = gamma, 20 = beta
 OSC_rltAmp = 0.1 //  amplitude relative to its mean firing rate  A = OSC_rltAmp * meanFR
+>>>>>>> 4d7d299d06b14052a37685c456cd6ee230dc0c46
 PHASE = 0 // in radians
 
 NOISE_STDEV  = 0 // 0  0.2  0.5 1 
 NOISE_MEAN = 0 // 0 -0.1 -0.5 -1 -1.5
+<<<<<<< HEAD
+W_SPK  = 0.0015 // 0.0015 0.0030
+//WSPKmul = 0.001 
+//TestW = 1 // 1:1:10
+=======
 W_SPK  = 0.0015 // 0.001 0.0015 0.0020 0.0025 0.0030  0.0050   ||0.01 015 0.02 
 WSPKmul = 0.001 
 TestW = 1 // 1:1:10
+>>>>>>> 4d7d299d06b14052a37685c456cd6ee230dc0c46
 //W_SPK = NOISE_MEAN*-10*WSPKmul*TestW // Only when mean != 0
 
 //Nsample100_TSTOP5500_InputFR100_Wspk0.045_IGmean-1.5_IGsig0.2
@@ -395,7 +406,7 @@ TestW = 1 // 1:1:10
 for p3_ii = 0,  InputFR_LST.size-1 {
 		InputFR = InputFR_LST.x(p3_ii)
 		print "\t\t#",p3_ii," Input Frequency = ", InputFR
-		print "\t\t\t\t W_SPK = ", W_SPK, ", NOISE_STDEV = ", NOISE_STDEV, ", NOISE_MEAN = ", NOISE_MEAN
+		print "\t\t\t\t W_SPK = ", W_SPK, ", OSC_F = ", OSC_F, ", OSC_rltAmp = ", OSC_rltAmp
 		    Run_All()					
 			cnt_run = cnt_run + 1
 			print"\t\t\t### End one set :: ", simCode,  " || cnt = ", cnt_run," ###"

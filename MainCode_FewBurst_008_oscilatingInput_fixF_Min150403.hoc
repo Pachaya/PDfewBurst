@@ -542,6 +542,8 @@ W_SCALE_TC = W_SCALE
 RANGE_TC = 50 // 25 75 100 150 200 250 <50?>
 
 //(r 250&50)  (r 100&40) 
+W_POISSPK_VL = 0.003 //0.0015 0.0030
+
 
 sigTC = RANGE_TC/sqrt(2) /// Ex. RANGE_E = 200 , sigTC =  141.4214  // Refi: McLaughlin paper
 
@@ -554,6 +556,7 @@ CNT = 0
 t_loop = startsw()
 
 W_POISSPK_VL = 0.0030 //0.0015 0.0030
+
 
 INPUT_POISSON = 50
 MEAN = 0 //  0 -0.5 -1 -1.5 -2  : -1.4 -1.6   \\ -0.01 -0.1 -0.5 -1 -5 -10 
@@ -592,7 +595,7 @@ for TRIAL_NO = 1 , N_Trial {
 			}else{ sprint(CELLtxt,"KO") }
 			printf("\t\t Cell type #%g : %s\n", CELL_TYPE, CELLtxt)
 			TSTOP = 3000
-			PoisSpkHz = 450 // 50 100 250 450
+			PoisSpkHz = 50 // 50 100 250 450
 
 			run_simulation(PoisSpkHz,TSTOP)
 			//rasterplot()
