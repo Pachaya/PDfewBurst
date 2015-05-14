@@ -257,7 +257,12 @@ run()
 Save_all_vectors()
 }
 
-
+proc Run_notSave(){
+MakeCell()
+RecordSomaV()
+MakeVectorSpkTrain()
+run()
+}
 
 proc panel_button() { //panel
 xpanel("Setting Simulation Parameter")
@@ -270,10 +275,10 @@ xlabel("")
 xvalue("Input Frequency (Hz)","InputFR",10,"InputFR",0,1)
 xvalue("W for Spk->VL","W_SPK",0.001,"W_SPK",0,1)
 
-
 xlabel("")
-
-xbutton("Run", "Run_All()")
+xlabel("---------------------------------------")
+xbutton("Run&Save", "Run_All()")
+xbutton("Run Only", "Run_notSave()")
 
 xpanel()
 }

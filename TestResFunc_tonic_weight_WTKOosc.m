@@ -24,22 +24,24 @@ InputFR_LST = [ 10 50:50:1000];
 SynchLvl_LST = [0];%[0:1/Nsample:1];
 W_VL_M1_LST = [0.0001 : 0.0002 : 0.0001*Nsample]; %[0.0001 : 0.0001 : 0.0001*Nsample];
 
-WspkMult_LST = [1 1.25 1.5 1.75 2 3]; %[1 1.5 2 2.5 3  5];
+WspkMult_LST = [ 1.5 3]; %[1 1.5 2 2.5 3  5];
 IGmean_LST = 0; %[0 -0.1 -0.5 -1 -1.5]; % 0
 IGsig_LST = [0];
+OSC_F_LST = [20, 40, 10];
+OSC_AMP_LST = [0 0.5 1];
 
 PARAM1 = InputFR_LST;
 lblTxt1 = 'Input Frequency';
 saveTxt1 = 'InputFR';
 titleTxt1 = 'Input Frequency';
-PARAM2 = IGmean_LST;
-lblTxt2 = 'Mean of tonic Current';
-saveTxt2 = 'IGmean';
-titleTxt2 = 'IG_m_e_a_n';
-PARAM3 = IGsig_LST;
-lblTxt3 = 'Sigma of tonic current';
-saveTxt3 = 'IGsig';
-titleTxt3 = 'IG_s_i_g';
+PARAM2 = OSC_F_LST;
+lblTxt2 = 'Oscilation Frequencyt';
+saveTxt2 = 'OscF';
+titleTxt2 = 'OSC Freq';
+PARAM3 = OSC_AMP_LST;
+lblTxt3 = 'Oscilation Amplitude relative to mean input FR';
+saveTxt3 = 'OscAmp';
+titleTxt3 = 'OSC Amp';
 PARAM4 = WspkMult_LST;
 lblTxt4 = 'Weighting factor';
 saveTxt4 = 'WspkMult';
@@ -74,7 +76,8 @@ for p1_ii = 1 : length(PARAM1)
                 plist = [p1_ii, p2_ii, p3_ii,p4_ii];
                 
                 inF_ii = p1_ii; sl_ii = 1; wVM_ii = 1;
-                igm_ii = p2_ii; igs_ii = p3_ii; ww_ii = p4_ii;
+                igm_ii = 1; igs_ii = 1; ww_ii = p4_ii;
+                of_ii = p2_ii; oa_ii = p3_ii;
                 
                 W_VL_M1= W_VL_M1_LST(wVM_ii);
                 SynchLvl = SynchLvl_LST(sl_ii);
@@ -92,7 +95,14 @@ for p1_ii = 1 : length(PARAM1)
                     Wspk =  IGmean*-10*Wscale*TestW;
                 end
                 
-                simCode =[ coreName 'Nsample' num2str(Nsample) '_TSTOP' num2str(TSTOP) '_InputFR' num2str(InputFR)  '_Wspk' num2str(Wspk) '_IGmean' num2str(IGmean) '_IGsig' num2str(IGsig)];
+                Osc_F = OSC_F_LST(of_ii);
+                Osc_amp = OSC_AMP_LST(oa_ii);
+                PHASE =0;
+                ampTxt = sprintf('%2.2f',Osc_amp);
+                %RecordSpkPvalues_VL_Nsample100_TSTOP5500_InputFR10_Wspk0.003_IGmean0_IGsig0_oscF20Hz_amp0.10_phase0
+                simCode =[ coreName 'Nsample' num2str(Nsample) '_TSTOP' num2str(TSTOP) '_InputFR' num2str(InputFR)  ...
+                    '_Wspk' num2str(Wspk) '_IGmean' num2str(IGmean) '_IGsig' num2str(IGsig) ...
+                    '_oscF' num2str(Osc_F) 'Hz_amp' ampTxt '_phase' num2str(PHASE) ];
                 disp(simCode)
                 
                 %                 '_wSPK' num2str(W_SPK) '_wVLM1_' num2str(W_VL_M1)];
