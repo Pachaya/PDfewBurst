@@ -11,7 +11,7 @@
 %%%% file that use automatic spike counts in NEURON
 %% Parameter Settings
 ssize = 1500; LowerBorder = 500; UpperBorder = ssize-LowerBorder;
-THRESHOLD = 0;  % was -55 , in NEURON use 0
+THRESHOLD = 0;  % in NEURON use 0 or 10, prof use -20 
 RES = 1; %temporal resolution of one bin
 % CUTTIME = 500;
 % PhotoInjT = 1000;

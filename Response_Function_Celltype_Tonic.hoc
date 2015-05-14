@@ -256,7 +256,12 @@ run()
 Save_all_vectors()
 }
 
-
+proc Run_notSave(){
+MakeCell()
+RecordSomaV()
+MakeVectorSpkTrain()
+run()
+}
 
 proc panel_button() { //panel
 xpanel("Setting Simulation Parameter")
@@ -275,8 +280,9 @@ xvalue("Input Frequency (Hz)","InputFR",10,"InputFR",0,1)
 xvalue("W for Spk->VL","W_SPK",0.001,"W_SPK",0,1)
 
 xlabel("")
-
-xbutton("Run", "Run_All()")
+xlabel("---------------------------------------")
+xbutton("Run&Save", "Run_All()")
+xbutton("Run Only", "Run_notSave()")
 
 xpanel()
 }
@@ -287,26 +293,29 @@ xpanel()
 
 /////// Loop
 
-
-
 objref InputFR_LST
 InputFR_LST = new Vector()
-InputFR_LST.indgen(0,100,10)
-InputFR_LST.x(0) = 5
+InputFR_LST.indgen(0,500,50)
+InputFR_LST.x(0) = 10
+//InputFR_LST.indgen(550,1000,50)
+
 //InputFR_LST.indgen(11,14,1)
 //InputFR_LST.x(0) = 5
 //InputFR_LST.x(0) = 10
 //InputFR_LST.x(2) = 15
+
+
+
 cnt_run = 0
 tloop = startsw()
 
-
-NOISE_STDEV  = 0.2 // 0  0.2  0.5 1 
-NOISE_MEAN = -1.5 // 0 -0.1 -0.5 -1 -1.5
-//W_SPK  = 0.005 // 0.001 0.0015 0.0020 0.0025 0.0030  0.0050   ||0.01 015 0.02 
-WSPKmul = 0.001 
-TestW = 3 // 1 1.5  2 2.5 3 5 
-W_SPK = NOISE_MEAN*-10*WSPKmul*TestW // Only when mean != 0
+//0.00125 0.00175
+NOISE_STDEV  = 0 // 0  0.2  0.5 1 
+NOISE_MEAN = 0 // 0 -0.1 -0.5 -1 -1.5
+W_SPK  = 0.00125 // 0.001 0.0015 0.0020 0.0025 0.0030  0.0050   ||0.01 015 0.02 
+//WSPKmul = 0.001 
+//TestW = 3 // 1 1.5  2 2.5 3 5 
+//W_SPK = NOISE_MEAN*-10*WSPKmul*TestW // Only when mean != 0
 
 //Nsample100_TSTOP5500_InputFR100_Wspk0.045_IGmean-1.5_IGsig0.2
  
