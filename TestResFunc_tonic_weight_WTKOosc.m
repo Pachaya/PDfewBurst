@@ -28,7 +28,7 @@ WspkMult_LST = [ 1.5 3]; %[1 1.5 2 2.5 3  5];
 IGmean_LST = 0; %[0 -0.1 -0.5 -1 -1.5]; % 0
 IGsig_LST = [0];
 OSC_F_LST = [20, 40, 10];
-OSC_AMP_LST = [0 0.1 0.5 1];
+OSC_AMP_LST = [0 0.5 1];
 
 PARAM1 = InputFR_LST;
 lblTxt1 = 'Input Frequency';
@@ -98,10 +98,11 @@ for p1_ii = 1 : length(PARAM1)
                 Osc_F = OSC_F_LST(of_ii);
                 Osc_amp = OSC_AMP_LST(oa_ii);
                 PHASE =0;
+                ampTxt = sprintf('%2.2f',Osc_amp);
                 %RecordSpkPvalues_VL_Nsample100_TSTOP5500_InputFR10_Wspk0.003_IGmean0_IGsig0_oscF20Hz_amp0.10_phase0
                 simCode =[ coreName 'Nsample' num2str(Nsample) '_TSTOP' num2str(TSTOP) '_InputFR' num2str(InputFR)  ...
                     '_Wspk' num2str(Wspk) '_IGmean' num2str(IGmean) '_IGsig' num2str(IGsig) ...
-                    '_oscF' num2str(Osc_F) 'Hz_amp' num2str(Osc_amp) '_phase' num2str(PHASE) ];
+                    '_oscF' num2str(Osc_F) 'Hz_amp' ampTxt '_phase' num2str(PHASE) ];
                 disp(simCode)
                 
                 %                 '_wSPK' num2str(W_SPK) '_wVLM1_' num2str(W_VL_M1)];
