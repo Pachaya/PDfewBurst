@@ -39,8 +39,8 @@ ncells = 1150;
 M1_ncells = 166;
 TRIAL_LST = 1 : NUM_TRIAL;
 
-rTC_LST = [50 ]; %
-wmTC_LST = [20 ]; %[10 25 50 75 100];
+rTC_LST = [50 100 150 200 250]; %
+wmTC_LST = [20 30 40 50 100]; %[10 25 50 75 100];
 
 LightAmp_LST = [0.5];
 LightDur_LST = [1000];
@@ -145,7 +145,7 @@ for p1_ii = 1 : length(PARAM1)
                         InGauss_STDEV = 0; %0.2;, 0.3
                         NoiseMEAN = 0;
                         IGmeanSig = 0;
-                        W_Weight = 0.003;
+                        W_Weight = 0.0015;
                         PoisInputFr = Input_FR_LST(fr_ii);
                         TSTOP = 3000;
 %                         GPmLightDur = LightDur_LST(ld_ii);
@@ -162,9 +162,14 @@ for p1_ii = 1 : length(PARAM1)
 %                         GPm_w_sg = GPmVLw_sig_LST(s_ii);
                         
                         txtFR = sprintf('%2.2f',PoisInputFr); txtAmp = sprintf('%2.2f',osc_amp);
-                        Simulation_Code = [coreFileName '_rTC' num2str(rTC) '_wmTC' num2str(wmTC) '_' cTxt '_InGauss' num2str(InGauss_STDEV) '_IGmean' num2str(NoiseMEAN) '_IGmeanSig' num2str(IGmeanSig) ...
+                        if( InGauss_STDEV ==0)
+                        Simulation_Code = [coreFileName '_rTC' num2str(rTC) '_wmTC' num2str(wmTC) '_' cTxt '_IGmean' num2str(NoiseMEAN) '_IGmeanSig' num2str(IGmeanSig) ...
                             '_W' num2str(W_Weight) '_' txtFR 'Hz_oscF' num2str(osc_f) 'Hz_amp' txtAmp '_phase' num2str(osc_phase) '_T' num2str(TSTOP) '_trial' num2str(TRIAL_NO)];
-%                         GPmVLmd1_0del_KO2_rTC250_wmTC50_KO_InGauss0.2_IGmean0_IGmeanSig0_W0.029_10.00Hz_oscF40Hz_amp0.00_phase0_T3000_trial1
+                        else
+                                                    Simulation_Code = [coreFileName '_rTC' num2str(rTC) '_wmTC' num2str(wmTC) '_' cTxt '_InGauss' num2str(InGauss_STDEV) '_IGmean' num2str(NoiseMEAN) '_IGmeanSig' num2str(IGmeanSig) ...
+                            '_W' num2str(W_Weight) '_' txtFR 'Hz_oscF' num2str(osc_f) 'Hz_amp' txtAmp '_phase' num2str(osc_phase) '_T' num2str(TSTOP) '_trial' num2str(TRIAL_NO)];
+                        end
+                       
                         disp('==================================================================================================')
                         disp(Simulation_Code)
                         

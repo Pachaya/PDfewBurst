@@ -403,5 +403,3 @@ for p3_ii = 0,  InputFR_LST.size-1 {
 }
 
 print "Total Time : ",startsw() - ttotal
-
-}
