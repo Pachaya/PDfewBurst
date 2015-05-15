@@ -379,26 +379,17 @@ InputFR_LST.x(0) = 10
 cnt_run = 0
 tloop = startsw()
 
-<<<<<<< HEAD
+
 OSC_F = 40 //40 = gamma, 20 = beta, 10 = mu/alpha
 OSC_rltAmp = 0.1// 0.5 1 0.1  amplitude relative to its mean firing rate  A = OSC_rltAmp * meanFR
-=======
-OSC_F = 40 //40 = gamma, 20 = beta
-OSC_rltAmp = 0.1 //  amplitude relative to its mean firing rate  A = OSC_rltAmp * meanFR
->>>>>>> 4d7d299d06b14052a37685c456cd6ee230dc0c46
 PHASE = 0 // in radians
 
 NOISE_STDEV  = 0 // 0  0.2  0.5 1 
 NOISE_MEAN = 0 // 0 -0.1 -0.5 -1 -1.5
-<<<<<<< HEAD
+
 W_SPK  = 0.0015 // 0.0015 0.0030
 //WSPKmul = 0.001 
 //TestW = 1 // 1:1:10
-=======
-W_SPK  = 0.0015 // 0.001 0.0015 0.0020 0.0025 0.0030  0.0050   ||0.01 015 0.02 
-WSPKmul = 0.001 
-TestW = 1 // 1:1:10
->>>>>>> 4d7d299d06b14052a37685c456cd6ee230dc0c46
 //W_SPK = NOISE_MEAN*-10*WSPKmul*TestW // Only when mean != 0
 
 //Nsample100_TSTOP5500_InputFR100_Wspk0.045_IGmean-1.5_IGsig0.2

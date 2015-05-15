@@ -1,4 +1,7 @@
 //////////////////* Thalamocortical Connection : VL - M1 *///////////////////////
+///////////				Uniform weight with equivalent connection that use parameter rTC and wmTC weight with Gaussian distribution
+///////////             The connectivity for the connection is still follow the Gaussian Distribution
+
 sigTC = RANGE_TC/sqrt(2)
 nclistSTR = nclist.count //Current connection in nclist  *Realy important parameter or the index will be mess up
 ////// Making Distance Matrix (each M1's E cell to all E cells in VL based on cortex distance )
@@ -72,12 +75,79 @@ for i = 0, conlist_TC.count-1{
 //Get src-tar ID lists 
 
 ///////// Make Connection ///////// 
+
+weight_SigNoise = 0 // define by gaussian? mean = 0, sigma = 5 ?  ---> need to optimize   ************************************************************ do this later after finish the basic model
+weight_PmaxNoise = 0 // 
+
+W_TC = 1*W_MULT_TC*W_SCALE_TC +weight_SigNoise // + noise  
+W_EE = W_TC
+W_EI = W_TC
+W_IE = W_TC 
+W_II = W_TC
+
+objref  WeightList
+WeightList = new Vector(conlist_TC.count)
+
+proc uniformTC_Cal(){local i, M1ID, tmpsum, dist localobj tmpWeight,tmpWeightList, tmpConnID
+
+// for each M1 
+for i = 0, cellsE_M1.count-1{
+	// Find the connection ID that have this M1 cells as target
+	M1ID = cellsE_M1.o(i).cID
+	tmpConnID = tarlist_TC.c.indvwhere(tarlist_TC,"==",M1ID) // The connection ID that have this M1 cells as target
+	if(tmpConnID.size !=0){
+
+		tmpWeight = new Vector(tmpConnID.size)		
+		for j = 0, tmpConnID.size-1 {
+			cnID = tmpConnID.x(j)
+			tmpWeight.x(j) = weightCal (srclist_TC.x(cnID),tarlist_TC.x(cnID),3,W_TC,W_TC,W_TC,W_TC)
+			//dist = dist2cells(srclist_TC.x(cnID),tarlist_TC.x(cnID))  // Distance
+			//tmpWeight.x(j) = connectivity(1,dist,sigTC+conn_SigNoise) // Supposed the max amplitude = 1
+		}
+		tmpsum = tmpWeight.sum()
+		tmpWeightList = new Vector(tmpConnID.size, tmpsum / tmpConnID.size)
+		//tmpWeightList = tmpsum / tmpConnID.size		
+		
+		//tmpWeight.div(tmpsum).mul(SPECIFIED_W_TC) // Normalized weight for this VL-to-M1 ensemble
+		// Note : Because the normalization does not consider whether the cell is at border or not, be sure to analysis only center part of M1 
+		for j = 0, tmpConnID.size-1 { // Put this weight to the whole WeightList
+			cnID = tmpConnID.x(j)
+			WeightList.x(cnID) = tmpWeightList.x(j)
+		}
+	}
+}	
+
+}
+uniformTC_Cal()
+printf("Finish making the equivalent weighted uniform connection" ) //WeightList
+
 /*
 //delay =1
 for i=0,srclist.size-1{ 
 nc_append(srclist.x(i),   tarlist.x(i), getSynInd (srclist.x(i)),  weightCal (srclist.x(i),tarlist.x(i),1,W_RATIO),delayCal(srclist.x(i),tarlist.x(i)))  //weightCal (srclist.x(i),tarlist.x(i),flag) flag: 0 -> fixed, 1 -> spatial dependent
 }
 */
+
+//Making the connection 
+for i=0,srclist_TC.size-1{ 
+   nc_append(srclist_TC.x(i),   tarlist_TC.x(i), 0, WeightList.x(i), 0)   // Should the TC delay = 0? 
+		// Weighting factor are previously calculate by normW_Cal() and were save into WeightList variable
+	
+  //nc_append(srclist_TC.x(i),   tarlist_TC.x(i), 0,  weightCal (srclist_TC.x(i),tarlist_TC.x(i),3,W_TC,W_TC,W_TC,W_TC),0)   // Should the TC delay = 0? 
+  // Note : PROP_SPEED_I = 1000 //[um/ms] speed of axonal propagation < 1 m/s >
+  // Note : PROP_SPEED_E = 100  //[um/ms] speed of axonal propagation < 0.1 m/s > 
+  //weightCal (srclist.x(i),tarlist.x(i),flag) flag: 0 -> fixed, 1 -> spatial dependent
+  // flag: 3 -> input weight values : $4 $5 $6 $7 for user specified WEE, WEI, WIE, WII correspondingly
+  
+  //nc_append(srclist_TC.x(i),   tarlist_TC.x(i), getSynInd (srclist_TC.x(i)),  weightCal (srclist_TC.x(i),tarlist_TC.x(i),3,W_TC,W_TC,W_TC,W_TC),delayCal(srclist_TC.x(i),tarlist_TC.x(i)))  //weightCal (srclist.x(i),tarlist.x(i),flag) flag: 0 -> fixed, 1 -> spatial dependent
+}
+//printf("Weight values\n\tWEE: %g\n\tWEI: %g\n\tWIE: %g\n\tWII: %g\n", RUN_WEE*W_EE ,RUN_WEI*W_EI,RUN_WIE*W_IE,RUN_WII*W_II)
+// printf("Weight values\n\tW_TC: %g\n", W_TC )
+
+
+
+
+
 
 objref tmpNConn_TC
 {tmpNConn_TC = new Vector()
@@ -89,30 +159,6 @@ printf("Finished wiring thalamocortical connection")
 printf("Number of connection\n\t#TC: %g\n",nConnEE_TC) //Plot average # connection per Cell
 printf("Average M1 connection to one VL's E cell\n\t #M1 per VL: %g\n", nConnPerCellVec.mean()) //Plot average # connection per Cell
 printf("Average VL connection to one M1's E cell\n\t #VL per M1: %g\n", nConnPerCellVec_M1.mean()) //Plot average # connection per Cell
-
-
-
-weight_SigNoise = 0 // define by gaussian? mean = 0, sigma = 5 ?  ---> need to optimize   ************************************************************ do this later after finish the basic model
-weight_PmaxNoise = 0 // 
-
-W_TC = 1*W_MULT_TC*W_SCALE_TC +weight_SigNoise // + noise  
-W_EE = W_TC
-W_EI = W_TC
-W_IE = W_TC 
-W_II = W_TC
-
-//Making the connection 
-for i=0,srclist_TC.size-1{ 
-  nc_append(srclist_TC.x(i),   tarlist_TC.x(i), 0,  weightCal (srclist_TC.x(i),tarlist_TC.x(i),3,W_TC,W_TC,W_TC,W_TC),0)   // Should the TC delay = 0? 
-  // Note : PROP_SPEED_I = 1000 //[um/ms] speed of axonal propagation < 1 m/s >
-  // Note : PROP_SPEED_E = 100  //[um/ms] speed of axonal propagation < 0.1 m/s > 
-  //weightCal (srclist.x(i),tarlist.x(i),flag) flag: 0 -> fixed, 1 -> spatial dependent
-  // flag: 3 -> input weight values : $4 $5 $6 $7 for user specified WEE, WEI, WIE, WII correspondingly
-  
-  //nc_append(srclist_TC.x(i),   tarlist_TC.x(i), getSynInd (srclist_TC.x(i)),  weightCal (srclist_TC.x(i),tarlist_TC.x(i),3,W_TC,W_TC,W_TC,W_TC),delayCal(srclist_TC.x(i),tarlist_TC.x(i)))  //weightCal (srclist.x(i),tarlist.x(i),flag) flag: 0 -> fixed, 1 -> spatial dependent
-}
-//printf("Weight values\n\tWEE: %g\n\tWEI: %g\n\tWIE: %g\n\tWII: %g\n", RUN_WEE*W_EE ,RUN_WEI*W_EI,RUN_WIE*W_IE,RUN_WII*W_II)
-printf("Weight values\n\tW_TC: %g\n", W_TC )
 
 
 
@@ -140,19 +186,10 @@ TC_Conn_dist = GetVecConnNO_TC()
 printf("  Average # of thalamocortical connection per cell : %g\n",GetAvgConnNO_TC())
 
 
-
 /////////  print connection to file ///////// 
 
-objref fout, foutWD
+objref foutWD
 strdef fname
-fout = new File()
-if (POSTFIX){
-sprint(fname,"%sTC_ConnectionParam_%s.txt",dirLoc,postfixTxt) 
-}else{
-sprint(fname,"%sTC_ConnectionParam.txt",dirLoc)
-}
-fout.wopen(fname)
-fout.printf("%d\n",srclist_TC.size) //total number of connection
 
 foutWD = new File()
 if (POSTFIX){
@@ -164,9 +201,7 @@ foutWD.wopen(fname)
 //foutWD.wopen("SpatialConnectionWDParam.txt")
 foutWD.printf("%d\n",srclist_TC.size) //total number of connection
 for i =0,srclist_TC.size-1{
-	fout.printf("%d\t%d\t%d\n",srclist_TC.x(i),tarlist_TC.x(i),typelist_TC.x(i)) // or conlist.o(i).printf(fout,"%g\t") fout.printf("\n")
 	foutWD.printf("%d\t%d\t%d\t%.10f\t%.10f\n",srclist_TC.x(i),tarlist_TC.x(i),typelist_TC.x(i),nclist.o(nclistSTR+i).weight,nclist.o(nclistSTR+i).delay)
 }
-fout.close()
 foutWD.close()
 
