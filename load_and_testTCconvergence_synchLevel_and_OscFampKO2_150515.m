@@ -48,7 +48,7 @@ GPmVLw_mean_LST = [ 0.5];
 GPmVLw_sig_LST =[0];
 
 OSC_F_LST = [20 40];
-OSC_Amp_LST = [0 1/3 1/2 1];
+OSC_Amp_LST = [0 1/2 1];
 OSC_phase_LST = 0;
 
 TRIAL_NO_LST = 1;
@@ -101,8 +101,6 @@ for ii = 1 : N_Param
 end
 ACT_Record = cell(ACT_Rec_size);
 % ACT_Rec_size = [ACT_Rec_size 2];
-Check_Status = zeros(ACT_Rec_size);
-
 % Directory
 
 
@@ -112,7 +110,6 @@ dirFig = ['Fig' get_Parameters_RangeTxt( PARAMETERS,[1,2,4,5]) '/'];
 mkdir([dirLoc dirFig])
 
 
-%CheckSimulationByName_Combine_GpmVL_VLM1\
 for p1_ii = 1 : length(PARAM1)
     for p2_ii = 1 : length(PARAM2)
         for p3_ii = 1 : length(PARAM3)

@@ -1,7 +1,7 @@
 //////////////////* Thalamocortical Connection : VL - M1 *///////////////////////
 ///////////				Uniform weight with equivalent connection that use parameter rTC and wmTC weight with Gaussian distribution
 ///////////             The connectivity for the connection is still follow the Gaussian Distribution
-
+// PD_thalamocorticalConn_negExpWTC_0delay.hoc
 sigTC = RANGE_TC/sqrt(2)
 nclistSTR = nclist.count //Current connection in nclist  *Realy important parameter or the index will be mess up
 ////// Making Distance Matrix (each M1's E cell to all E cells in VL based on cortex distance )
@@ -40,34 +40,52 @@ ranNoise.normal(meanSto,sigSto)
 conn_SigNoise = 0 // define by gaussian? mean = 0, sigma = 5 ?  ---> need to optimize ************************************************************ do this later after finish the basic model
 conn_PmaxNoise = 0 // 
 
-//E cells 
-for i = 0, cellsE.count-1{
+
+
+
+objref  tmpListOfcellsInRange
+
+// Get average connectivity for each convergent connection
+// Get all cells that fall in the range 
+for ii = 0, cellsE_M1.count-1{
 	//Find distance between M1's ith E cell to all E cells in VL based on cortex distance
 		//nConnPerCell = 0
-		tmpVec = new Vector(3)
-		for j =0, cellsE_M1.count-1{
-				dist = dist2cells(cellsE.o(i).cID,cellsE_M1.o(j).cID)  // Distance
-				if( dist < (sigTC+conn_SigNoise)*3){ // cells withing radius of 3 sigma
-				//Connect cells?
-				p = 0.63 // 
-				//If the geniculate receptive field centre overlapped an appropriately signed simple subregion, the connection was high (63%). 
-				//The probability was highest if the X cell was well centred over the strongest simple subregion(86%) and decrease in both width and length. 
-				// (Reid & Alonso 1995)
+		tmpListOfcellsInRange = new List()
+		sumProb = 0
+		for jj =0, cellsE.count-1{				
+				dist = dist2cells(cellsE.o(jj).cID,cellsE_M1.o(ii).cID)  // Distance			
+				p = connectivity(Pmax_TC+conn_PmaxNoise,dist,sigTC+conn_SigNoise)
+				
+				if( dist < (sigTC+conn_SigNoise)*3){ // cells withing radius of 3 sigma	
+				tmpVec = new Vector(3)				
+				tmpVec.x(0) =jj  //cellsE.o(i).cID //source cell ID
+				tmpVec.x(1) = ii //cellsE_M1.o(j).cID //target cell ID
+				tmpVec.x(2) = p// p from Gaussian
+				sumProb = sumProb + p
+				tmpListOfcellsInRange.append(tmpVec.c)				
+				}
+		}
+		// For cells that can connect to each M1 
+		avgP = sumProb / tmpListOfcellsInRange.count
+		//printf("Average P for M1#%d = %g\n",ii,avgP ) 
+		p = avgP
+		for cc = 0, tmpListOfcellsInRange.count() - 1	{
 				if (ran.repick() < p){ //connect
-					//srclist.append(cellsE.o(i).cID)
-					//tarlist.append(cellsE.o(j).cID)
-					tmpVec.x(0) = cellsE.o(i).cID //source cell ID
-					tmpVec.x(1) = cellsE_M1.o(j).cID //target cell ID
+					sID  = tmpListOfcellsInRange.o(cc).x(0)
+					tID = tmpListOfcellsInRange.o(cc).x(1)
+					tmpVec = new Vector(3)		
+					tmpVec.x(0) = cellsE.o(sID).cID //source cell ID
+					tmpVec.x(1) = cellsE_M1.o(tID).cID //target cell ID
 					tmpVec.x(2) = 0 //Connection Type EE:0
 					conlist_TC.append(tmpVec.c)
 					cntCon_TC = cntCon_TC+1
 					//nConnPerCell =  nConnPerCell+1
-					nConnPerCellVec_M1.x(j) = nConnPerCellVec_M1.x(j) + 1 // Number of conn that each M1 receive from VL ( VL per 1 M1)
-					nConnPerCellVec.x(i) = nConnPerCellVec.x(i) + 1 // Number of conn that each VL make to M1 (M1 per 1VL)
+					nConnPerCellVec_M1.x(tID) = nConnPerCellVec_M1.x(tID) + 1 // Number of conn that each M1 receive from VL ( VL per 1 M1)
+					nConnPerCellVec.x(sID) = nConnPerCellVec.x(sID) + 1 // Number of conn that each VL make to M1 (M1 per 1VL)
 				}
-				}
-			}
-}
+		}
+		
+	}
 
 srclist_TC= new Vector(cntCon_TC)
 tarlist_TC = new Vector(cntCon_TC)
@@ -90,10 +108,12 @@ W_EI = W_TC
 W_IE = W_TC 
 W_II = W_TC
 
-objref  WeightList
+objref  WeightList, rneg
 WeightList = new Vector(conlist_TC.count)
+rneg = new Random(TRIAL_NO)
 
-proc uniformTC_Cal(){local i, M1ID, tmpsum, dist localobj tmpWeight,tmpWeightList, tmpConnID
+
+proc negExpTC_Cal(){local i, M1ID, tmpsum, tmpmean, dist localobj tmpWeight,tmpWeightList, tmpConnID
 
 // for each M1 
 for i = 0, cellsE_M1.count-1{
@@ -110,7 +130,10 @@ for i = 0, cellsE_M1.count-1{
 			//tmpWeight.x(j) = connectivity(1,dist,sigTC+conn_SigNoise) // Supposed the max amplitude = 1
 		}
 		tmpsum = tmpWeight.sum()
-		tmpWeightList = new Vector(tmpConnID.size, tmpsum / tmpConnID.size)
+		tmpmean = tmpsum / tmpConnID.size
+		rneg.negexp(tmpmean) // Negative Exponential // r.negexp(mean) 
+		tmpWeightList = new Vector(tmpConnID.size)
+		tmpWeightList.setrand(rneg)
 		//tmpWeightList = tmpsum / tmpConnID.size		
 		
 		//tmpWeight.div(tmpsum).mul(SPECIFIED_W_TC) // Normalized weight for this VL-to-M1 ensemble
@@ -123,8 +146,8 @@ for i = 0, cellsE_M1.count-1{
 }	
 
 }
-uniformTC_Cal()
-printf("Finish making the equivalent weighted uniform connection" ) //WeightList
+negExpTC_Cal()
+printf("Finish making the weighting for connection based on negative exponential distribution" ) //WeightList
 
 /*
 //delay =1

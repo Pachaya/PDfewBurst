@@ -1,0 +1,17 @@
+load_file("nrngui.hoc") 
+objref r, hist, g
+r = new Random()
+r.negexp(2.5)
+hist = new Vector(1000)
+proc sample() {
+        hist = new Vector(1000)
+        hist.setrand(r)
+        hist = hist.histogram(0,20,.1)
+        hist.plot(g, .1)
+}
+g = new Graph()
+g.size(0,20,0,50)
+sample()
+xpanel("Resample")
+xbutton("Resample", "sample()")
+xpanel()

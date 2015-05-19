@@ -15,7 +15,7 @@ SAVE_FIG = 1; Close_Fig_aftr_save = 1;
 % Statistical - Test
 DoTTest = 1;
 %raster plot
-plotSampleV = 1;
+plotSampleV = 0;
 
 
 % Simulation setting
@@ -39,8 +39,8 @@ ncells = 1150;
 M1_ncells = 166;
 TRIAL_LST = 1 : NUM_TRIAL;
 
-rTC_LST =  [50 100 150 200 250 ]; %
-wmTC_LST = [20 30 40 50 100]; %[10 25 50 75 100];
+rTC_LST = [50 100 150 200 250]; %
+wmTC_LST = [50 100 200 300 400 500]; %[10 25 50 75 100];
 
 LightAmp_LST = [0.5];
 LightDur_LST = [1000];
@@ -54,7 +54,7 @@ OSC_phase_LST = 0;
 TRIAL_NO_LST = 1;
 Noise_MEAN_LST = 0; %[0 -0.5 -1 -1.5 -2 ];
 InGauss_STDEV_LST = 0; %[ 0 0.2 0.5 1 ];
-spkW_LST = [0.0015 0.003];
+spkW_LST = [0.001];
 PoisInputFr_LST = 50;
 
 PARAM1 = rTC_LST;
@@ -103,7 +103,7 @@ ACT_Record = cell(ACT_Rec_size);
 
 PATH = SetPath;
 dirLoc = [PATH 'OscInput_Sim/'];
-dirFig = ['Fig_' num2str( PoisInputFr) 'Hz_' get_Parameters_RangeTxt( PARAMETERS,[1,2,4,5,6]) '/'];
+dirFig = ['Gauss_' num2str( PoisInputFr) 'Hz_' get_Parameters_RangeTxt( PARAMETERS,[1,2,4,5,6]) '/'];
 mkdir([dirLoc dirFig])
 
 for p1_ii = 1 : length(PARAM1)
@@ -129,7 +129,7 @@ for p1_ii = 1 : length(PARAM1)
                         
                         % PDfewBurst_GPmVLmd1_rTC120_wmTC10_WT_GPmInput_Amp0.3_Dur1000_GPmVLw_m0.06_sig0.01_InGauss0.2_IGmean-0.15_IGmeanSig0_W0.0015_SpecifiedPoisSpk_sig0.00Hz_T4000_trial3
                         
-                        coreFileName = 'GPmVLmd1_0del_KO2' ;
+                        coreFileName = 'GPmVLmd1_0del_KO2' ; %% 'GPmVLmd1_0del_KO2'  for Gaussian distribution ,   'GPmVLmd1_0del_KO2_uniformP63WTC' for uniform distribution , 'GPmVLmd1_0del_KO2_negExpWTC' for constant connectivity with random w from negative exponential distribution
                         
                         InGauss_STDEV = InGauss_STDEV_LST(gn_ii); %0.2;, 0.3
                         NoiseMEAN = Noise_MEAN_LST(g_ii);
@@ -448,46 +448,6 @@ end
 
 end
 
-%% When I noise sigma = 0.5 , I mean =0 ; what is the relationship between baseline activity of VL and ocillation amp
-fg = figure;
-p6_ii =3; p3_ii =1; p1_ii = 1; p2_ii =1;
-    VL_baselineWT = zeros(length(PARAM4),length(PARAM5)); 
-    VL_baselineKO = zeros(length(PARAM4),length(PARAM5));
-    VL_baselineWTstd = zeros(length(PARAM4),length(PARAM5)); 
-    VL_baselineKOstd = zeros(length(PARAM4),length(PARAM5));
-    tmpT = CUTTIME +1 : BaselineT;
-    normalActrange =  length(tmpT);
-    % Get Cell activity
-    for p4_ii = 1 : length(PARAM4)
-        for p5_ii = 1 : length(PARAM5)
-            BasalAct = ACT_Record{p1_ii, p2_ii,p3_ii,p4_ii,p5_ii, p6_ii}.VL; %% for M1
-            tmpFrWT = sum(BasalAct.WT.All.spktrain(:,tmpT),2)/length(tmpT)*1000;  
-            tmpFrKO = sum(BasalAct.KO.All.spktrain(:,tmpT),2)/length(tmpT)*1000;
-            VL_baselineWT(p4_ii,p5_ii) = mean(tmpFrWT);     VL_baselineWTstd(p4_ii,p5_ii) = std(tmpFrWT);
-            VL_baselineKO(p4_ii,p5_ii) = mean(tmpFrKO);     VL_baselineKOstd(p4_ii,p5_ii) = std(tmpFrKO);
-        end
-    end
-%     cntcnt = cntcnt +1;
-%     subplot(nR,nC,cntcnt);
-    
-    LEG = cell(length(PARAM4)*2,1); Clist1 = ['k','b','c'];  Clist2 = ['r','m','y'];
-    for p4_ii = 1 : length(PARAM4)
-        errorbar( VL_baselineWT(p4_ii,:), VL_baselineWTstd(p4_ii,:), ['*-' Clist1(p4_ii)]); hold on;  LEG{2*p4_ii-1} = ['WT: ' get_Parameters_titleText( PARAMETERS, 4, p4_ii )];
-        errorbar( VL_baselineKO(p4_ii,:), VL_baselineKOstd(p4_ii,:), ['*-' Clist2(p4_ii)]); hold on;  LEG{2*p4_ii} = ['KO: ' get_Parameters_titleText( PARAMETERS, 4, p4_ii )];
-    end
-    xt = PARAM5; xl =  PARAMETERS{5}.lblTxt;
-    yl = '<Firing rate> (Hz)';
-    set(gca,'XTick', 1:length(xt))
-    set(gca, 'XTickLabel', xt)
-                xlabel(xl);
-    
-    ylabel(yl); title( get_Parameters_titleText(PARAMETERS, [1,2,3,6], [p1_ii, p2_ii, p3_ii,p6_ii ]));
-    legend(LEG,'location','northeastoutside' );
-    
-%     if(cntcnt == 5)
-%         legend(LEG,'location','northeastoutside' );
-%     end
-    
 
 %% Check the membrane potential for each case
 
@@ -683,6 +643,40 @@ if(SAVE_FIG)
 end
 
 end
+%% 
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Get info for TC convergenc --> number of VL per M1 , average maxW , average summation of weight
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+p3_ii = 1; p4_ii = 1; p5_ii =1;
+ssize = 1500; dist = ssize/2; pmax =0.85; W_scale = 1E-05;
+fprintf('RangeTC\t\t wmTC\t\t numVL/M1\t\t sumW\t\t maxW\t\n');
+numVL_M1_LST = zeros(length(PARAM1),length(PARAM2));
+sumW_LST = 		 zeros(length(PARAM1),length(PARAM2));
+maxW_LST  = zeros(length(PARAM1),length(PARAM2));
+
+for p1_ii = 1 : length(PARAM1)
+    for p2_ii = 1 : length(PARAM2)
+        %         disp('##################################################################################################')
+        %        disp( [lblTxt1 ' = ' num2str(PARAM1(p1_ii)) ]);
+        %          disp( [lblTxt2 ' = ' num2str(PARAM2(p2_ii)) ]);
+        rangeTC = PARAM1(p1_ii);      sigTC = rangeTC/sqrt(2);
+        wmTC = PARAM2(p2_ii);
+        
+        Name_postfix_WT  = ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii }.VL.WT.Simulation_Code;  % The connection is same for WT and KO
+        %    Name_postfix_KO  = ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii }.VL.KO.Simulation_Code;
+        display = 0;
+        [TC_basedOnM1_WT, TC_sumW_WT, TC_maxW_WT, TC_numVL_WT ]               = ExtractTC_info( dirLoc, Name_postfix_WT,  display);
+        %disp([ num2str(rangeTC) '        ' num2str(mean(TC_numVL_WT)) '        ' num2str(specified_wmTC) '        ' num2str(mean(TC_sumW_WT)) '        ' num2str(mean(TC_maxW_WT))  ])
+        fprintf(' %3.0f\t\t%7.4f\t\t%7.4X\t\t%7.4X\t\t%7.4X\n', rangeTC, wmTC, mean(TC_numVL_WT), mean(TC_sumW_WT), mean(TC_maxW_WT));
+        numVL_M1_LST(p1_ii,p2_ii) = mean(TC_numVL_WT);
+        sumW_LST(p1_ii,p2_ii) = 	mean(TC_sumW_WT);
+        maxW_LST(p1_ii,p2_ii)  = mean(TC_maxW_WT);
+    end
+end
+VLperM1 = numVL_M1_LST(:,1);
+%%
+M1_BaselineActivity_Matrix
 
 
 %%

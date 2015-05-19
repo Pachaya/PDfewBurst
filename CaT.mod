@@ -1,4 +1,4 @@
-TITLE Calcium T channel for Subthalamic Nucleus
+TITLE T-type Calcium channel
 
 UNITS {
     (mV) = (millivolt)

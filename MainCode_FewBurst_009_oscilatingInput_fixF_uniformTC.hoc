@@ -177,7 +177,7 @@ CELL_TYPE = 1 //1 = WT, 2 = KO  ////////////////////////////////////////////////
 //////////  Setting Directories 
 strdef postfixTxt, dirLoc, core, hname
 
-dirLoc ="SimResult/OscInput_Sim/" 
+dirLoc ="SimResult/OscInput_varyTCtype_Sim/" 
 
 system("hostname",hname)      
 if(strcmp("user-PC\n",hname) == 0){ // Exp machine
@@ -201,7 +201,7 @@ proc run_simulation() { ////////////////////// Simulation Function
 	cIDrec = -1
 	//// * Make simulation's name
 	postfixTxt = ""
-	core = "GPmVLmd1_0del_KO2"
+	core = "GPmVLmd1_0del_KO2_uniformP63WTC"
 	if(MULT_PULSE){
 	sprint(core,"%s_%gHz_amp%g_dur%g_N%g",core,PulseHz, Input_I_Amp,Input_I_Dur,N_Pulses)
 	}
@@ -323,7 +323,7 @@ proc run_simulation() { ////////////////////// Simulation Function
 	}
 	
 	if(MAKE_M1_LAYER){ ///////////////////////////////////////////////////////////////
-	xopen("PD_thalamocorticalConn_0delay.hoc") printf( "////// Setting Thalamocortical Connection /////\n") }
+	xopen("PD_thalamocorticalConn_uniformTC_0delay.hoc") printf( "////// Setting Thalamocortical Connection /////\n") }
 
 
 	if(POSTFIX){
@@ -516,9 +516,8 @@ OSC_F_LST.x(2) = 10 //40 = gamma, 20 = beta
 
 OSC_rltAmp_LST = new Vector(3) 
 OSC_rltAmp_LST.x(0) = 0 // A = 0  =  No oscillation  -> 5 Trials
-OSC_rltAmp_LST.x(1) = 0.5 // 1 , 1/2 , 1/3 
+OSC_rltAmp_LST.x(1) = 1/2 // 1 , 1/2 , 1/3 
 OSC_rltAmp_LST.x(2) = 1 // 1 , 1/2 , 1/3 
-//OSC_rltAmp_LST.x(3) = 0.1 // 1 , 1/2 , 1/3 
 //OSC_rltAmp_LST.x(3) = 1 / 3 // 1 , 1/2 , 1/3
 
 OSC_phase_LST  = new Vector(1)
@@ -538,20 +537,19 @@ W_GPm_VL_sigma_LST  = new Vector(1) //
 //W_GPm_VL_sigma_LST.indgen(0.05,0,-0.01) // 0 0.05 0.1
 W_GPm_VL_sigma_LST.x(0) = 0 
 
-W_MULT_TC = 500 //20 30 40 50
+W_MULT_TC = 100  //20 30 40 50 
 W_SCALE_TC = W_SCALE 
-RANGE_TC = 250 // 25 75 100 150 200 250 <50?>
-
-//(r 250&50)  (r 100&40) 
-
-
+RANGE_TC = 200 // 25 75 100 150 200 250 <50?>
 sigTC = RANGE_TC/sqrt(2) /// Ex. RANGE_E = 200 , sigTC =  141.4214  // Refi: McLaughlin paper
+
 PHASE = 0 
+
 PARAM1 =  OSC_F_LST
 PARAM2 =  OSC_rltAmp_LST // meanFR =  PoisSpkHz or read from file in the case of specified input for each cell
 
 CNT = 0
 t_loop = startsw()
+
 W_POISSPK_VL = 0.001 //0.0015 0.0030
 
 INPUT_POISSON = 50
@@ -561,12 +559,13 @@ STDEV  = 0 // 0 0.2' 0.5 1 Noise by InGauss
 // Run one parameter set
 OSC_F = 20 //40
 PHASE =0 
-CELL_TYPE = 2 //2
-TSTOP = 4000
-PoisSpkHz = 0
+CELL_TYPE = 1 //2
+TSTOP = 100
+PoisSpkHz = 50
+
+run_simulation(PoisSpkHz,TSTOP)
 */
-//run_simulation(PoisSpkHz,TSTOP)
-	
+
 N_Trial = 1
 SHOW_GUI = 0
 for TRIAL_NO = 1 , N_Trial {	
