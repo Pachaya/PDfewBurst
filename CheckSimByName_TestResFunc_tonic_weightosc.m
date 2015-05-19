@@ -19,7 +19,7 @@ W_SPK = 0.029;
 W_VL_M1 = 0.002/Nsample ;
 
 
-InputFR_LST = [ 10 50:50:450];
+InputFR_LST = 10; %[ 10 50:50:450];
 SynchLvl_LST = [0];%[0:1/Nsample:1];
 W_VL_M1_LST = [0.0001 : 0.0002 : 0.0001*Nsample]; %[0.0001 : 0.0001 : 0.0001*Nsample];
 
