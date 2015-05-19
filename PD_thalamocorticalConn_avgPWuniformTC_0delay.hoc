@@ -1,7 +1,7 @@
 //////////////////* Thalamocortical Connection : VL - M1 *///////////////////////
 ///////////				Uniform weight with equivalent connection that use parameter rTC and wmTC weight with Gaussian distribution
 ///////////             The connectivity for the connection is still follow the Gaussian Distribution
-// PD_thalamocorticalConn_negExpWTC_0delay.hoc
+
 sigTC = RANGE_TC/sqrt(2)
 nclistSTR = nclist.count //Current connection in nclist  *Realy important parameter or the index will be mess up
 ////// Making Distance Matrix (each M1's E cell to all E cells in VL based on cortex distance )
@@ -41,8 +41,6 @@ conn_SigNoise = 0 // define by gaussian? mean = 0, sigma = 5 ?  ---> need to opt
 conn_PmaxNoise = 0 // 
 
 
-
-
 objref  tmpListOfcellsInRange
 
 // Get average connectivity for each convergent connection
@@ -55,7 +53,7 @@ for ii = 0, cellsE_M1.count-1{
 		for jj =0, cellsE.count-1{				
 				dist = dist2cells(cellsE.o(jj).cID,cellsE_M1.o(ii).cID)  // Distance			
 				p = connectivity(Pmax_TC+conn_PmaxNoise,dist,sigTC+conn_SigNoise)
-				printf("Dist = %d, p = %g",dist,p)
+				//printf("Dist = %d, p = %g\n",dist,p)
 				if( dist < (sigTC+conn_SigNoise)*3){ // cells withing radius of 3 sigma	
 				tmpVec = new Vector(3)				
 				tmpVec.x(0) =jj  //cellsE.o(i).cID //source cell ID
@@ -67,7 +65,7 @@ for ii = 0, cellsE_M1.count-1{
 		}
 		// For cells that can connect to each M1 
 		avgP = sumProb / tmpListOfcellsInRange.count
-		//printf("Average P for M1#%d = %g\n",ii,avgP ) 
+		printf("Average P for M1#%d = %g\n",ii,avgP ) 
 		p = avgP
 		for cc = 0, tmpListOfcellsInRange.count() - 1	{
 				if (ran.repick() < p){ //connect
@@ -86,6 +84,7 @@ for ii = 0, cellsE_M1.count-1{
 		}
 		
 	}
+
 
 srclist_TC= new Vector(cntCon_TC)
 tarlist_TC = new Vector(cntCon_TC)
@@ -108,12 +107,10 @@ W_EI = W_TC
 W_IE = W_TC 
 W_II = W_TC
 
-objref  WeightList, rneg
+objref  WeightList
 WeightList = new Vector(conlist_TC.count)
-rneg = new Random(TRIAL_NO)
 
-
-proc negExpTC_Cal(){local i, M1ID, tmpsum, tmpmean, dist localobj tmpWeight,tmpWeightList, tmpConnID
+proc uniformTC_Cal(){local i, M1ID, tmpsum, dist localobj tmpWeight,tmpWeightList, tmpConnID
 
 // for each M1 
 for i = 0, cellsE_M1.count-1{
@@ -130,10 +127,7 @@ for i = 0, cellsE_M1.count-1{
 			//tmpWeight.x(j) = connectivity(1,dist,sigTC+conn_SigNoise) // Supposed the max amplitude = 1
 		}
 		tmpsum = tmpWeight.sum()
-		tmpmean = tmpsum / tmpConnID.size
-		rneg.negexp(tmpmean) // Negative Exponential // r.negexp(mean) 
-		tmpWeightList = new Vector(tmpConnID.size)
-		tmpWeightList.setrand(rneg)
+		tmpWeightList = new Vector(tmpConnID.size, tmpsum / tmpConnID.size)
 		//tmpWeightList = tmpsum / tmpConnID.size		
 		
 		//tmpWeight.div(tmpsum).mul(SPECIFIED_W_TC) // Normalized weight for this VL-to-M1 ensemble
@@ -146,8 +140,8 @@ for i = 0, cellsE_M1.count-1{
 }	
 
 }
-negExpTC_Cal()
-printf("Finish making the weighting for connection based on negative exponential distribution" ) //WeightList
+uniformTC_Cal()
+printf("Finish making the equivalent weighted uniform connection" ) //WeightList
 
 /*
 //delay =1
