@@ -109,7 +109,7 @@ Check_Status = zeros(ACT_Rec_size);
 
 
 PATH = SetPath;
-dirLoc = [PATH 'OscInput_varyTCtype_Sim']; %OscInput_Sim/'];
+dirLoc = [PATH 'OscInput_varyTCtype_Sim/']; %OscInput_Sim/'];
 % dirFig = ['Fig' get_Parameters_RangeTxt( PARAMETERS,[1,2,4,5]) '/'];
 % mkdir([dirLoc dirFig])
 
@@ -140,7 +140,7 @@ for p1_ii = 1 : length(PARAM1)
                         
                         % PDfewBurst_GPmVLmd1_rTC120_wmTC10_WT_GPmInput_Amp0.3_Dur1000_GPmVLw_m0.06_sig0.01_InGauss0.2_IGmean-0.15_IGmeanSig0_W0.0015_SpecifiedPoisSpk_sig0.00Hz_T4000_trial3
                         
-                        coreFileName = 'GPmVLmd1_0del_KO2_avgPnegExpWTC'; % GPmVLmd1_0del_KO2' ;
+                        coreFileName = 'GPmVLmd1_0del_KO2_avgPWuniformTC';%'GPmVLmd1_0del_KO2_avgPWuniformTC' % GPmVLmd1_0del_KO2' ;
                         
                         InGauss_STDEV = 0; %0.2;, 0.3
                         NoiseMEAN = 0;

@@ -41,7 +41,7 @@ M1_ncells = 166;
 TRIAL_LST = 1 : NUM_TRIAL;
 
 rTC_LST =  [50 100 150 200 250 ]; %
-wmTC_LST = [20 30 40 50 100]; %[10 25 50 75 100];
+wmTC_LST = [50 100 200 300 400 500]; %[10 25 50 75 100];
 
 LightAmp_LST = [0.5];
 LightDur_LST = [1000];
@@ -104,7 +104,7 @@ ACT_Record = cell(ACT_Rec_size);
 
 PATH = SetPath;
 dirLoc = [PATH 'OscInput_varyTCtype_Sim/']; % [PATH 'OscInput_Sim/']; % /OscInput_varyTCtype_Sim/
-dirFig = ['uniformP63WTC_' num2str( PoisInputFr) 'Hz_' get_Parameters_RangeTxt( PARAMETERS,[1,2,4,5,6]) '/'];
+dirFig = ['negExp_2_2_' num2str( PoisInputFr) 'Hz_' get_Parameters_RangeTxt( PARAMETERS,[1,2,4,5,6]) '/'];
 mkdir([dirLoc dirFig])
 
 for p1_ii = 1 : length(PARAM1)

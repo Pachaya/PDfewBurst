@@ -40,8 +40,8 @@ ncells = 1150;
 M1_ncells = 166;
 TRIAL_LST = 1 : NUM_TRIAL;
 
-rTC_LST =  [50 100 150 200 250 ]; %
-wmTC_LST = [20 30 40 50 100]; %[10 25 50 75 100];
+rTC_LST =  [ 100 150 200 250 ]; %
+wmTC_LST = [ 50 100 200 300 400 500]; %[10 25 50 75 100];
 
 LightAmp_LST = [0.5];
 LightDur_LST = [1000];
@@ -130,7 +130,7 @@ for p1_ii = 1 : length(PARAM1)
                         
                         % PDfewBurst_GPmVLmd1_rTC120_wmTC10_WT_GPmInput_Amp0.3_Dur1000_GPmVLw_m0.06_sig0.01_InGauss0.2_IGmean-0.15_IGmeanSig0_W0.0015_SpecifiedPoisSpk_sig0.00Hz_T4000_trial3
                         
-                        coreFileName = 'GPmVLmd1_0del_KO2_avgPnegExpWTC'; %GPmVLmd1_0del_KO2_negExpWTC' ; %% 'GPmVLmd1_0del_KO2'  for Gaussian distribution ,   'GPmVLmd1_0del_KO2_uniformP63WTC' for uniform distribution , 'GPmVLmd1_0del_KO2_negExpWTC' for constant connectivity with random w from negative exponential distribution
+                        coreFileName = 'GPmVLmd1_0del_KO2_avgPWuniformTC' ; %% 'GPmVLmd1_0del_KO2'  for Gaussian distribution ,   'GPmVLmd1_0del_KO2_uniformP63WTC' for uniform distribution , 'GPmVLmd1_0del_KO2_negExpWTC' for constant connectivity with random w from negative exponential distribution
                         
                         InGauss_STDEV = InGauss_STDEV_LST(gn_ii); %0.2;, 0.3
                         NoiseMEAN = Noise_MEAN_LST(g_ii);

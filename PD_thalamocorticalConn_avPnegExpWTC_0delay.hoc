@@ -55,7 +55,7 @@ for ii = 0, cellsE_M1.count-1{
 		for jj =0, cellsE.count-1{				
 				dist = dist2cells(cellsE.o(jj).cID,cellsE_M1.o(ii).cID)  // Distance			
 				p = connectivity(Pmax_TC+conn_PmaxNoise,dist,sigTC+conn_SigNoise)
-				printf("Dist = %d, p = %g",dist,p)
+				//printf("Dist = %d, p = %g\n",dist,p)
 				if( dist < (sigTC+conn_SigNoise)*3){ // cells withing radius of 3 sigma	
 				tmpVec = new Vector(3)				
 				tmpVec.x(0) =jj  //cellsE.o(i).cID //source cell ID
