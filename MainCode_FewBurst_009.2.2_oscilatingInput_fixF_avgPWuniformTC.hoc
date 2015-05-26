@@ -537,9 +537,9 @@ W_GPm_VL_sigma_LST  = new Vector(1) //
 //W_GPm_VL_sigma_LST.indgen(0.05,0,-0.01) // 0 0.05 0.1
 W_GPm_VL_sigma_LST.x(0) = 0 
 
-W_MULT_TC = 400  //20 30 40 50 
+W_MULT_TC = 50  //20 30 40 50 
 W_SCALE_TC = W_SCALE 
-RANGE_TC = 200 // 25 75 100 150 200 250 <50?>
+RANGE_TC = 250 // 25 75 100 150 200 250 <50?>
 sigTC = RANGE_TC/sqrt(2) /// Ex. RANGE_E = 200 , sigTC =  141.4214  // Refi: McLaughlin paper
 
 PHASE = 0 
