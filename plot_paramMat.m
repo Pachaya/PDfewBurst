@@ -11,8 +11,9 @@ caxis2  = max( data1(:) );
 % plot to current axis
 imagesc(data1);
 set(gca, 'YTick', 1:length(yt), 'XTick', 1:length(xt))
-set(gca, 'YTickLabel',  yt, 'XTickLabel', xt)
+set(gca, 'YTickLabel',  yt, 'XTickLabel', xt);
 axis xy;
+set(gca,'fontsize',11);
 xlabel(xl); ylabel(yl); colorbar();  caxis([0 caxis2]); colormap('gray')
 title(tt1);
 

@@ -69,7 +69,7 @@ InFR_CODENAME = "PoisInputFr150403_leastW_newExp"
 NOISE_POISSONSPK_GPm = 0
 NOISE_POISSONSPK_M1 = 0
 
-W_POISSPK_VL = 0.029//Weighting Factor for spikes input  ////////////////////////////////////////
+W_POISSPK_VL = 0.001//Weighting Factor for spikes input  ////////////////////////////////////////
 VARIE_W_POISSPK = 0 // Vary weighting factor for spikes input to each cell or not
 W_POISSPK_VL_mean = W_POISSPK_VL //** Done Implementation **
 W_POISSPK_VL_sigma = 0.001

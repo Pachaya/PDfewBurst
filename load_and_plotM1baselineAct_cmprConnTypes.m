@@ -96,7 +96,20 @@ for ii = 1 : N_Param
 end
 ACT_Record = cell(ACT_Rec_size);
 
-
+% Connection Types
+NumCnvrgntTypes = 3; CnvrgntTypes = cell(NumCnvrgntTypes,1);
+CnvrgntTypes{1}.FileName = 'GPmVLmd1_0del_KO2'; 
+CnvrgntTypes{2}.FileName = 'GPmVLmd1_0del_KO2_avgPWuniformTC'; 
+CnvrgntTypes{3}.FileName = 'GPmVLmd1_0del_KO2_avgPnegExpWTC' ; 
+CnvrgntTypes{1}.TitleName = 'Connectivity: Gaussian, Strength: Gaussian'; 
+CnvrgntTypes{2}.TitleName = 'Connectivity: Uniform, Strength: Uniform'; 
+CnvrgntTypes{3}.TitleName = 'Connectivity: Uniform, Strength: Negative exponential'; 
+CnvrgntTypes{1}.CodeName = 'gaussPgaussW'; 
+CnvrgntTypes{2}.CodeName = 'avgPuniformW'; 
+CnvrgntTypes{3}.CodeName = 'avgPnegecpW'; 
+CnvrgntTypes{1}.leg = 'P:Gauss, W:Gauss'; 
+CnvrgntTypes{2}.leg = 'P:uniform, W:uniform';
+CnvrgntTypes{3}.leg = 'P:uniform, W:Neg Exp'; 
 
  PoisInputFr = 50;
  
@@ -104,9 +117,19 @@ ACT_Record = cell(ACT_Rec_size);
 
 PATH = SetPath;
 dirLoc = [PATH 'OscInput_varyTCtype_Sim/']; % [PATH 'OscInput_Sim/']; % /OscInput_varyTCtype_Sim/
-dirFig = ['uniformTC_' num2str( PoisInputFr) 'Hz_' get_Parameters_RangeTxt( PARAMETERS,[1,2,4,5,6]) '/'];
+dirFig = ['CompareConTypes_' num2str( PoisInputFr) 'Hz_' get_Parameters_RangeTxt( PARAMETERS,[1,2,4,5,6]) '/'];
 mkdir([dirLoc dirFig])
-
+NEVER_LOAD_DATA = 0;
+if (NEVER_LOAD_DATA)
+for ct_ii = 1 : NumCnvrgntTypes 
+ ACT_Record = cell(ACT_Rec_size);
+ if ct_ii == 1 
+    dirLoc = [PATH 'OscInput_Sim/'];
+    dirFig = ['../OscInput_varyTCtype_Sim/' 'CompareConTypes_' num2str( PoisInputFr) 'Hz_' get_Parameters_RangeTxt( PARAMETERS,[1,2,4,5,6]) '/'];    
+ else
+    dirLoc = [PATH 'OscInput_varyTCtype_Sim/']; % [PATH 'OscInput_Sim/']; % /OscInput_varyTCtype_Sim/
+    dirFig = ['CompareConTypes_' num2str( PoisInputFr) 'Hz_' get_Parameters_RangeTxt( PARAMETERS,[1,2,4,5,6]) '/'];
+ end
 for p1_ii = 1 : length(PARAM1)
     for p2_ii = 1 : length(PARAM2)
         for p3_ii = 1 : length(PARAM3)
@@ -130,7 +153,7 @@ for p1_ii = 1 : length(PARAM1)
                         
                         % PDfewBurst_GPmVLmd1_rTC120_wmTC10_WT_GPmInput_Amp0.3_Dur1000_GPmVLw_m0.06_sig0.01_InGauss0.2_IGmean-0.15_IGmeanSig0_W0.0015_SpecifiedPoisSpk_sig0.00Hz_T4000_trial3
                         
-                        coreFileName = 'GPmVLmd1_0del_KO2_avgPWuniformTC' ; %% 'GPmVLmd1_0del_KO2'  for Gaussian distribution ,   'GPmVLmd1_0del_KO2_uniformP63WTC' for uniform distribution , 'GPmVLmd1_0del_KO2_negExpWTC' for constant connectivity with random w from negative exponential distribution
+                        coreFileName =  CnvrgntTypes{ct_ii}.FileName; %'GPmVLmd1_0del_KO2_avgPWuniformTC' ; %% 'GPmVLmd1_0del_KO2'  for Gaussian distribution ,   'GPmVLmd1_0del_KO2_uniformP63WTC' for uniform distribution , 'GPmVLmd1_0del_KO2_negExpWTC' for constant connectivity with random w from negative exponential distribution
                         
                         InGauss_STDEV = InGauss_STDEV_LST(gn_ii); %0.2;, 0.3
                         NoiseMEAN = Noise_MEAN_LST(g_ii);
@@ -272,130 +295,107 @@ for p1_ii = 1 : length(PARAM1)
         end
     end
 end
-%%
-if(SAVE_BASAL_ACT)
-    save([dirLoc dirFig 'Saved_Activity_result_' SPECIFIED_BASAL_ACT_CODENAME date '.mat' ], 'ACT_Record','PARAMETERS','-v7.3');
-end
+%% Save Data
 
+    contype =   CnvrgntTypes{ct_ii}.CodeName;
+    CnvrgntTypes{ct_ii}.ACT_Record = ACT_Record;
+    save([dirLoc dirFig 'Activity_' contype '_' date '.mat' ], 'ACT_Record','PARAMETERS','-v7.3');
+    CnvrgntTypes{ct_ii}.matFile = [dirLoc dirFig 'Activity_' contype '_' date '.mat' ];
+    disp('============================================================================================');
+    disp('============================================================================================');
+    disp(CnvrgntTypes{ct_ii}.TitleName)
+    disp('============================================================================================');
+    disp('============================================================================================');
+    clear ACT_Record
+end
+else
+    
+    
+    matFile = {'Activity_gaussPgaussW_27-May-2015','Activity_avgPuniformW_27-May-2015', 'Activity_avgPnegecpW_27-May-2015'};
+    for ct_ii = 1 : NumCnvrgntTypes
+        CnvrgntTypes{ct_ii}.matFile = matFile{ct_ii};
+        load([dirLoc dirFig matFile{ct_ii} '.mat' ]);
+        CnvrgntTypes{ct_ii}.ACT_Record = ACT_Record;
+        disp('============================================================================================');
+        disp(CnvrgntTypes{ct_ii}.TitleName)
+        disp('============================================================================================');
+        
+    end
+end
+%%
+ save([dirLoc dirFig 'ActivityResult_allCnvrgntTypes_' date '.mat' ], 'CnvrgntTypes','PARAMETERS','-v7.3');
 
 
 %% 
-
-
+close all
+for ct_ii = 1 : NumCnvrgntTypes 
+ ACT_Record = CnvrgntTypes{ct_ii}.ACT_Record;
+ if ct_ii == 1 
+    dirLoc = [PATH 'OscInput_Sim/'];
+    dirFig = ['../OscInput_varyTCtype_Sim/' 'CompareConTypes_' num2str( PoisInputFr) 'Hz_' get_Parameters_RangeTxt( PARAMETERS,[1,2,4,5,6]) '/'];    
+ else
+    dirLoc = [PATH 'OscInput_varyTCtype_Sim/']; % [PATH 'OscInput_Sim/']; % /OscInput_varyTCtype_Sim/
+    dirFig = ['CompareConTypes_' num2str( PoisInputFr) 'Hz_' get_Parameters_RangeTxt( PARAMETERS,[1,2,4,5,6]) '/'];
+ end
 %% Check Osc F and Amp of one current case
-p1_ii = 1; p2_ii =1; p3_ii = 1; p6_ii = 1;
-nR = length(PARAM4); nC = length(PARAM5);
-fosc = figure;  set(fosc, 'position', [   147         799        2094         471]); set(gcf,'PaperPositionMode','auto');
-cnt1 =0;
-fg_fft = figure;  set(fg_fft,'position',[ 458         600        1421         568]); set(gcf,'PaperPositionMode','auto');
-cntcnt = 0;
+% Check_OscF_and_Amp_of_one_case
+%%  Get info for TC convergenc --> number of VL per M1 , average maxW , average summation of weight
+Get_info_TC_convergence_numVLperM1
 
-for p4_ii = 1 : length(PARAM4)  % OSC F
-    for p5_ii = 1 : length(PARAM5) % OSC Amp
-        
-        tmpTxt = get_Parameters_titleText(PARAMETERS,[4, 5],[p4_ii,p5_ii]);
-        %%% for VL
-        tmpWTtrain_VL =  ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii,p6_ii}.VL.WT.All.spktrain;
-        tmpKOtrain_VL =  ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii,p6_ii}.VL.KO.All.spktrain;
-        
-        % Check Oscillation Frequency of VL
-        
-        T = TSTOP;
-        tt = 0:1:T;
-        
-        % Spike Train
-        [KOci, KOti] = find(tmpKOtrain_VL);
-        [WTci, WTti] = find(tmpWTtrain_VL);
-        
-        % mean firing rate
-        KOfmu = mean(tmpKOtrain_VL, 1)*1000;
-        WTfmu = mean(tmpWTtrain_VL, 1)*1000;
-        %         fosc = figure;  set(fosc, 'position', [496         763        1042         420]); set(gcf,'PaperPositionMode','auto');
-        %         subplot(211);
-        %         plot(WTfmu,'k');   hold on;  plot(KOfmu,'r'); legend('WT','KO'); title('Raw instantaneous average firing rate')
-        
-        gsig = 3;   % filter [ms]
-        gfil = exp( -[-round(4*gsig):round(4*gsig)].^2 /2/gsig^2);
-        gfil = gfil/sum(gfil(:));
-        
-        KOfmus = conv(KOfmu, gfil, 'same');
-        WTfmus = conv(WTfmu, gfil, 'same');
-        %         subplot(212); plot(WTfmus,'k');   hold on;  plot(KOfmus,'r'); legend('WT','KO'); title('Smooth instantaneous average firing rate');
-        %         suptitle(tmpTxt)
-        cnt1 = cnt1+1;
-        figure(fosc); subplot(nR,nC,cnt1);
-        plot(WTfmus,'k');   hold on;  plot(KOfmus,'r'); legend('WT','KO','location','best'); title(tmpTxt);  %title('Smooth instantaneous average firing rate');
-        
-        % FFT
-        KOfft = abs(fftshift(fft(KOfmus)));
-        WTfft = abs(fftshift(fft(WTfmus)));
-        
-        
-        dHz = 1/T * 1000;
-        Hz_ind = [-round(T/2):round(T/2)]*dHz;
-        %         Hz_ind = Hz_ind(1:T);
-        %         fg_fft = figure;  set(fg_fft,'position',[ 458         600        1421         568]); set(gcf,'PaperPositionMode','auto');
-        %         subplot(121);
-        figure(fg_fft);  cntcnt = cntcnt +1;
-        subplot(nR,nC,cntcnt);
-        plot(Hz_ind, WTfft,'k'); hold on;  plot(Hz_ind, KOfft,'r');  legend('WT','KO');
-        xlim([1 100]); ylabel('FFT amplitude (a.u.)'); xlabel('Frequency (Hz)'); title(tmpTxt); %title('raw FFT')
-        
-        [Hind, KO_FFT, WT_FFT] = analyze_fft(Hz_ind, WTfft, KOfft);
-        %         subplot(122);
-        %         plot(Hind, WT_FFT.FF,'k') ;     hold on; plot(Hind, KO_FFT.FF,'r');  legend('WT','KO');
-        %         xlim([1 100]); ylabel('FFT amplitude (a.u.)'); xlabel('Frequency (Hz)'); title('Smooth FFT');
-        %         suptitle(tmpTxt);
-        
-    end
-end
-tmpTxt = get_Parameters_titleText(PARAMETERS, [1:3, 6], [p1_ii p2_ii p3_ii p6_ii ]);
-figure(fosc); suptitle({['Smooth instantaneous average firing rate (Gaussian filter size = ' num2str(gsig) ')'], tmpTxt});
-figure(fg_fft); suptitle({'Raw FFT', tmpTxt});
-if (SAVE_FIG)
-    tmpTxt = get_Parameters_saveText(PARAMETERS, [1:3 6], [p1_ii p2_ii p3_ii p6_ii]);
-    ffig = [ dirLoc dirFig 'ChecksampleVLInst_Avg_FR_' tmpTxt ];
-    saveas(  fosc, [ffig '.jpg'], 'jpg');        saveas(  fosc, [ffig '.fig'], 'fig');
-    ffig = [ dirLoc dirFig 'ChecksampleVL_Osc_fft_' tmpTxt ];
-    saveas(  fg_fft, [ffig '.jpg'], 'jpg');        saveas(  fg_fft, [ffig '.fig'], 'fig');
+%%
+CtypeTxt =  CnvrgntTypes{ct_ii}.TitleName;
+codeTxt =   CnvrgntTypes{ct_ii}.CodeName;
+% M1_BaselineActivity_Matrix_noIndvPlot  % ---> plot raw M1 activity 
+M1_BaselineActivity_Matrix_noIndvPlot_normVL % ---> plot M1 activity  - VL activity (normalized with VL activity)
+Diff_M1act_OSC_F_AMP_oneType_normVL % Plot different in M1 raw activity when osc F increase or when osc amp increase
+
 end
 
+%% Convergent rate ( = average of total weight per cell) vs  output activity
+Cnvrgnt_rate_vs_normOutput
 
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Get info for TC convergenc --> number of VL per M1 , average maxW , average summation of weight
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-p3_ii = 1; p4_ii = 1; p5_ii =1;
-ssize = 1500; dist = ssize/2; pmax =0.85; W_scale = 1E-05;
-fprintf('RangeTC\t\t wmTC\t\t numVL/M1\t\t sumW\t\t maxW\t\n');
-numVL_M1_LST = zeros(length(PARAM1),length(PARAM2));
-sumW_LST = 		 zeros(length(PARAM1),length(PARAM2));
-maxW_LST  = zeros(length(PARAM1),length(PARAM2));
-
-for p1_ii = 1 : length(PARAM1)
-    for p2_ii = 1 : length(PARAM2)
-        %         disp('##################################################################################################')
-        %        disp( [lblTxt1 ' = ' num2str(PARAM1(p1_ii)) ]);
-        %          disp( [lblTxt2 ' = ' num2str(PARAM2(p2_ii)) ]);
-        rangeTC = PARAM1(p1_ii);      sigTC = rangeTC/sqrt(2);
-        wmTC = PARAM2(p2_ii);
-        
-        Name_postfix_WT  = ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii }.VL.WT.Simulation_Code;  % The connection is same for WT and KO
-        %    Name_postfix_KO  = ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii }.VL.KO.Simulation_Code;
-        display = 0;
-        [TC_basedOnM1_WT, TC_sumW_WT, TC_maxW_WT, TC_numVL_WT ]               = ExtractTC_info( dirLoc, Name_postfix_WT,  display);
-        %disp([ num2str(rangeTC) '        ' num2str(mean(TC_numVL_WT)) '        ' num2str(specified_wmTC) '        ' num2str(mean(TC_sumW_WT)) '        ' num2str(mean(TC_maxW_WT))  ])
-        fprintf(' %3.0f\t\t%7.4f\t\t%7.4X\t\t%7.4X\t\t%7.4X\n', rangeTC, wmTC, mean(TC_numVL_WT), mean(TC_sumW_WT), mean(TC_maxW_WT));
-        numVL_M1_LST(p1_ii,p2_ii) = mean(TC_numVL_WT);
-        sumW_LST(p1_ii,p2_ii) = 	mean(TC_sumW_WT);
-        maxW_LST(p1_ii,p2_ii)  = mean(TC_maxW_WT);
-    end
-end
-VLperM1 = numVL_M1_LST(:,1);
 %%
 
-M1_BaselineActivity_Matrix
+% Normalize M1 activity with actual number of spikes in VL
+% Gaussian vs Uniform ->  same volume of connectivity and strength
+% May be explain why the brain use this rules of connection 
+% Why can we use simple statistical rules to model
+% Quatitatively analysis for each parameter cases ->What is the  biggest different in response when osc 40 ? osc 20 or when amp 1 ? amp 0
+% -> input
+% t frequency change  thn what happen
+% Ex Pick one set ex r = 250 , how response different in each cases
+% Pick one set of ex W, how response different in each case 
 
+ %ACT_Record1 = CnvrgntTypes{1}.ACT_Record; 
+ 
+% PARAM1 = rTC_LST;
+% lblTxt1 = 'Range of thalamocortical connection';
+% saveTxt1 = 'rTC';
+% titleTxt1 = 'Range_T_C';
+% PARAM2 = wmTC_LST;
+% lblTxt2 = 'Weight of thalamocortical connection';
+% saveTxt2 = 'wmTC';
+% titleTxt2 = 'W_T_C';
+% PARAM3 = TRIAL_NO_LST ;
+% lblTxt3 = 'Trial#';
+% saveTxt3 = 'trial';
+% titleTxt3 = 'Trial NO.';
+% PARAM4 = OSC_F_LST;
+% lblTxt4 = 'Oscillation Frequency';
+% saveTxt4 = 'OSC_F';
+% titleTxt4 = 'Osc Freq';
+% PARAM5 = OSC_Amp_LST;
+% lblTxt5 = 'Oscillation Amplitude relative to mean FR';
+% saveTxt5 = 'OSC_amp';
+% titleTxt5 = 'Osc Amp';
+% PARAM6 = spkW_LST;
+% lblTxt6 = 'Input spike weight';
+% saveTxt6 = 'Wspk';
+% titleTxt6 = 'W_s_p_k';
 
+%% Quatitatively analysis for each parameter cases ->What is the  biggest different in response when osc 40 ? osc 20 or when amp 1 ? amp 0
+% For First Case 
+% Different in 
 
 %%
 if(SAVE_WORKSPACE)

@@ -84,9 +84,9 @@ for p3_ii = 1 : length(PARAM3)
             figure(fContour1);  suptitle({stt, [ tt1 ' : ' txtp3] })
             figure(fContour2);  suptitle({stt, [ tt2 ' : ' txtp3] })
          figure(fCombine1numVL);  suptitle({stt, [ tt1 ' : ' txtp3] })
-            figure(fCombine2numVL); suptitle({stt, [ tt2 ' : ' txtp3] })
-            figure(fContour1numVL);  suptitle({stt, [ tt1 ' : ' txtp3] })
-            figure(fContour2numVL);  suptitle({stt, [ tt2 ' : ' txtp3] })
+            figure(fCombine2numVL); suptitle({stt, [ tt2 ' : ' txtp3] }); set(gcf,'PaperPositionMode','auto');
+            figure(fContour1numVL);  suptitle({stt, [ tt1 ' : ' txtp3] }) ; 
+            figure(fContour2numVL);  suptitle({stt, [ tt2 ' : ' txtp3] }); set(gcf,'PaperPositionMode','auto');
                   
             
             if(SAVE_FIG)
