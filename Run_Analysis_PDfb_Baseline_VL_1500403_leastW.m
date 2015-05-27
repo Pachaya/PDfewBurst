@@ -45,7 +45,7 @@ ADD_I_to_M1 = 0;
 ADD_I_to_VL = 0;
 
 FIG_ALL = 0;
-dirFig = 'Fig_leastW_100s/';
+dirFig = 'DeleteThis'; %  'Fig_leastW_100s/';
 mkdir([dirLoc dirFig])
 InFR_CODENAME = 'PoisInputFr150403_leastW_newExp'; 
 
