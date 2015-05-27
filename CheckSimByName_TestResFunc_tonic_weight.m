@@ -25,8 +25,8 @@ SynchLvl_LST = [0];%[0:1/Nsample:1];
 W_VL_M1_LST = [0.0001 : 0.0002 : 0.0001*Nsample]; %[0.0001 : 0.0001 : 0.0001*Nsample];
 
 WspkMult_LST = [1 1.5 2 2.5 3  5];
-IGmean_LST = [0 -0.1 -0.5 -1 -1.5]; % 0
-IGsig_LST = [0 0.2 0.5 1 ];
+IGmean_LST = [0]; % -0.1 -0.5 -1 -1.5]; % 0
+IGsig_LST = [0] ;% 0.2 0.5 1 ];
 
 PARAM1 = InputFR_LST;
 lblTxt1 = 'Input Frequency';

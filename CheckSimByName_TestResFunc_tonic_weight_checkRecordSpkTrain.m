@@ -1,7 +1,8 @@
-% Response Function
-clc
-close all
+% Check spike train
+clc 
 clear all
+close all
+
 
 simCode  = 'ResFunc';
 CoreName = '';
@@ -19,15 +20,15 @@ W_SPK = 0.029;
 W_VL_M1 = 0.002/Nsample ;
 
 
-InputFR_LST = 10; %[ 10 50:50:450];
+InputFR_LST = [ 10 50:50:450];
 SynchLvl_LST = [0];%[0:1/Nsample:1];
 W_VL_M1_LST = [0.0001 : 0.0002 : 0.0001*Nsample]; %[0.0001 : 0.0001 : 0.0001*Nsample];
 
-WspkMult_LST = [1:1:10];
+WspkMult_LST = [1]; %[1 1.5 2 2.5 3  5];
 IGmean_LST = 0; %[0 -0.1 -0.5 -1 -1.5]; % 0
 IGsig_LST = [0];
 OSC_F_LST = [20, 40, 10];
-OSC_AMP_LST = [0 0.1 0.5 1];
+OSC_AMP_LST = [0 0.5 1];
 
 PARAM1 = InputFR_LST;
 lblTxt1 = 'Input Frequency';
@@ -48,12 +49,12 @@ titleTxt4 = 'W_m_u_l_t';
 
 N_Param = 4;
 ACT_Rec_size = zeros(1,N_Param);
-for ii = 1 : N_Param
-    PARAMETERS{ii}.PARAM = eval(sprintf('PARAM%d',ii)) ;
-    PARAMETERS{ii}.lblTxt = eval(sprintf('lblTxt%d',ii));
-    PARAMETERS{ii}.titleTxt = eval(sprintf('titleTxt%d',ii));
-    PARAMETERS{ii}.saveTxt = eval(sprintf('saveTxt%d',ii));
-    ACT_Rec_size(ii) = eval(sprintf('length(PARAM%d)',ii));
+for mm = 1 : N_Param
+    PARAMETERS{mm}.PARAM = eval(sprintf('PARAM%d',mm)) ;
+    PARAMETERS{mm}.lblTxt = eval(sprintf('lblTxt%d',mm));
+    PARAMETERS{mm}.titleTxt = eval(sprintf('titleTxt%d',mm));
+    PARAMETERS{mm}.saveTxt = eval(sprintf('saveTxt%d',mm));
+    ACT_Rec_size(mm) = eval(sprintf('length(PARAM%d)',mm));
 end
 if(length(ACT_Rec_size) == 1)
     ACT_Rec_size = [ACT_Rec_size 1];
@@ -65,7 +66,7 @@ coreName = '';
 % Directory
 PATH = SetPath;
 dirLoc = [PATH 'ResFunc_cellType/'];
-dirFig = ['ResFunc_' get_Parameters_RangeTxt( PARAMETERS,[1:4]) '/'];
+dirFig = ['DelThisfold/']; %['smallResFunc_' get_Parameters_RangeTxt( PARAMETERS,[1:4]) '/'];
 mkdir([dirLoc dirFig])
 
 for p1_ii = 1 : length(PARAM1)
@@ -87,7 +88,7 @@ for p1_ii = 1 : length(PARAM1)
                 IGmean = IGmean_LST(igm_ii);
                 IGsig = IGsig_LST(igs_ii);
                 TestW = WspkMult_LST(ww_ii);
-                Wscale = 0.001; 
+                Wscale = 0.001;
                 if(IGmean == 0)
                     Wspk = Wscale*TestW;
                 else
@@ -104,14 +105,26 @@ for p1_ii = 1 : length(PARAM1)
                     '_oscF' num2str(Osc_F) 'Hz_amp' ampTxt '_phase' num2str(PHASE) ];
                 disp(simCode)
                 
-                
-                %WT_VL
-                Name_postfix  = ['WT_VL_' simCode ];
-                Check_Status(plist) = CheckFileExist( dirLoc, Name_postfix  );
-                
-            end
-        end
-    end
+
+            
+          
+            Name_postfix  = [ simCode ];
+%             Check_Status(plist) = CheckFileExist( dirLoc, Name_postfix  );
+            
+%             RecordSpkTrain_VL_Nsample100_TSTOP5500_InputFR10_Wspk0.0015_IGmean0_IGsig0_oscF10Hz_amp0.00_phase0
+            
+              if exist([dirLoc 'RecordSpkTrain_VL_' Name_postfix '.txt'], 'file')
+                        disp(' ----- Yes -----')                       
+                        found =1;
+                    else
+                        disp('### Sorry ###')
+                        found = 0;
+              end
+                    Check_Status(plist) = found; 
+               
+          end
+      end
+  end
 end
 
 

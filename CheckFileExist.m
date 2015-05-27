@@ -11,7 +11,7 @@ function [found] = CheckFileExist( dirLoc, Name_postfix  )
                         found =1;
                     else
                         disp('### Sorry ###')
-                        found = 0;;;;
+                        found = 0;
                     end
                     
 end

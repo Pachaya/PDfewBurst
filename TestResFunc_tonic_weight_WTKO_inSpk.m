@@ -24,24 +24,22 @@ InputFR_LST = [ 10 50:50:450];
 SynchLvl_LST = [0];%[0:1/Nsample:1];
 W_VL_M1_LST = [0.0001 : 0.0002 : 0.0001*Nsample]; %[0.0001 : 0.0001 : 0.0001*Nsample];
 
-WspkMult_LST = [1.5 3]; %[1 1.5 2 2.5 3  5];
+WspkMult_LST = [1 1.25 1.5 1.75 2 3]; %[1 1.5 2 2.5 3  5];
 IGmean_LST = 0; %[0 -0.1 -0.5 -1 -1.5]; % 0
 IGsig_LST = [0];
-OSC_F_LST = [20, 40, 10];
-OSC_AMP_LST = [0 0.5 1];
 
 PARAM1 = InputFR_LST;
 lblTxt1 = 'Input Frequency';
 saveTxt1 = 'InputFR';
 titleTxt1 = 'Input Frequency';
-PARAM2 = OSC_F_LST;
-lblTxt2 = 'Oscilation Frequencyt';
-saveTxt2 = 'OscF';
-titleTxt2 = 'OSC Freq';
-PARAM3 = OSC_AMP_LST;
-lblTxt3 = 'Oscilation Amplitude relative to mean input FR';
-saveTxt3 = 'OscAmp';
-titleTxt3 = 'OSC Amp';
+PARAM2 = IGmean_LST;
+lblTxt2 = 'Mean of tonic Current';
+saveTxt2 = 'IGmean';
+titleTxt2 = 'IG_m_e_a_n';
+PARAM3 = IGsig_LST;
+lblTxt3 = 'Sigma of tonic current';
+saveTxt3 = 'IGsig';
+titleTxt3 = 'IG_s_i_g';
 PARAM4 = WspkMult_LST;
 lblTxt4 = 'Weighting factor';
 saveTxt4 = 'WspkMult';
@@ -49,12 +47,12 @@ titleTxt4 = 'W_m_u_l_t';
 
 N_Param = 4;
 ACT_Rec_size = zeros(1,N_Param);
-for mm = 1 : N_Param
-    PARAMETERS{mm}.PARAM = eval(sprintf('PARAM%d',mm)) ;
-    PARAMETERS{mm}.lblTxt = eval(sprintf('lblTxt%d',mm));
-    PARAMETERS{mm}.titleTxt = eval(sprintf('titleTxt%d',mm));
-    PARAMETERS{mm}.saveTxt = eval(sprintf('saveTxt%d',mm));
-    ACT_Rec_size(mm) = eval(sprintf('length(PARAM%d)',mm));
+for ii = 1 : N_Param
+    PARAMETERS{ii}.PARAM = eval(sprintf('PARAM%d',ii)) ;
+    PARAMETERS{ii}.lblTxt = eval(sprintf('lblTxt%d',ii));
+    PARAMETERS{ii}.titleTxt = eval(sprintf('titleTxt%d',ii));
+    PARAMETERS{ii}.saveTxt = eval(sprintf('saveTxt%d',ii));
+    ACT_Rec_size(ii) = eval(sprintf('length(PARAM%d)',ii));
 end
 if(length(ACT_Rec_size) == 1)
     ACT_Rec_size = [ACT_Rec_size 1];
@@ -66,7 +64,7 @@ coreName = '';
 % Directory
 PATH = SetPath;
 dirLoc = [PATH 'ResFunc_cellType/'];
-dirFig = ['DelThisfold/']; %['smallResFunc_' get_Parameters_RangeTxt( PARAMETERS,[1:4]) '/'];
+dirFig = ['smallResFunc_' get_Parameters_RangeTxt( PARAMETERS,[1:4]) '/'];
 mkdir([dirLoc dirFig])
 
 for p1_ii = 1 : length(PARAM1)
@@ -76,8 +74,7 @@ for p1_ii = 1 : length(PARAM1)
                 plist = [p1_ii, p2_ii, p3_ii,p4_ii];
                 
                 inF_ii = p1_ii; sl_ii = 1; wVM_ii = 1;
-                igm_ii = 1; igs_ii = 1; ww_ii = p4_ii;
-                of_ii = p2_ii; oa_ii = p3_ii;
+                igm_ii = p2_ii; igs_ii = p3_ii; ww_ii = p4_ii;
                 
                 W_VL_M1= W_VL_M1_LST(wVM_ii);
                 SynchLvl = SynchLvl_LST(sl_ii);
@@ -95,14 +92,7 @@ for p1_ii = 1 : length(PARAM1)
                     Wspk =  IGmean*-10*Wscale*TestW;
                 end
                 
-                Osc_F = OSC_F_LST(of_ii);
-                Osc_amp = OSC_AMP_LST(oa_ii);
-                PHASE =0;
-                ampTxt = sprintf('%2.2f',Osc_amp);
-                %RecordSpkPvalues_VL_Nsample100_TSTOP5500_InputFR10_Wspk0.003_IGmean0_IGsig0_oscF20Hz_amp0.10_phase0
-                simCode =[ coreName 'Nsample' num2str(Nsample) '_TSTOP' num2str(TSTOP) '_InputFR' num2str(InputFR)  ...
-                    '_Wspk' num2str(Wspk) '_IGmean' num2str(IGmean) '_IGsig' num2str(IGsig) ...
-                    '_oscF' num2str(Osc_F) 'Hz_amp' ampTxt '_phase' num2str(PHASE) ];
+                simCode =[ coreName 'Nsample' num2str(Nsample) '_TSTOP' num2str(TSTOP) '_InputFR' num2str(InputFR)  '_Wspk' num2str(Wspk) '_IGmean' num2str(IGmean) '_IGsig' num2str(IGsig)];
                 disp(simCode)
                 
                 %                 '_wSPK' num2str(W_SPK) '_wVLM1_' num2str(W_VL_M1)];
@@ -204,92 +194,33 @@ end
 
 %% Response Function
 
-% SAVE_FIG =1;
-% 
-% % Weight and Response function when vary sigma p2_ii vs p3 , p2 vs p4, p3
-% % vs p4 
-% % p3 vs p4 
-% p2_ii = 1; 
-% 
-% mainPARAM = PARAM4;
-% subPARAM = PARAM3;
-% for pp = 1 :  length(subPARAM)
-%     rf = figure;  set(gcf, 'position',[     372         -94        1160         753])
-%     ef = figure;  set(gcf, 'position',[     372         -94        1160         753])  
-%     LEG = cell(length(mainPARAM)*2,1);
-%     for ii = 1 : length(mainPARAM)        
-%         p4_ii = ii; p3_ii = pp;
-%         p2_ii = 1;
-%         
-%         figure(rf);
-%         errorbar(PARAM1, avgFR(:,p2_ii,p3_ii,p4_ii,1),stdFR(:,p2_ii,p3_ii,p4_ii,1),[getDotStyle(ii) getLineStyle(1) getColorCode(ii)], 'LineWidth',2); hold on;
-%         errorbar(PARAM1, avgFR(:,p2_ii,p3_ii,p4_ii,2),stdFR(:,p2_ii,p3_ii,p4_ii,2),[getDotStyle(ii) getLineStyle(2) getColorCode(ii)], 'LineWidth',2);
-%         figure(ef);
-%         errorbar(PARAM1, avgEff(:,p2_ii,p3_ii,p4_ii,1),stdEff(:,p2_ii,p3_ii,p4_ii,1),[getDotStyle(ii) getLineStyle(1) getColorCode(ii)], 'LineWidth',2); hold on;
-%         errorbar(PARAM1, avgEff(:,p2_ii,p3_ii,p4_ii,2),stdEff(:,p2_ii,p3_ii,p4_ii,2),[getDotStyle(ii) getLineStyle(2) getColorCode(ii)], 'LineWidth',2);
-%         
-%         if(mainPARAM == PARAM4)
-%                 
-%         TestW = PARAM4(p4_ii);  IGmean = PARAM2(p2_ii);
-%         Wscale = 0.001;
-%         if(IGmean == 0)
-%             Wspk = Wscale*TestW;
-%         else
-%             Wspk =  IGmean*-10*Wscale*TestW;
-%         end
-%         
-%         LEG{2*ii-1} =  ['[WT]   W_s_p_k  = ' num2str(Wspk)];
-%         LEG{2*ii} = ['[KO2]  W_s_p_k  = ' num2str(Wspk)];
-%         end
-%     end
-%     figure(rf);
-%     xlim([0 PARAM1(end)+10]); ylim([0 max(avgFR(:))+10])
-%     ylabel('Average Output fring rate (Hz)' ); xlabel('Input Firing rate(Hz)');
-%     title({'Response Function of each cell type', get_Parameters_titleText(PARAMETERS, [2,3], [ p2_ii, p3_ii]) })
-%     legend(LEG,'location','best');
-%     
-%     figure(ef);
-%     xlim([0 PARAM1(end)+5]); 
-%     ylabel('Efficacy (output FR /input FR)' ); xlabel('Input Firing rate(Hz)');
-%     title({'Response Function of each cell type', get_Parameters_titleText(PARAMETERS, [2,3], [ p2_ii, p3_ii]) })
-%     legend(LEG,'location','best');
-%     Line = 1/7 * ones(length(PARAM1),1);
-%     plot(PARAM1,Line,':','color',[0.5 0.5 0.5])
-%     if(SAVE_FIG)
-%         tmpTxt = get_Parameters_saveText(PARAMETERS,[2,3], [ p2_ii, p3_ii]);
-%         fg = rf;  figName = ['ResFunc' tmpTxt];
-%         saveas(fg,[dirLoc dirFig figName '.fig'],'fig'); saveas(fg, [dirLoc dirFig figName '.jpg'],'jpg');
-%         fg = ef;  figName = ['Efficacy' tmpTxt];
-%         saveas(fg,[dirLoc dirFig figName '.fig'],'fig'); saveas(fg, [dirLoc dirFig figName '.jpg'],'jpg')
-%     end
-% end
+SAVE_FIG =1;
+close all;
+% Weight and Response function when vary sigma p2_ii vs p3 , p2 vs p4, p3
+% vs p4 
+% p3 vs p4 
+p2_ii = 1; 
 
-%% 
-
-% p4 vs p2 
-% close all;
-mainPARAM = PARAM2; mainID = 2; 
-subPARAM = PARAM4; subID = 4;
-dummy = 3;  dd =1;
+mainPARAM = PARAM4;
+subPARAM = PARAM3;
 for pp = 1 :  length(subPARAM)
     rf = figure;  set(gcf, 'position',[     372         -94        1160         753])
     ef = figure;  set(gcf, 'position',[     372         -94        1160         753])  
     LEG = cell(length(mainPARAM)*2,1);
-    for mm = 1 : length(mainPARAM)        
-%         p4_ii = pp; p2_ii = ii;
-%         p3_ii = 1;
-        eval(sprintf('p%d_ii = mm; p%d_ii = pp; p%d_ii = dd; ',mainID, subID,dummy ));
+    for ii = 1 : length(mainPARAM)        
+        p4_ii = ii; p3_ii = pp;
+        p2_ii = 1;
         
         figure(rf);
-        errorbar(PARAM1, avgFR(:,p2_ii,p3_ii,p4_ii,1),stdFR(:,p2_ii,p3_ii,p4_ii,1),[getDotStyle(mm) getLineStyle(1) getColorCode(mm)], 'LineWidth',2); hold on;
-        errorbar(PARAM1, avgFR(:,p2_ii,p3_ii,p4_ii,2),stdFR(:,p2_ii,p3_ii,p4_ii,2),[getDotStyle(mm) getLineStyle(2) getColorCode(mm)], 'LineWidth',2);
+        errorbar(PARAM1, avgFR(:,p2_ii,p3_ii,p4_ii,1),stdFR(:,p2_ii,p3_ii,p4_ii,1),[getDotStyle(ii) getLineStyle(1) getColorCode(ii)], 'LineWidth',2); hold on;
+        errorbar(PARAM1, avgFR(:,p2_ii,p3_ii,p4_ii,2),stdFR(:,p2_ii,p3_ii,p4_ii,2),[getDotStyle(ii) getLineStyle(2) getColorCode(ii)], 'LineWidth',2);
         figure(ef);
-        errorbar(PARAM1, avgEff(:,p2_ii,p3_ii,p4_ii,1),stdEff(:,p2_ii,p3_ii,p4_ii,1),[getDotStyle(mm) getLineStyle(1) getColorCode(mm)], 'LineWidth',2); hold on;
-        errorbar(PARAM1, avgEff(:,p2_ii,p3_ii,p4_ii,2),stdEff(:,p2_ii,p3_ii,p4_ii,2),[getDotStyle(mm) getLineStyle(2) getColorCode(mm)], 'LineWidth',2);
+        errorbar(PARAM1, avgEff(:,p2_ii,p3_ii,p4_ii,1),stdEff(:,p2_ii,p3_ii,p4_ii,1),[getDotStyle(ii) getLineStyle(1) getColorCode(ii)], 'LineWidth',2); hold on;
+        errorbar(PARAM1, avgEff(:,p2_ii,p3_ii,p4_ii,2),stdEff(:,p2_ii,p3_ii,p4_ii,2),[getDotStyle(ii) getLineStyle(2) getColorCode(ii)], 'LineWidth',2);
         
-        if(mainID == 4)
+        if(mainPARAM == PARAM4)
                 
-        TestW = PARAM4(p4_ii);  IGmean = IGmean_LST(1);
+        TestW = PARAM4(p4_ii);  IGmean = PARAM2(p2_ii);
         Wscale = 0.001;
         if(IGmean == 0)
             Wspk = Wscale*TestW;
@@ -297,28 +228,25 @@ for pp = 1 :  length(subPARAM)
             Wspk =  IGmean*-10*Wscale*TestW;
         end
         
-        LEG{2*mm-1} =  ['[WT]   W_s_p_k  = ' num2str(Wspk)];
-        LEG{2*mm} = ['[KO2]  W_s_p_k  = ' num2str(Wspk)];
-        else
-             tmpTxt =  get_Parameters_titleText(PARAMETERS,[subID, dummy],[pp, dd]);
-             LEG{2*mm-1} =  ['[WT] ' tmpTxt];
-             LEG{2*mm} = ['[KO2] ' tmpTxt];
+        LEG{2*ii-1} =  ['[WT]   W_s_p_k  = ' num2str(Wspk)];
+        LEG{2*ii} = ['[KO2]  W_s_p_k  = ' num2str(Wspk)];
         end
     end
     figure(rf);
     xlim([0 PARAM1(end)+10]); ylim([0 max(avgFR(:))+10])
     ylabel('Average Output fring rate (Hz)' ); xlabel('Input Firing rate(Hz)');
-    title({'Response Function of each cell type', get_Parameters_titleText(PARAMETERS, [subID, dummy],[pp, dd]) })
+    title({'Response Function of each cell type', get_Parameters_titleText(PARAMETERS, [2,3], [ p2_ii, p3_ii]) })
     legend(LEG,'location','best');
     
     figure(ef);
     xlim([0 PARAM1(end)+5]); 
     ylabel('Efficacy (output FR /input FR)' ); xlabel('Input Firing rate(Hz)');
-    title({'Response Function of each cell type', get_Parameters_titleText(PARAMETERS, [subID, dummy],[pp, dd]) })
+    title({'Response Function of each cell type', get_Parameters_titleText(PARAMETERS, [2,3], [ p2_ii, p3_ii]) })
     legend(LEG,'location','best');
-    
+    Line = 1/7 * ones(length(PARAM1),1);
+    plot(PARAM1,Line,':','color',[0.5 0.5 0.5])
     if(SAVE_FIG)
-        tmpTxt = get_Parameters_saveText(PARAMETERS,[subID, dummy],[pp, dd]);
+        tmpTxt = get_Parameters_saveText(PARAMETERS,[2,3], [ p2_ii, p3_ii]);
         fg = rf;  figName = ['ResFunc' tmpTxt];
         saveas(fg,[dirLoc dirFig figName '.fig'],'fig'); saveas(fg, [dirLoc dirFig figName '.jpg'],'jpg');
         fg = ef;  figName = ['Efficacy' tmpTxt];
@@ -327,22 +255,66 @@ for pp = 1 :  length(subPARAM)
 end
 
 %% 
-% main 2 sub 4 dummy 2 
-testlist = perms(2:4);
-
-for idid  = 1 : size(testlist,1)
-    tmpid = testlist(idid,:);
-    mainPARAM = eval(sprintf('PARAM%d',tmpid(1)));  mainID = tmpid(1); 
-    subPARAM = eval(sprintf('PARAM%d',tmpid(2))); subID = tmpid(2);
-    dummy =  tmpid(3);  dd =1;
-    disp('============================================================')
-    disp(['mainID = ' num2str(mainID) '    subID = ' num2str(subID) '   dummy = ' num2str(dummy)])
-    disp('============================================================')
-    PLOT_Response_Function;
-% k = waitforbuttonpress;
+if(0)
+% p4 vs p2 
+close all;
+mainPARAM = PARAM2; mainPARAMID = 2; 
+subPARAM = PARAM4; suPARAMID = 4;
+for pp = 1 :  length(subPARAM)
+    rf = figure;  set(gcf, 'position',[     372         -94        1160         753])
+    ef = figure;  set(gcf, 'position',[     372         -94        1160         753])  
+    LEG = cell(length(mainPARAM)*2,1);
+    for ii = 1 : length(mainPARAM)        
+        p4_ii = pp; p2_ii = ii;
+        p3_ii = 1;
+        
+        figure(rf);
+        errorbar(PARAM1, avgFR(:,p2_ii,p3_ii,p4_ii,1),stdFR(:,p2_ii,p3_ii,p4_ii,1),[getDotStyle(ii) getLineStyle(1) getColorCode(ii)], 'LineWidth',2); hold on;
+        errorbar(PARAM1, avgFR(:,p2_ii,p3_ii,p4_ii,2),stdFR(:,p2_ii,p3_ii,p4_ii,2),[getDotStyle(ii) getLineStyle(2) getColorCode(ii)], 'LineWidth',2);
+        figure(ef);
+        errorbar(PARAM1, avgEff(:,p2_ii,p3_ii,p4_ii,1),stdEff(:,p2_ii,p3_ii,p4_ii,1),[getDotStyle(ii) getLineStyle(1) getColorCode(ii)], 'LineWidth',2); hold on;
+        errorbar(PARAM1, avgEff(:,p2_ii,p3_ii,p4_ii,2),stdEff(:,p2_ii,p3_ii,p4_ii,2),[getDotStyle(ii) getLineStyle(2) getColorCode(ii)], 'LineWidth',2);
+        
+        if(mainPARAM == PARAM4)
+                
+        TestW = PARAM4(p4_ii);  IGmean = PARAM2(p2_ii);
+        Wscale = 0.001;
+        if(IGmean == 0)
+            Wspk = Wscale*TestW;
+        else
+            Wspk =  IGmean*-10*Wscale*TestW;
+        end
+        
+        LEG{2*ii-1} =  ['[WT]   W_s_p_k  = ' num2str(Wspk)];
+        LEG{2*ii} = ['[KO2]  W_s_p_k  = ' num2str(Wspk)];
+        else
+             tmpTxt =  get_Parameters_titleText(PARAMETERS,[2],[p2_ii]);
+             LEG{2*ii-1} =  ['[WT] ' tmpTxt];
+             LEG{2*ii} = ['[KO2] ' tmpTxt];
+        end
+    end
+    figure(rf);
+    xlim([0 PARAM1(end)+10]); ylim([0 max(avgFR(:))+10])
+    ylabel('Average Output fring rate (Hz)' ); xlabel('Input Firing rate(Hz)');
+    title({'Response Function of each cell type', get_Parameters_titleText(PARAMETERS, [2,3], [ p2_ii, p3_ii]) })
+    legend(LEG,'location','best');
+    
+    figure(ef);
+    xlim([0 PARAM1(end)+5]); 
+    ylabel('Efficacy (output FR /input FR)' ); xlabel('Input Firing rate(Hz)');
+    title({'Response Function of each cell type', get_Parameters_titleText(PARAMETERS, [2,3], [ p2_ii, p3_ii]) })
+    legend(LEG,'location','best');
+    
+    if(SAVE_FIG)
+        tmpTxt = get_Parameters_saveText(PARAMETERS,[2,3], [ p2_ii, p3_ii]);
+        fg = rf;  figName = ['ResFunc' tmpTxt];
+        saveas(fg,[dirLoc dirFig figName '.fig'],'fig'); saveas(fg, [dirLoc dirFig figName '.jpg'],'jpg');
+        fg = ef;  figName = ['Efficacy' tmpTxt];
+        saveas(fg,[dirLoc dirFig figName '.fig'],'fig'); saveas(fg, [dirLoc dirFig figName '.jpg'],'jpg')
+    end
 end
 
-
+end
 %%
 %  tmpRange = 1:7;
 %  figure;
