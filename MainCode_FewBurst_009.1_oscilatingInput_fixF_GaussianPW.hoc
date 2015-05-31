@@ -1,0 +1,664 @@
+// PD model 4  : VL has only E and no local conn , M1 with E+I and local Conn
+// PD4_012 - Test TC : no E conn
+//Main Code
+load_file("nrngui.hoc") //load basics library
+T_everythng = startsw()
+load_file("ranstream.hoc") //for InGauss random seed
+load_file("PD_Parameters.hoc") //Parameters
+////////////////////////////////////////////////////
+// Make M1 layer or not? , Add I cells to VL and M1 or not?
+MAKE_M1_LAYER = 1  
+ADD_I_to_M1 = 0
+ADD_I_to_VL = 0
+////////////////////////////////////////////////////////
+load_file("PDfb_CellsTemplate_FewBurstModel1.hoc") //load basics library  Note: Parameters for Cells template are specified inside
+load_file("PDfb_NetSpecIntf.hoc") // Network specification interface
+load_file("PD3_load_position_file_simVL.hoc") 
+load_file("PD3_load_position_file_M1centerE.hoc") //Read position of M1
+load_file("PD_ObjrefDeclare.hoc") // Objects declaration 
+
+///////////////////////////////// Simulation Setting ////////////////////////////////////////
+
+//////////////////  parameter & variables with user specified values   //////////////////////
+RESOLUTION = 1 //bins = 1 ms
+THRESHOLD = 0 // The threshold that NEURON will count Spike
+POSTFIX = 1 // For file name 
+
+//////  Don't really use this part ///////// 
+MULT_TRIAL = 0   // Run simulation in many trials or not 
+N_TRIAL = 1  // Number of Trial
+cntTrial = 1 
+TRIAL_NO = 1
+//////////////////////////////////////////////////////////////
+
+//////* Noise by InGauss = GABAergic input = current fluctuation or spontaneous activity
+MEAN = 0 // Noise by InGauss = GABAergic input
+STDEV  = 0.2 // Noise by InGauss
+VARIE_MEAN_InGauss = 1 //////// 1 = varies mean of noise current injection in each individual cell
+VARIE_MEAN_InGauss_SIGMA = 0 //  How spread the mean of noise current spread (assume Gaussian dist, with the specified sigma)
+
+ADD_SPONTANEOUS_ACTIVITY = 1 // When both mean and stdev = 0 --> Cells are silent(with zero spontaneous activity)
+ADD_SPONTANEOUS_ACTIVITY_M1 = 0
+ADD_SPONTANEOUS_ACTIVITY_GPm =0
+MEAN_M1 = 0
+STDEV_M1 = 0
+
+////* Toy model
+INDV_NEURON =  0 // If 1: Neuron location are fixed (Toy model), if 0: use neuron location from file. 
+N_REPEAT = 500 // How many E&I cells in toy model
+INDV_NEURON_M1 = 0 // Same as above with M1 layer
+N_REPEAT_M1 = 100 
+
+////* Separate type of interneuron or not
+SEPARATE_I_TYPE = 0 // Separate I type to interneuron that inhibit other I cells ex. VIP (II connection) or PV/SOM (IE connection) or not?
+SEPARATE_I_TYPE_M1 = 0
+
+////* Poisson Spike Input 
+INSERT_SPK_INPUT = 1 // Insert spike input or not  (as feedforward input to the layer from other part of the brain, that is , another type of noise )
+INSERT_SPK_INPUT_M1 = 0 
+
+INSERT_SPK_INPUT_startT = 0 // Starting time for spike input
+INSERT_SPK_to_E = 1 // Insert spike input to E cell or not
+INSERT_SPK_to_I = 0 // Insert spike input to I cell or not
+
+SPECIFIED_INDV_SPK_INPUT = 0  //When wanted to specified input frequency of each cell : Read from file
+strdef InFR_CODENAME
+InFR_CODENAME = "PoisInputFr150403_leastW_newExp"
+
+//Spike input as noise in other layer
+NOISE_POISSONSPK_GPm = 0
+NOISE_POISSONSPK_M1 = 0
+
+W_POISSPK_VL = 0.0015//0.029 Weighting Factor for spikes input  ////////////////////////////////////////
+VARIE_W_POISSPK = 0 // Vary weighting factor for spikes input to each cell or not
+W_POISSPK_VL_mean = W_POISSPK_VL //** Done Implementation **
+W_POISSPK_VL_sigma = 0.001
+
+PoisSpkHz = 0
+VARIE_FR_POISSPK = 0 // Vary input spike frequency   
+FR_POISSPK_VL_mean = PoisSpkHz //** Done Implementation **
+FR_POISSPK_VL_sigma = 0
+OSCILLATE_IN_SPKTRAIN = 1  
+// meanFR =  PoisSpkHz (when set VARIE_FR_POISSPK = 0) or read from file in the case of specified input for each cell
+OSC_F = 10 //40 = gamma, 20 = beta
+OSC_rltAmp = 1 //  amplitude relative to its mean firing rate  A = OSC_rltAmp * meanFR
+PHASE = 0 // in radians
+// osc_amp =  meanFR / 3
+
+
+////* ICLamp = Current Clamp :: Photoactivation modeled as IClamp // If inject to VL -> Cell is hyperpolarized
+INSERT_I_INPUT = 0 // Insert photoactivation or not
+INSERT_I_INPUT_startT = 1500 // Starting time
+INSERT_I_to_E = 1 // Insert to E cells only because I cells are interneuron
+INSERT_I_to_I = 0
+
+INSERT_I_to_SpecifiedE = 0 // Insert photoactivation to the specified cell only *For Testing | Don't really use* ::  Vector --> injIClamp_SingleVec /  IClamp --> injIClamp_Single
+ID_SPECIFIED_E = 570 //In the center part of Network *For Testing | Don't really use* 
+
+// Set Values for ICLamp
+Input_I_Amp = 0  // Stimulate at VL 
+Input_I_Dur = 1000 
+MULT_PULSE = 0 // Number of photoactivation pulse
+PulseHz = 1 //// Setting Multiple Pulse 
+t_observe_pulse = 1000/ PulseHz 
+
+// Multiple Pulses 
+N_Pulses = 1
+if(MULT_PULSE == 0 ){
+N_Pulses = 0
+t_observe_pulse = 0
+}
+
+////* GPm :: When make the model so that photoactivation activate inhibition input spikes from GPm
+GPM_INPUT_to_VL = 0 // Use GPm for Input to VL Method 1 : use current injection as photo activation ///////////////////////
+Light_Stim_Amp = 0.3 //Stimulate GPm cells with IClamp so the GPm can release inhibition spikes to VL
+Light_Stim_Dur = 1000
+Light_Stim_StartT = 1500
+// I amp = 0.3, mean 0.06, sigma = 0.01
+// I amp = 0.5, mean 0.04, sigma = 0.03
+INSERT_GPm_SPK_INPUT = 0  //to VL; Inhibition spike to VL , directly specified FR of GPm and inhibit on VL
+INSERT_GPm_SPK_INPUT_startT = 100// Starting time
+INSERT_GPm_SPK_INPUT_Dur = 1000 // Duration
+INSERT_GPm_SPK_to_E = 1
+INSERT_GPm_SPK_to_I = 0
+GPm_SPK_avg_fr = 500 // Firing Rate
+
+W_POISSPK_GPm = 0.06 // Weighting factor (how strong the connection is )
+
+Vary_W_GPm_VL = 1 
+W_GPm_VL_mean = W_POISSPK_GPm /// ** Finish Implemented **
+W_GPm_VL_sigma = 0.01
+
+////* Specified 3 seed numbers for random stream
+RANDOM123_ID1_POISSONSPK = Rand123Seed_append("RANDOM123_ID1_POISSONSPK")  // 1 = FF input poisson spike , 2 = GPm inhibition input spike 
+RANDOM123_ID1_GPm_SPK = Rand123Seed_append("RANDOM123_ID1_GPm_SPK")  // 1 = FF input poisson spike , 2 = GPm inhibition input spike 
+// Note : RANDOM123_ID2 = cell ID
+RANDOM123_ID3_RUN_POISSONSPK = TRIAL_NO //For  multiple trials (trial#)
+
+
+//////////////////////////////////
+////* Local connection
+LOCAL_CONNECT = 0 // Make lateral (local) connection or not?
+LOCAL_CONNECT_M1 = 0
+////* Setting Local Connection
+SPECIFIED_RATIO = 0 // Ratio of EE : EI: IE :II connection strength
+R_EE = 0
+R_EI = 0
+R_IE = 10 
+R_II = 1
+
+SPECIFIED_RATIO_M1 = 0 // Ratio of EE : EI: IE :II connection strength
+R_EE_M1 = 1
+R_EI_M1 = 1
+R_IE_M1 = 1 
+R_II_M1 = 1
+
+W_MULT = 125 // connection weight for local connection  : This number will multiply to Ratio and W_scale to get the exact weight ; Ex. weight for EE connection will be R_EE*W_MULT*W_SCALE
+W_SCALE = 0.00001 
+
+////* For Thalamocortical Connection
+W_MULT_TC = 10  /// 4 5 6 7
+W_SCALE_TC = W_SCALE 
+
+RANGE_TC =  120 // 120 130 140 150 
+sigTC = RANGE_TC/sqrt(2) /// Ex. RANGE_E = 200 , sigTC =  141.4214  // Ref: McLaughlin paper
+
+/////////////////////////////////////////////////////////////////////////////////////////
+SHOW_GUI = 1 // If set to 1 // Show real time graph of sample membrane potential
+
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// SET CELL TYPE HERE //////////////////////////////////
+CELL_TYPE = 1 //1 = WT, 2 = KO  ///////////////////////////////////////////////////////// 
+/////////////////////////////////// SET CELL TYPE HERE //////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////////////////////
+//////////  Setting Directories 
+strdef postfixTxt, dirLoc, core, hname
+
+dirLoc ="SimResult/OscInput_Sim/" 
+
+system("hostname",hname)      
+if(strcmp("user-PC\n",hname) == 0){ // Exp machine
+sprint(dirLoc,"/cygdrive/d/Pachaya/150313 Code/%s",dirLoc)
+//sprint(dirLoc,"/cygdrive/c/%s",dirLoc)
+} else{
+if (strcmp("VSlab-PC\n",hname) == 0){ // office's machine
+sprint(dirLoc,"/cygdrive/e/PDmodelFewBurst/%s",dirLoc) // or chdir("/cygdrive/e/PDmodelFewBurst/")
+}
+}
+
+
+/////////////////////////////////////////////////////////////////////////
+objref genseedlist, Specified_Spk_Input_Fr
+Specified_Spk_Input_Fr = new Vector()
+
+proc run_simulation() { ////////////////////// Simulation Function
+
+	t0 = startsw()
+	genseedlist = new Vector()
+	cIDrec = -1
+	//// * Make simulation's name
+	postfixTxt = ""
+	core = "GPmVLmd1_0del_KO2"
+	if(MULT_PULSE){
+	sprint(core,"%s_%gHz_amp%g_dur%g_N%g",core,PulseHz, Input_I_Amp,Input_I_Dur,N_Pulses)
+	}
+
+	if(MAKE_M1_LAYER ){
+	sprint(core,"%s_rTC%g",core,RANGE_TC )
+	sprint(core,"%s_wmTC%g",core,W_MULT_TC)
+	}
+
+
+	if ( CELL_TYPE == 1){ //WT
+		sprint(core,"%s_WT",core)
+	}else { //KO
+		sprint(core,"%s_KO",core)
+	}
+	if(GPM_INPUT_to_VL){ //to VL; Hyperpolarized (inhibition spike)
+	sprint(core,"%s_GPmInput_Amp%g_Dur%g",core, Light_Stim_Amp, Light_Stim_Dur)
+		if(Vary_W_GPm_VL == 1){
+			sprint(core,"%s_GPmVLw_m%g_sig%g",core, W_GPm_VL_mean, W_GPm_VL_sigma)
+		}
+	
+	}
+
+	if (STDEV != 0){
+	 sprint(core,"%s_InGauss%g",core,STDEV)
+	}
+	if(VARIE_MEAN_InGauss){
+	sprint(core,"%s_IGmean%g_IGmeanSig%g",core,MEAN,VARIE_MEAN_InGauss_SIGMA)
+	}
+
+	sprint(core,"%s_W%g",core, W_POISSPK_VL )
+	if(VARIE_W_POISSPK){
+	sprint(core,"%s_Wsig%g",core,W_POISSPK_VL_sigma ) }
+	
+	Input_spk_avg_fr = $1// [Hz]
+	tstop = $2 // Have to set tstop here because the random_stream_offset_ setting need the tstop for parameter setting
+	steps_per_ms = 1    // -----------> set resolution and then use the variable in all references for unified process
+	v_init = -70
+
+	sprint(postfixTxt,"%s",core)
+
+
+	if(INSERT_SPK_INPUT){
+	//sprint(postfixTxt,"%s_%2.2fnA",core,Input_I_Amp)
+	
+		if(VARIE_FR_POISSPK){
+			if (!SPECIFIED_INDV_SPK_INPUT){
+						FR_POISSPK_VL_mean = Input_spk_avg_fr
+						sprint(postfixTxt,"%s_%2.2fHz_sig%2.2fHz",postfixTxt,FR_POISSPK_VL_mean, FR_POISSPK_VL_sigma)
+					 }else{ // load file to read Poisson spike input frequency for each cell
+					 sprint(postfixTxt,"%s_SpecifiedPoisSpk_sig%2.2fHz",postfixTxt,FR_POISSPK_VL_sigma)
+					 xopen("load_specified_PoisSpk_input_fr_codename.hoc")
+					 printf("******************************************* LOAD ********************************************")
+					 }
+		}else{
+				 if (!SPECIFIED_INDV_SPK_INPUT){
+					sprint(postfixTxt,"%s_%2.2fHz",postfixTxt,Input_spk_avg_fr)
+				 }else{ // load file to read Poisson spike input frequency for each cell
+				 xopen("load_specified_PoisSpk_input_fr_codename.hoc")
+				 printf("******************************************* LOAD ********************************************")
+				 }
+			}
+			
+				if(OSCILLATE_IN_SPKTRAIN){
+				sprint(postfixTxt,"%s_oscF%gHz_amp%2.2f_phase%g",postfixTxt,OSC_F, OSC_rltAmp, PHASE)
+				}
+	
+	}
+
+	/*if(MULT_TRIAL){
+	sprint(postfixTxt,"%s_trial%g",postfixTxt,cntTrial)
+	}*/
+	if(SPECIFIED_RATIO){
+	sprint(postfixTxt,"%s_rEE%g_rEI%g_rIE%g_rII%g_Wmult%g",postfixTxt,R_EE,R_EI,R_IE,R_II, W_MULT)
+	}
+	sprint(postfixTxt,"%s_T%g",postfixTxt,TSTOP)
+	sprint(postfixTxt,"%s_trial%g",postfixTxt,TRIAL_NO)
+
+	if(POSTFIX){
+		printf( "/////////////// %s /////////////////\n", postfixTxt)
+	}
+    //// * Finish Making file name *////
+	// xopen("PD_NetGenn.hoc") printf( "////// Generate VL network /////")
+	xopen("PD4_NetGenn_param_oscIn_KO2.hoc") printf( "////// Generate VL network /////")
+
+	if(GPM_INPUT_to_VL){
+	xopen("PD_NetGenn_GPm_signFlip_varyW.hoc")   printf( "////// Generate GPm network /////\n")
+	}
+	if(MAKE_M1_LAYER){
+	xopen("PD3_NetGenn_M1_separateI_signFlip_KO2.hoc")   printf( "////// Generate M1 network /////\n") 
+	}
+	xopen("PD_NetSimRec_pulses.hoc")  printf( "////// Generate vector recordings in VL network simulation /////\n")
+	if(MAKE_M1_LAYER){
+	xopen("PD_NetSimRec_M1.hoc")  printf( "////// Generate vector recordings in M1 network simulation /////\n")
+	}
+
+	t1 = startsw()
+	print "tstop = ",tstop
+	printf("\nrandom_stream_offset_ = (tstop+1000)*1/dt = %f\n",random_stream_offset_ ) 
+
+	///////// Connection Specification ///////// 
+
+	if(LOCAL_CONNECT){
+	{RUN_WEE = 1 RUN_WEI = 1 RUN_WIE = 1 RUN_WII = 1 }
+	}else{
+	{RUN_WEE = 0 RUN_WEI = 0 RUN_WIE = 0 RUN_WII = 0}
+	}
+
+	xopen("PD_LocalConn_SeparateItype.hoc")  printf( "////// Finish Setting Local VL Connection /////\n")
+
+	if(MAKE_M1_LAYER){
+	if(LOCAL_CONNECT_M1){
+	{RUN_WEE_M1 = 1 RUN_WEI_M1 = 1 RUN_WIE_M1 = 1 RUN_WII_M1 = 1 }
+	xopen("PD3_LocalConn_M1_SeparateItype.hoc")   printf( "////// Finish Setting Local M1 Connection /////\n")
+	}else{
+	{RUN_WEE_M1 = 0 RUN_WEI_M1 = 0 RUN_WIE_M1 = 0 RUN_WII_M1 = 0}
+	xopen("PD3_LocalConn_M1_SeparateItype.hoc")  printf( "////// Finish Setting Local M1 Connection /////\n")
+	} 
+	}
+	
+	if(MAKE_M1_LAYER){ ///////////////////////////////////////////////////////////////
+	xopen("PD_thalamocorticalConn_0delay.hoc") printf( "////// Setting Thalamocortical Connection /////\n") }
+
+
+	if(POSTFIX){
+		printf( "/////////////// %s /////////////////\n", postfixTxt)
+	}
+
+	t2 = startsw()
+	print "Runtime for local connection ", t2-t1
+
+	VectorRecord() 
+	if(MAKE_M1_LAYER){
+	VectorRecord_M1() }
+	spikerecord()
+	if(SHOW_GUI){
+	//spikerecordEI()
+		/*if ( CELL_TYPE == 1){ // 1 = WT, 2 = KO
+			if(INSERT_I_to_SpecifiedE){
+			load_file("LVnetSesWT_injSingleE.ses")
+			} else{
+			load_file("LVnetSesWT.ses")
+			}
+		}else{
+			if(INSERT_I_to_SpecifiedE){
+			load_file("LVnetSesKO_injSingleE.ses")
+			}else{
+			load_file("LVnetSesKO.ses")
+			}
+		}*/
+		load_file("VLcenterSes.ses")		
+		if (GPM_INPUT_to_VL == 1){
+		load_file("GPmSes.ses")
+		}
+		if(MAKE_M1_LAYER){
+		load_file("M1centerSample.ses")		
+		}
+	}
+	tstop = $2 // Need to set simulation parameters here again because some parameters are change during downloading session file
+	steps_per_ms = 1    // -----------> set resolution and then use the variable in all references for unified process
+	v_init = -70
+	print "Calling run()"
+	//printf("Before Run :random_stream_offset_ = %f\n",random_stream_offset_ ) 
+	run_all(tstop)
+	//printf("After Run :random_stream_offset_ = %f\n",random_stream_offset_ ) 
+	t3 = startsw()
+	print "Runtime for simulation ", t3-t2
+	//graphList[0].o(0).exec_menu("View = plot")
+	//graphList[1].o(0).exec_menu("View = plot")
+	//graphList[2].o(0).exec_menu("View = plot")
+
+	if(INSERT_I_to_SpecifiedE ){
+	GetSpkBin_of_injSpecifiedE() }
+
+	//rasterplot()
+	print "Runtime for raster plot ", startsw()-t3
+	t4 = startsw()
+	//rasterplotEI()
+
+	saveSpikesToFile()
+	//saveSomaVolt()
+	save_all_soma_rec_vec()
+
+	if(MAKE_M1_LAYER){
+	saveSpikesToFile_VL_M1()
+	save_all_soma_rec_vec_M1()
+	 }
+
+	if(VARIE_MEAN_InGauss) { 
+	saveMeanNoiseCurrentToFile()
+	}
+	saveRand123Seed_ID1()
+	create_sim_profile2() 
+	create_sim_profile_cellConfig() 
+	//if(cntTrial ==1){ saveGenSeedlist()}
+	//saveSeedlist()
+	print "Runtime for saving vectors ", startsw()-t4
+	print "Done the simulation for = ", $1 
+	if(0){
+	print ":::Simulation Setting::::"
+	print "INSERT_SPK_INPUT = ", INSERT_SPK_INPUT
+	print "INSERT_SPK_to_E = ", INSERT_SPK_to_E
+	print "INSERT_SPK_to_I = ", INSERT_SPK_to_I
+	print "INSERT_I_INPUT = ", INSERT_I_INPUT
+	print "INSERT_I_to_E = "   ,INSERT_I_to_E
+	print "INSERT_I_to_I = ",INSERT_I_to_I
+	print "INSERT_I_to_SpecifiedE = ", INSERT_I_to_SpecifiedE
+	print "INSERT_GPm_SPK_INPUT = ", INSERT_GPm_SPK_INPUT
+	print "INSERT_GPm_SPK_INPUT_startT =", INSERT_GPm_SPK_INPUT_startT
+	print "INSERT_GPm_SPK_INPUT_Dur = ", INSERT_GPm_SPK_INPUT_Dur
+	print "INSERT_GPm_SPK_to_E = ", INSERT_GPm_SPK_to_E
+	print "INSERT_GPm_SPK_to_I = ", INSERT_GPm_SPK_to_I
+	print "W_POISSPK_GPm = ", W_POISSPK_GPm
+	print "GPm_SPK_avg_fr = ", GPm_SPK_avg_fr
+	print "ID_SPECIFIED_E = ", ID_SPECIFIED_E
+	print "LOCAL_CONNECT = ",LOCAL_CONNECT
+	print "INDV_NEURON = ",INDV_NEURON
+	}
+	print "postfixTxt = ",postfixTxt
+	print "Total Runtime :: ", startsw()-t0
+}
+
+TSTOP = 3000
+PoisSpkHz = 10 //25 50 75 100 200
+
+
+/////////////////////////////////// Uncomment the following line for one time run 
+//run_simulation(PoisSpkHz,TSTOP)   
+
+//objref avgFrVec
+//avgFrVec = GetAvgFr_VL_All()
+//saveRecordSeed()
+//rasterplot()
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////  Setting many parameters with loop  /////////////////////////////////////////////////////
+///////////////////////////// - don't recommend because it's take longer time for serial simulation  //////////////
+///////////////////////////// - Run simulation in multiple windows for parallel simulation is better //////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/* First Test : 
+
+//GPm weight 
+GPM_INPUT_to_VL = 1 // Use GPm for Input to VL Method 1 : use current injection as photo activation
+Light_Stim_Amp = 0.3 //Stimulate GPm cells with IClamp so the GPm can release inhibition spikes to VL
+
+W_POISSPK_GPm = 0.06 // Weighting factor (how strong the connection is )
+
+Vary_W_GPm_VL = 1 
+W_GPm_VL_mean = W_POISSPK_GPm /// ** Finish Implemented **
+W_GPm_VL_sigma = 0.01
+
+// TC conn
+W_MULT_TC = 10  /// 4 5 6 7
+W_SCALE_TC = W_SCALE 
+RANGE_TC =  120 // 120 130 140 150 
+sigTC = RANGE_TC/sqrt(2) /// Ex. RANGE_E = 200 , sigTC =  141.4214  // Ref: McLaughlin paper
+*/
+
+
+
+strdef CELLtxt
+SHOW_GUI = 0
+//for TRIAL_NO = 1 ,5 {
+	TRIAL_NO = 1
+	printf("==========================================================\n")
+	printf("\tTRIAL NO = %g\n" , TRIAL_NO)
+	printf("==========================================================\n")
+/*		for CELL_TYPE = 1, 2{
+			if (CELL_TYPE == 1){
+			sprint(CELLtxt,"WT")
+			}else{ sprint(CELLtxt,"KO") }
+			printf("\t\t Cell type #%g : %s\n", CELL_TYPE, CELLtxt)
+			TSTOP = 4000
+			PoisSpkHz = 0
+
+			run_simulation(PoisSpkHz,TSTOP)
+			//rasterplot()
+			CNT = CNT + 1
+		printf("========================= End Trial#%g : %s ========================\n", TRIAL_NO, CELLtxt )
+		}
+	printf("========================= End Trial#%g  ========================\n",TRIAL_NO)
+//}
+*/
+// print "Time for everything = ",  startsw() - T_everythng
+
+
+/*
+W_POISSPK_GPm = 0.06 // Weighting factor (how strong the connection is )
+
+Vary_W_GPm_VL = 1 
+W_GPm_VL_mean = W_POISSPK_GPm  // 0.04 :0.002 :0.10
+W_GPm_VL_sigma = 0.02 // 0.005 0.01 0.02 0.03
+*/
+// Note rTC = 120 , wTC = 10
+
+
+
+
+objref W_GPm_VL_mean_LST,W_GPm_VL_sigma_LST , OSC_F_LST, OSC_phase_LST, OSC_rltAmp_LST
+strdef CELLtxt
+objref PARAM1, PARAM2
+
+
+
+OSC_F_LST  = new Vector(2)
+OSC_F_LST.x(0) = 20 //40 = gamma, 20 = beta
+OSC_F_LST.x(1) = 40 //40 = gamma, 20 = beta
+//OSC_F_LST.x(2) = 10 //40 = gamma, 20 = beta
+
+OSC_rltAmp_LST = new Vector(3) 
+OSC_rltAmp_LST.x(0) = 0 // A = 0  =  No oscillation  -> 5 Trials
+OSC_rltAmp_LST.x(1) = 0.5 // 1 , 1/2 , 1/3 
+OSC_rltAmp_LST.x(2) = 1 // 1 , 1/2 , 1/3 
+//OSC_rltAmp_LST.x(3) = 0.1 // 1 , 1/2 , 1/3 
+//OSC_rltAmp_LST.x(3) = 1 / 3 // 1 , 1/2 , 1/3
+
+OSC_phase_LST  = new Vector(1)
+OSC_phase_LST.x(0) = 0 //40 = gamma, 20 = betag
+
+Light_Stim_Amp = 0.5 //0.4 0.03 0.5' 0.6
+Light_Stim_Dur = 1000 // 500 , 1000
+
+W_GPm_VL_mean = 0.5
+W_GPm_VL_sigma = 0
+
+W_GPm_VL_mean_LST = new Vector(1) // 3
+//W_GPm_VL_mean_LST.indgen(0.5,0.3,-0.1) // .3 .4 .5 //0 0.05 0.15 0.2 
+W_GPm_VL_mean_LST.x(0) = 0.5 // 0.
+
+W_GPm_VL_sigma_LST  = new Vector(1) // 
+//W_GPm_VL_sigma_LST.indgen(0.05,0,-0.01) // 0 0.05 0.1
+W_GPm_VL_sigma_LST.x(0) = 0 
+
+W_MULT_TC = 500  //50 100 200 300 400 500
+W_SCALE_TC = W_SCALE 
+RANGE_TC = 250 // 50 100 150 200 250
+
+//(r 250&50)  (r 100&40) 
+
+
+sigTC = RANGE_TC/sqrt(2) /// Ex. RANGE_E = 200 , sigTC =  141.4214  // Refi: McLaughlin paper
+PHASE = 0 
+PARAM1 =  OSC_F_LST
+PARAM2 =  OSC_rltAmp_LST // meanFR =  PoisSpkHz or read from file in the case of specified input for each cell
+
+CNT = 0
+t_loop = startsw()
+W_POISSPK_VL = 0.001 //0.0015 0.0030
+
+INPUT_POISSON = 50
+MEAN = 0 //  0 -0.5 -1 -1.5 -2  : -1.4 -1.6   \\ -0.01 -0.1 -0.5 -1 -5 -10 
+STDEV  = 0 // 0 0.2' 0.5 1 Noise by InGauss
+/*
+// Run one parameter set
+OSC_F = 20 //40
+PHASE =0 
+CELL_TYPE = 2 //2
+TSTOP = 4000
+PoisSpkHz = 0
+*/
+//run_simulation(PoisSpkHz,TSTOP)
+	
+N_Trial = 5
+SHOW_GUI = 0
+for TRIAL_NO = 2 , N_Trial {	
+	t_trial = startsw()
+	printf("==========================================================\n")
+	printf("\tTRIAL NO = %g\n" , TRIAL_NO)
+	printf("==========================================================\n")
+		
+	for p1_ii = 0 ,PARAM1.size-1 {
+	OSC_F = PARAM1.x(p1_ii)
+	printf("==========================================================\n")
+	printf("Frequency of oscillating input #%g : %g\n", p1_ii, PARAM1.x(p1_ii))
+	printf("==========================================================\n")
+		for p2_ii = 0 ,PARAM2.size-1 {
+		 OSC_rltAmp = PARAM2.x(p2_ii)
+		printf("==========================================================\n")
+		printf("\tRelative amplitude of oscillating input #%g : %g\n" , p2_ii, PARAM2.x(p2_ii))
+		printf("==========================================================\n")
+			for CELL_TYPE = 1, 2{
+			
+			if (CELL_TYPE == 1){
+			sprint(CELLtxt,"WT")
+			}else{ sprint(CELLtxt,"KO") }
+			printf("\t\t Cell type #%g : %s\n", CELL_TYPE, CELLtxt)
+			TSTOP = 3000
+			PoisSpkHz = 50 // 50 100 250 450
+
+			run_simulation(PoisSpkHz,TSTOP)
+			//rasterplot()
+			CNT = CNT + 1
+			printf("######################  Simulation#%g : PARAM1's ID = %g\t,  PARAM2's ID = %g\t ###################### \n", CNT, p1_ii, p2_ii)
+			}
+		}
+	printf("=========================End one big Loop ========================\n")
+	}
+	printf("=========================TRIAL # %g ========================\n", TRIAL_NO)
+	print "Total Run time for one trial :: ", startsw()-t_trial
+	}
+	
+printf("========================= Finished all ========================\n")
+
+
+print "Total Runtime :: ", startsw()-t_loop
+print "\n"
+print "Time for everything = ",  startsw() - T_everythng
+
+
+
+/*
+objref RANGE_TC_LST,W_MULT_TC_LST 
+strdef CELLtxt
+
+RANGE_TC_LST = new Vector(1) 
+
+RANGE_TC_LST.x(0) = 150 // 120 130 140 150 
+//{ RANGE_TC_LST.x(0) =70   RANGE_TC_LST.x(1) = 100  RANGE_TC_LST.x(2) =150  RANGE_TC_LST.x(3) =200}
+W_MULT_TC_LST = new Vector(1)
+W_MULT_TC_LST.x(0) = 10// 4 5 6 7 8 10
+//W_MULT_TC_LST.indgen(0,150,50) // 0 50 100
+//W_MULT_TC_LST.x(0) =10 // 10 50 100
+
+CNT = 0
+t_loop = startsw()
+for r_ii = 0 ,RANGE_TC_LST.size-1 {
+RANGE_TC = RANGE_TC_LST.x(r_ii)
+printf("==========================================================\n")
+printf("RANGE of Thalamocortical connection #%g : %g\n", r_ii, RANGE_TC_LST.x(r_ii))
+printf("==========================================================\n")
+	for w_ii = 0 ,W_MULT_TC_LST.size-1 {
+	W_MULT_TC = W_MULT_TC_LST.x(w_ii) W_SCALE = 0.00001
+	printf("==========================================================\n")
+	printf("\tWEIGHT of Thalamocortical connection #%g Mult = %g  , Weight = %g\n", w_ii, W_MULT_TC_LST.x(w_ii), W_MULT_TC*W_SCALE_TC)
+	printf("==========================================================\n")
+		for CELL_TYPE = 1, 2{
+		if (CELL_TYPE == 1){
+		sprint(CELLtxt,"WT")
+		}else{ sprint(CELLtxt,"KO") }
+		printf("\t\t Cell type #%g : %s\n", CELL_TYPE, CELLtxt)
+		TSTOP = 3000
+		PoisSpkHz = 3
+
+		run_simulation(PoisSpkHz,TSTOP)
+		//rasterplot()
+		CNT = CNT + 1
+		printf("######################  Simulation#%g : RANGE_TC = %g\t,  W_MULT_TC = %g\t ###################### \n", CNT, RANGE_TC, W_MULT_TC)
+		}
+	}
+printf("=========================End one big Loop ========================\n")
+}	
+printf("========================= Finished all ========================\n")
+
+print "Total Runtime :: ", startsw()-t_loop
+print "\n"
+
+*/

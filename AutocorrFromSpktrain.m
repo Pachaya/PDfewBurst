@@ -2,7 +2,7 @@ function [box,sumAC, cntSample] = AutocorrFromSpktrain(spktrainVec, Trange, cutT
 % AutoCorrelation from Spktrain
 %   - Cut edges data box out 
 %   - Don't count reference spike
-%   - don't count outher spikes in the ref ID
+%   - don't count other spikes in the ref ID
 %   - Data =  all other cells ID ( not include the reference ID)
 %   - Change the ref cell to other cells
 
