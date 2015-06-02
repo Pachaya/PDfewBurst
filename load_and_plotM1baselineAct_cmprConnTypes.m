@@ -115,11 +115,12 @@ CnvrgntTypes{3}.leg = 'P:uniform, W:Neg Exp';
  
 % Directory
 
-PATH = SetPath;
+% PATH = SetPath;
+PATH = 'L:\';
 dirLoc = [PATH 'OscInput_varyTCtype_Sim/']; % [PATH 'OscInput_Sim/']; % /OscInput_varyTCtype_Sim/
-dirFig = ['CompareConTypes_' num2str( PoisInputFr) 'Hz_' get_Parameters_RangeTxt( PARAMETERS,[1,2,4,5,6]) '/'];
+dirFig = ['TestRunDelThis/'];%['CompareConTypes_' num2str( PoisInputFr) 'Hz_' get_Parameters_RangeTxt( PARAMETERS,[1,2,4,5,6]) '/'];
 mkdir([dirLoc dirFig])
-NEVER_LOAD_DATA = 0;
+NEVER_LOAD_DATA = 1;
 if (NEVER_LOAD_DATA)
 for ct_ii = 1 : NumCnvrgntTypes 
  ACT_Record = cell(ACT_Rec_size);
@@ -327,7 +328,7 @@ end
 
 
 %% 
-close all
+% close all
 
 
 for ct_ii = 1 : NumCnvrgntTypes 
@@ -357,7 +358,7 @@ end
 VL_spikeCorr
 
 %% Convergent rate ( = average of total weight per cell) vs  output activity
-close all
+% close all
 Cnvrgnt_rate_vs_normOutput
 
 %%
