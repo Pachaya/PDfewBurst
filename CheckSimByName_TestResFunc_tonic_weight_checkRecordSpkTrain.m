@@ -20,14 +20,14 @@ W_SPK = 0.029;
 W_VL_M1 = 0.002/Nsample ;
 
 
-InputFR_LST = [ 10 50:50:450];
+InputFR_LST = [ 10 25:25:450];
 SynchLvl_LST = [0];%[0:1/Nsample:1];
 W_VL_M1_LST = [0.0001 : 0.0002 : 0.0001*Nsample]; %[0.0001 : 0.0001 : 0.0001*Nsample];
 
 WspkMult_LST = [1]; %[1 1.5 2 2.5 3  5];
 IGmean_LST = 0; %[0 -0.1 -0.5 -1 -1.5]; % 0
 IGsig_LST = [0];
-OSC_F_LST = [20, 40, 10];
+OSC_F_LST =  [20, 40, 10];
 OSC_AMP_LST = [0 0.5 1];
 
 PARAM1 = InputFR_LST;

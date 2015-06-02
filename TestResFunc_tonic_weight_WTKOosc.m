@@ -20,14 +20,14 @@ W_SPK = 0.029;
 W_VL_M1 = 0.002/Nsample ;
 
 
-InputFR_LST = [ 10 50:50:450];
+InputFR_LST = [ 10 25:25:450];
 SynchLvl_LST = [0];%[0:1/Nsample:1];
 W_VL_M1_LST = [0.0001 : 0.0002 : 0.0001*Nsample]; %[0.0001 : 0.0001 : 0.0001*Nsample];
 
-WspkMult_LST = [1.5 3]; %[1 1.5 2 2.5 3  5];
+WspkMult_LST = [1]; %[1 1.5 2 2.5 3  5];
 IGmean_LST = 0; %[0 -0.1 -0.5 -1 -1.5]; % 0
 IGsig_LST = [0];
-OSC_F_LST = [20, 40, 10];
+OSC_F_LST =  [20, 40, 10];
 OSC_AMP_LST = [0 0.5 1];
 
 PARAM1 = InputFR_LST;
@@ -66,7 +66,7 @@ coreName = '';
 % Directory
 PATH = SetPath;
 dirLoc = [PATH 'ResFunc_cellType/'];
-dirFig = ['DelThisfold/']; %['smallResFunc_' get_Parameters_RangeTxt( PARAMETERS,[1:4]) '/'];
+dirFig = ['TestSmallResFunc/']; %['smallResFunc_' get_Parameters_RangeTxt( PARAMETERS,[1:4]) '/'];
 mkdir([dirLoc dirFig])
 
 for p1_ii = 1 : length(PARAM1)
@@ -123,10 +123,17 @@ for p1_ii = 1 : length(PARAM1)
                 %KOp_VL
                 Name_postfix  = ['KOp_VL_' simCode ];
                 VL_BaselineAct
-                tmp.E = E;      tmp.I = I;  tmp.All = All; tmp.All.somaVall = somaVall;
+                tmp.E = E;      tmp.I = I;  tmp.All = All; tmp.All.somaVall = somaVall;              
                 KOp.VL = tmp;
                 
-                ACT.WT =  WT;  %ACT.KO = KO; 
+                %Input Spiketrain (same input to WT and KO)
+                fInput = [dirLoc 'RecordSpkTrain_VL_' simCode  '.txt'];
+                [nE, nI, Tstop,InspkTrain] = get_save_vec_file_BigNet(fInput );
+                WT.VL.InputSpikeTrain = InspkTrain;
+                KOp.VL.InputSpikeTrain = InspkTrain;
+                
+                
+                ACT.WT =  WT;  %ACT.KO = KO;  
                 ACT.KOp = KOp;
                 
                 ACT_Record{p1_ii, p2_ii, p3_ii,p4_ii} = ACT;
@@ -145,6 +152,10 @@ avgFR = zeros(ACT_Rec_size, Ncelltype ) ;
 stdFR = zeros(ACT_Rec_size, Ncelltype ) ;
 avgEff = zeros(ACT_Rec_size, Ncelltype) ;
 stdEff = zeros(ACT_Rec_size, Ncelltype) ;
+
+avgInputFR = zeros(ACT_Rec_size) ;
+stdInputFR = zeros(ACT_Rec_size) ;
+
 
 for p1_ii = 1 : length(PARAM1)
     for p2_ii = 1 : length(PARAM2)
@@ -174,15 +185,20 @@ for p1_ii = 1 : length(PARAM1)
                     end
                     
                 end
-                
-                spkBin = ACT_Record{p1_ii, p2_ii, p3_ii,p4_ii}.WT.VL.All.spktrain;
-                tmpT = cuttime+1:Tstop;
+                       tmpT = cuttime+1:Tstop;
+                       %Input Spike
+                spkBin = ACT_Record{p1_ii, p2_ii, p3_ii,p4_ii}.KOp.VL.InputSpikeTrain;
+                freq_InFR = sum(spkBin(:,tmpT),2)/length(tmpT)*1000;   
+                avgInputFR(p1_ii, p2_ii,p3_ii,p4_ii) = mean(freq_InFR);
+                stdInputFR(p1_ii, p2_ii,p3_ii,p4_ii) = std(freq_InFR);
+                       
+                spkBin = ACT_Record{p1_ii, p2_ii, p3_ii,p4_ii}.WT.VL.All.spktrain;         
                 freq_all_WT = sum(spkBin(:,tmpT),2)/length(tmpT)*1000;
-                efficacy_all_WT = freq_all_WT./InputFR_LST(p1_ii);
+                efficacy_all_WT = freq_all_WT./freq_InFR;
                 
                 spkBin = ACT_Record{p1_ii, p2_ii, p3_ii,p4_ii}.KOp.VL.All.spktrain;
                 freq_all_KOp = sum(spkBin(:,tmpT),2)/length(tmpT)*1000;
-                efficacy_all_KOp = freq_all_KOp./InputFR_LST(p1_ii);
+                efficacy_all_KOp = freq_all_KOp./freq_InFR;
                 
                 avgFR(p1_ii, p2_ii,p3_ii,p4_ii, 1) = mean(freq_all_WT); stdFR(p1_ii, p2_ii,p3_ii,p4_ii, 1) = std(freq_all_WT);
                 avgFR(p1_ii, p2_ii,p3_ii,p4_ii, 2) = mean(freq_all_KOp);  stdFR(p1_ii, p2_ii,p3_ii,p4_ii, 2) = std(freq_all_KOp);
@@ -190,7 +206,10 @@ for p1_ii = 1 : length(PARAM1)
                 avgEff(p1_ii, p2_ii,p3_ii,p4_ii, 1) = mean(efficacy_all_WT); stdEff(p1_ii, p2_ii,p3_ii,p4_ii, 1) = std(efficacy_all_WT);
                 avgEff(p1_ii, p2_ii,p3_ii,p4_ii, 2) = mean(efficacy_all_KOp);  stdEff(p1_ii, p2_ii,p3_ii,p4_ii, 2) = std(efficacy_all_KOp);
                 
-                disp(['########### Trial = ' simTxt ])
+            
+
+                disp(['########### Trial = ' simTxt ])                
+                disp(['### Input avg freq = ' num2str(mean(freq_InFR))])
                 disp(['### WT avg freq = ' num2str(mean(freq_all_WT))])
                 disp(['### KOp avg freq = ' num2str(mean(freq_all_KOp))])
                 
@@ -265,7 +284,8 @@ end
 % end
 
 %% 
-
+if(0)
+    
 % p4 vs p2 
 % close all;
 mainPARAM = PARAM2; mainID = 2; 
@@ -325,22 +345,26 @@ for pp = 1 :  length(subPARAM)
         saveas(fg,[dirLoc dirFig figName '.fig'],'fig'); saveas(fg, [dirLoc dirFig figName '.jpg'],'jpg')
     end
 end
-
+end
 %% 
 % main 2 sub 4 dummy 2 
+
 testlist = perms(2:4);
 
-for idid  = 1 : size(testlist,1)
-    tmpid = testlist(idid,:);
+% for idid  = 1 : size(testlist,1)
+%     tmpid = testlist(idid,:);
+tmpid = [2 3 4];
     mainPARAM = eval(sprintf('PARAM%d',tmpid(1)));  mainID = tmpid(1); 
     subPARAM = eval(sprintf('PARAM%d',tmpid(2))); subID = tmpid(2);
     dummy =  tmpid(3);  dd =1;
     disp('============================================================')
     disp(['mainID = ' num2str(mainID) '    subID = ' num2str(subID) '   dummy = ' num2str(dummy)])
     disp('============================================================')
-    PLOT_Response_Function;
+    if (length(mainPARAM)  > 1)
+        PLOT_Response_Function_getInSpk;
+    end
 % k = waitforbuttonpress;
-end
+% end
 
 
 %%

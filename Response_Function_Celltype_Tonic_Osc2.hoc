@@ -369,8 +369,8 @@ load_file("Res_func.ses")
 
 objref InputFR_LST
 InputFR_LST = new Vector()
-InputFR_LST.indgen(0,450,50)
-InputFR_LST.x(0) = 10
+InputFR_LST.indgen(25,450,50)
+//InputFR_LST.x(0) = 10
 
 //InputFR_LST.indgen(11,14,1)
 //InputFR_LST.x(0) = 5
@@ -380,12 +380,12 @@ cnt_run = 0
 tloop = startsw()
 
 OSC_F = 10 //40 = gamma, 20 = beta, 10 = mu/alpha
-OSC_rltAmp = 0// 0.5 1 0.1 0 amplitude relative to its mean firing rate  A = OSC_rltAmp * meanFR
+OSC_rltAmp = 1// 0.5 1 0.1 0 amplitude relative to its mean firing rate  A = OSC_rltAmp * meanFR
 PHASE = 0 // in radians
 
 NOISE_STDEV  = 0 // 0  0.2  0.5 1 
 NOISE_MEAN = 0 // 0 -0.1 -0.5 -1 -1.5
-W_SPK  = 0.001 // 0.0015 0.0030
+W_SPK  = 0.001 //0.25' 0.5 0.75 1' 1.25 1.5 1.75 2 2.25 2.5 2.75 3 // 0.0015 0.0030
 
 //WSPKmul = 0.001 
 //TestW = 1 // 1:1:10

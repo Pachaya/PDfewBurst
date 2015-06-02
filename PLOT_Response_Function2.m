@@ -4,7 +4,7 @@ for pp = 1 :  length(subPARAM)
     rf = figure;  set(gcf, 'position',[     372         -94        1160         753])
     ef = figure;  set(gcf, 'position',[     372         -94        1160         753])  
     LEG = cell(length(mainPARAM)*2,1);
-    nR = length(subPARAM)
+    nR = length(subPARAM);
     for mm = 1 : length(mainPARAM)        
 %         p4_ii = pp; p2_ii = ii;
 %         p3_ii = 1;
