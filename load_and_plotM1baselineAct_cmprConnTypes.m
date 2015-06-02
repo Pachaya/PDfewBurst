@@ -328,6 +328,8 @@ end
 
 %% 
 close all
+
+
 for ct_ii = 1 : NumCnvrgntTypes 
  ACT_Record = CnvrgntTypes{ct_ii}.ACT_Record;
  if ct_ii == 1 
@@ -346,12 +348,16 @@ Get_info_TC_convergence_numVLperM1
 CtypeTxt =  CnvrgntTypes{ct_ii}.TitleName;
 codeTxt =   CnvrgntTypes{ct_ii}.CodeName;
 % M1_BaselineActivity_Matrix_noIndvPlot  % ---> plot raw M1 activity 
-M1_BaselineActivity_Matrix_noIndvPlot_normVL % ---> plot M1 activity  - VL activity (normalized with VL activity)
-Diff_M1act_OSC_F_AMP_oneType_normVL % Plot different in M1 raw activity when osc F increase or when osc amp increase
-
+% M1_BaselineActivity_Matrix_noIndvPlot_normVL % ---> plot M1 activity  - VL activity (normalized with VL activity)
+% Diff_M1act_OSC_F_AMP_oneType_normVL %--> Plot different in M1 raw activity when osc F increase or when osc amp increase
+VL_M1_spikeCorr
 end
 
+% Autocorrelation at VL
+VL_spikeCorr
+
 %% Convergent rate ( = average of total weight per cell) vs  output activity
+close all
 Cnvrgnt_rate_vs_normOutput
 
 %%
