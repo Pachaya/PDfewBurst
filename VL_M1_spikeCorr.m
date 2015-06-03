@@ -2,6 +2,7 @@
        RUN_KO = 0;
     
 %% 
+cuttime = 500;
 p3_ii =1 ; %trial no
 SAVE_FIG = 0;
 % Collect_sumAC_WT = cell(length(PARAM4),length(PARAM5));
@@ -16,10 +17,12 @@ RR = length(PARAM4); CC = length(PARAM5); cnt_aut = 0;
 Trange_LST = [25 50];
 % for t_ii = 1 : length(Trange_LST)
 %     Trange = Trange_LST(t_ii);
-Trange = 50;
+
 tt_run = tic();
-for p4_ii = 1 : length(PARAM4)
+for p4_ii = 1 : length(PARAM4) %osc f
+Trange = 1000/PARAM4(p4_ii); 
     for p5_ii = 1 : length(PARAM5)
+	
         tosc = tic();
         figPos = [ 1          41        1920         1000];
         nR = length(PARAM1); nC = length(PARAM2);
@@ -61,7 +64,9 @@ for p4_ii = 1 : length(PARAM4)
                     spkBin_VL = ACT_Record{p1_ii, p2_ii, p3_ii,p4_ii,p5_ii}.VL.WT.All.spktrain;
                     spkBin_M1 = ACT_Record{p1_ii, p2_ii, p3_ii,p4_ii,p5_ii}.M1.WT.All.spktrain;
                     [box,sumAC, cntSample] = CrossCorrFromSpktrain(spkBin_M1,spkBin_VL, Trange, cuttime );
-                    figure(fp1_WT); subplot(nR,nC,cnt);
+                    avgsumAC = sum(sumAC(:)) / length(box); 
+					sumAC = sumAC - avgsumAC;
+					figure(fp1_WT); subplot(nR,nC,cnt);
                     bar(box,sumAC); title(tmptt);
                     Collect_sumCC_WT{p1_ii,p2_ii,p4_ii,p5_ii} = sumAC;
                     toc(tt);
@@ -70,7 +75,9 @@ for p4_ii = 1 : length(PARAM4)
                     spkBin_VL = ACT_Record{p1_ii, p2_ii, p3_ii,p4_ii,p5_ii}.VL.KO.All.spktrain;
                     spkBin_M1 = ACT_Record{p1_ii, p2_ii, p3_ii,p4_ii,p5_ii}.M1.KO.All.spktrain;
                     [box,sumAC, cntSample] = CrossCorrFromSpktrain(spkBin_M1,spkBin_VL, Trange, cuttime );
-                    figure(fp1_KO); subplot(nR,nC,cnt);
+                    avgsumAC = sum(sumAC(:)) / length(box); 
+					sumAC = sumAC - avgsumAC;
+					figure(fp1_KO); subplot(nR,nC,cnt);
                     bar(box,sumAC,'r'); title(tmptt);
                     Collect_sumCC_KO{p1_ii,p2_ii,p4_ii,p5_ii} = sumAC;
                     toc(tt);    

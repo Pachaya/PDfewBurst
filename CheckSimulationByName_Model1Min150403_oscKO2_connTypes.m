@@ -39,7 +39,7 @@ ncells = 1150;
 M1_ncells = 166;
 TRIAL_LST = 1 : NUM_TRIAL;
 
-rTC_LST = [50 100 150 200 250]; %
+rTC_LST = [50 100 150 200 250]; % 
 wmTC_LST = [50 100 200 300 400 500]; %[10 25 50 75 100];
 
 LightAmp_LST = [0.5];
@@ -53,7 +53,7 @@ OSC_phase_LST = 0;
 
 Input_FR_LST = 50; %[50 100 250 450];
 
-TRIAL_NO_LST = 1;
+TRIAL_NO_LST = 6;
 
 PARAM1 = rTC_LST;
 lblTxt1 = 'Range of thalamocortical connection';
@@ -109,7 +109,7 @@ Check_Status = zeros(ACT_Rec_size);
 
 
 PATH = SetPath;
-dirLoc = [PATH 'OscInput_varyTCtype_Sim/']; %OscInput_Sim/'];
+dirLoc = [PATH  'OscInput_varyTCtype_Sim/'];  % 'OscInput_Sim/']; 
 % dirFig = ['Fig' get_Parameters_RangeTxt( PARAMETERS,[1,2,4,5]) '/'];
 % mkdir([dirLoc dirFig])
 
@@ -127,7 +127,7 @@ for p1_ii = 1 : length(PARAM1)
                     r_ii = p1_ii; wm_ii = p2_ii;
                     la_ii = 1;  m_ii = 1; s_ii = 1; ld_ii= 1;   
                     of_ii = p4_ii; oa_ii = p5_ii; op_ii = 1;
-                    TRIAL_NO = 1;
+                    TRIAL_NO = 5;
                     fr_ii = p3_ii;
                     cell_type = 1;
 %                     for cell_type = 1 : 2
