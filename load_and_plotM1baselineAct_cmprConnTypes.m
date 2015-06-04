@@ -323,6 +323,7 @@ else
     end
 end
 %%
+% Extract Conn Info
  save([dirLoc dirFig 'ActivityResult_allCnvrgntTypes_' date '.mat' ], 'CnvrgntTypes','PARAMETERS','-v7.3');
 
 
@@ -332,25 +333,27 @@ end
 
 for ct_ii = 1 : NumCnvrgntTypes 
  ACT_Record = CnvrgntTypes{ct_ii}.ACT_Record;
+ %     tmpdirFig =  ['CompareConTypes_' num2str( PoisInputFr) 'Hz_' get_Parameters_RangeTxt( PARAMETERS,[1,2,4,5,6]) '/'];
+  tmpdirFig =  ['RestartAnalysisOnConnTypes/'];
  if ct_ii == 1 
     dirLoc = [PATH 'OscInput_Sim/'];
-    dirFig = ['../OscInput_varyTCtype_Sim/' 'CompareConTypes_' num2str( PoisInputFr) 'Hz_' get_Parameters_RangeTxt( PARAMETERS,[1,2,4,5,6]) '/'];    
- else
+    dirFig = ['../OscInput_varyTCtype_Sim/'    tmpdirFig ];    
+ else     
     dirLoc = [PATH 'OscInput_varyTCtype_Sim/']; % [PATH 'OscInput_Sim/']; % /OscInput_varyTCtype_Sim/
-    dirFig = ['CompareConTypes_' num2str( PoisInputFr) 'Hz_' get_Parameters_RangeTxt( PARAMETERS,[1,2,4,5,6]) '/'];
+    dirFig = [   tmpdirFig ];
  end
 %% Check Osc F and Amp of one current case
-% Check_OscF_and_Amp_of_one_case
+Check_OscF_and_Amp_of_one_case
 %%  Get info for TC convergenc --> number of VL per M1 , average maxW , average summation of weight
 Get_info_TC_convergence_numVLperM1
 
 %%
 CtypeTxt =  CnvrgntTypes{ct_ii}.TitleName;
 codeTxt =   CnvrgntTypes{ct_ii}.CodeName;
-% M1_BaselineActivity_Matrix_noIndvPlot  % ---> plot raw M1 activity 
-% M1_BaselineActivity_Matrix_noIndvPlot_normVL % ---> plot M1 activity  - VL activity (normalized with VL activity)
+M1_BaselineActivity_Matrix_noIndvPlot  % ---> plot raw M1 activity 
+M1_BaselineActivity_Matrix_noIndvPlot_normVL % ---> plot M1 activity  - VL activity (normalized with VL activity)
 Diff_M1act_OSC_F_AMP_oneType_normVL %--> Plot different in M1 raw activity when osc F increase or when osc amp increase
-VL_M1_spikeCorr
+% VL_M1_spikeCorr
 end
 
 % Autocorrelation at VL
@@ -359,7 +362,7 @@ VL_spikeCorr
 %% Convergent rate ( = average of total weight per cell) vs  output activity
 % close all
 Cnvrgnt_rate_vs_normOutput
-VL_M1_instFrCorr
+% VL_M1_instFrCorr
 %%
 
 % Normalize M1 activity with actual number of spikes in VL

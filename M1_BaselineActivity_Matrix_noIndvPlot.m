@@ -95,28 +95,28 @@ for p3_ii = 1 : length(PARAM3)
         tmpTxt = get_Parameters_saveText(PARAMETERS, [3], [ p3_ii]);
         
         fg = fCombine1;
-        figname = ['CombineM1FR_atBaselineWT' tmpTxt];
+        figname = ['rawM1FR_WT' tmpTxt];
         saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
         fg = fCombine2;
-        figname = ['CombineM1FR_atBaselineKO' tmpTxt];
+        figname = ['rawM1FR_KO' tmpTxt];
         saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
         fg = fContour1;
-        figname = ['ContourM1FR_atBaselineWT' tmpTxt];
+        figname = ['rawM1FRcontour_WT' tmpTxt];
         saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
         fg = fContour2;
-        figname = ['ContourM1FR_atBaselineKO' tmpTxt];
+        figname = ['rawM1FRcontour_KO' tmpTxt];
         saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
         fg = fCombine1numVL;
-        figname = ['CombineM1FRnumVL_atBaselineWT' tmpTxt];
+        figname = ['rawM1FRnumVL_WT' tmpTxt];
         saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
         fg = fCombine2numVL;
-        figname = ['CombineM1FRnumVL_atBaselineKO' tmpTxt];
+        figname = ['rawM1FRnumVL_KO' tmpTxt];
         saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
         fg = fContour1numVL;
-        figname = ['ContourM1FRnumVL_atBaselineWT' tmpTxt];
+        figname = ['rawM1FRnumVLcontour_WT' tmpTxt];
         saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
         fg = fContour2numVL;
-        figname = ['ContourM1FRnumVL_atBaselineKO' tmpTxt];
+        figname = ['rawM1FRnumVLcontour_KO' tmpTxt];
         saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
     end
     

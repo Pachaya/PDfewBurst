@@ -10,8 +10,8 @@ function [ varargout ] = ExtractTC_info( dirLoc, Name_postfix, display  )
 
 tmpData = importdata([dirLoc 'TC_ConnectionWDParam_' Name_postfix '.txt'] );
 N_TC = tmpData(1); tmpData = tmpData(2:end);  tmpData = reshape(tmpData,[5,N_TC])';
-srcVLcell = tmpData(:,1);  tarM1Cell = tmpData(:,2); connType = tmpData(:,3); connWeight = tmpData(:,4); connDelay = tmpData(:,5); % ID of the cell start from 0 so the ID should be add by one, the M1 cell start from 3450 and get only center part of M1
-
+srcVLcell = tmpData(:,1);  tarM1Cell = tmpData(:,2); connType = tmpData(:,3); connWeight = tmpData(:,4); connDelay = tmpData(:,5); % ID of the cell start from 0 so the ID should be add by one, the M1 cell start from 2300 and get only center part of M1
+srcVLcell = srcVLcell +1;  tarM1Cell =  tarM1Cell - min(tarM1Cell) +1; 
 % Find the set of target cell
 [tarID_M1cell, IA, IC] = unique(tarM1Cell,'stable'); % tarID_M1cell = tarM1Cell(IA) and tarM1Cell = tarID_M1cell(IC)
 

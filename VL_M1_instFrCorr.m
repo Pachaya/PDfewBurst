@@ -23,7 +23,7 @@ for p4_ii = 1 : length(PARAM4)
         subplot(nR,nC,1); suptitle({CtypeTxt,['WT : '  get_Parameters_titleText(PARAMETERS,[4,5],[p4_ii, p5_ii]) ]});
        if(RUN_KO)
         fp1_KO= figure;  set(fp1_KO, 'position',figPos); set(fp1_KO,'PaperPositionMode','auto');
-        subplot(nR,nC,1); suptitle({CtypeTxt , ['KO : ' get_Parameters_titleText(PARAMETERS,[4,5],[p4_ii, p5_ii]) });
+        subplot(nR,nC,1); suptitle({CtypeTxt , ['KO : ' get_Parameters_titleText(PARAMETERS,[4,5],[p4_ii, p5_ii])] });
        end
         cnt = 0;
 
@@ -38,7 +38,7 @@ for p4_ii = 1 : length(PARAM4)
 					
                     spkBin_VL = ACT_Record{p1_ii, p2_ii, p3_ii,p4_ii,p5_ii}.VL.WT.All.spktrain;
                     spkBin_M1 = ACT_Record{p1_ii, p2_ii, p3_ii,p4_ii,p5_ii}.M1.WT.All.spktrain;
-					
+				    t_Axis = 0 : 
 					instAvgFR_VL = mean(spkBin_VL, 1)*1000;
 					instAvgFR_M1 = mean(spkBin_M1, 1)*1000;
 					

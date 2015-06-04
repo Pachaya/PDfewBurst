@@ -500,7 +500,7 @@ CNT = 0
 t_loop = startsw()
 W_POISSPK_VL = 0.001 //0.0015 0.0030
 
-INPUT_POISSON = 50
+INPUT_POISSON = 100
 MEAN = 0 //  0 -0.5 -1 -1.5 -2  : -1.4 -1.6   \\ -0.01 -0.1 -0.5 -1 -5 -10 
 STDEV  = 0 // 0 0.2' 0.5 1 Noise by InGauss
 /*
@@ -513,9 +513,9 @@ PoisSpkHz = 0
 */
 //run_simulation(PoisSpkHz,TSTOP)
 	
-N_Trial = 6
+N_Trial = 1
 SHOW_GUI = 0
-for TRIAL_NO = 6 , N_Trial {	
+for TRIAL_NO = 1 , N_Trial {	
 	t_trial = startsw()
 	printf("==========================================================\n")
 	printf("\tTRIAL NO = %g\n" , TRIAL_NO)

@@ -2,7 +2,7 @@
 
 % For param 3, 4 , 5
 PhotoInjT  = TSTOP;
-p3_ii = 1; p6_ii = 1;
+p3_ii = 1; p6_ii = 1; Ncontour = 4;
 
 % for p3_ii = 1 : length(PARAM3)  % Trial
 dataY1 =[]; data2 = [];
@@ -44,32 +44,32 @@ fCombine2numVL =  figure; set(gcf, 'position', figSize); set(gcf,'PaperPositionM
 fContour1numVL =  figure; set(gcf, 'position', figSize2); set(gcf,'PaperPositionMode','auto');
 fContour2numVL =  figure; set(gcf, 'position', figSize2); set(gcf,'PaperPositionMode','auto');
 cntcnt = 0;
-nR = 2; nC = length(PARAM5)-1;
+nR = length(PARAM4); nC = length(PARAM5)-1;
 
+for p4_ii = 1 : length(PARAM4) % OSC Amp
 for p5_ii = 2 : length(PARAM5) % OSC Amp
+
     cntcnt = cntcnt + 1;
     
     xt = PARAM2; yt = round(VLperM1);
     xl = titleTxt2; yl =  'Average number of VL per M1 (cell)';
-    suptitleTxt = get_Parameters_titleText(PARAMETERS, [5], [ p5_ii]);
+    suptitleTxt = get_Parameters_titleText(PARAMETERS, [4,5], [ p4_ii, p5_ii]);
     
-    tmpMatAmp =  CellsOfMatrixWT{2, p5_ii}; tmpMat0 =  CellsOfMatrixWT{1,1};
+    tmpMatAmp =  CellsOfMatrixWT{p4_ii, p5_ii}; tmpMat0 =  CellsOfMatrixWT{p4_ii,1}; % static input
     diff_M1_WT =  tmpMatAmp - tmpMat0;
     data1= diff_M1_WT;
     figure(fCombine1numVL); subplot(nR,nC,cntcnt);  plot_paramMat( data1, suptitleTxt ,xl,yl, xt,yt);
     figure(fContour1numVL); subplot(nR,nC,cntcnt);  plot_contourparamMat( data1, suptitleTxt ,xl,yl, xt,yt, Ncontour);
     
-    tmpMatAmp =  CellsOfMatrixKO{2, p5_ii}; tmpMat0 =  CellsOfMatrixKO{1, p5_ii};
+     tmpMatAmp =  CellsOfMatrixWT{p4_ii, p5_ii}; tmpMat0 =  CellsOfMatrixWT{p4_ii,1};
     diff_M1_KO =  tmpMatAmp - tmpMat0;
     data2= diff_M1_KO;
     figure(fCombine2numVL); subplot(nR,nC,cntcnt);  plot_paramMat( data2, suptitleTxt ,xl,yl, xt,yt);
-    figure(fContour2numVL); subplot(nR,nC,cntcnt);  plot_contourparamMat( data2, suptitleTxt ,xl,yl, xt,yt, Ncontour);
-    
-    
-    
+    figure(fContour2numVL); subplot(nR,nC,cntcnt);  plot_contourparamMat( data2, suptitleTxt ,xl,yl, xt,yt, Ncontour); 
+    end
 end
 tt1 = '[WT] '; tt2 = '[KO] ';
-stt = 'Different in M1 activity when oscillation frequency increase (40Hz - 20Hz)';
+stt = 'Different in M1 activity when oscillation frequency increase compare to static input';
 figure(fCombine1numVL);  suptitle( {stt, [tt1 CtypeTxt]}); set(gcf,'PaperPositionMode','auto');
 figure(fCombine2numVL);  suptitle( {stt, [tt2 CtypeTxt]}); set(gcf,'PaperPositionMode','auto');
 figure(fContour1numVL);  suptitle( {stt, [tt1 CtypeTxt]}); set(gcf,'PaperPositionMode','auto');

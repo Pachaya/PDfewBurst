@@ -55,7 +55,7 @@ for p3_ii = 1 : length(PARAM3)
             tt1 = 'WT'; tt2 = 'KO';
             xt = PARAM2; yt = PARAM1;
             xl = titleTxt2; yl =titleTxt1; %yl =  'Average number of VL per M1 (cell)';
-            suptitleTxt = {'Average firing rate of M1 baseline activity', get_Parameters_titleText(PARAMETERS, [3:5], [ p3_ii,p4_ii,p5_ii])};
+            suptitleTxt = {'Average firing rate of M1 baseline activity normalized with VL activity', get_Parameters_titleText(PARAMETERS, [3:5], [ p3_ii,p4_ii,p5_ii])};
             %suptitleTxt = get_Parameters_titleText(PARAMETERS, [4:5], [p4_ii,p5_ii]);
             %             [ fg_M1FR ] = plotFigure_paramMat( M1_baselineWT,M1_baselineKO, tt1,tt2, xl,yl, xt,yt, suptitleTxt,figLoc );
             cntcnt = cntcnt+1;
@@ -77,7 +77,7 @@ for p3_ii = 1 : length(PARAM3)
             
             xt = PARAM2; yt = round(VLperM1);
             xl = titleTxt2; yl =  'Average number of VL per M1 (cell)';
-            suptitleTxt = {'Average firing rate of M1 baseline activity', get_Parameters_titleText(PARAMETERS, [3:5], [ p3_ii,p4_ii,p5_ii])};
+            suptitleTxt = {'Average firing rate of M1 baseline activity normalized with VL activity', get_Parameters_titleText(PARAMETERS, [3:5], [ p3_ii,p4_ii,p5_ii])};
             %             [ fg_M1FRnumVL ] = plotFigure_paramMat( M1_baselineWT,M1_baselineKO, tt1,tt2, xl,yl, xt,yt, suptitleTxt,figLoc );
             %                         Ncontour =4;
             data1=M1_baselineWT; data2 = M1_baselineKO;
@@ -104,7 +104,7 @@ for p3_ii = 1 : length(PARAM3)
         end
     end
     tt1 = '[WT] '; tt2 = '[KO] ';   txtp3 = CtypeTxt; % get_Parameters_titleText(PARAMETERS, [3], [p3_ii]);
-    stt = 'Average firing rate of M1 baseline activity';
+    stt = 'Average firing rate of M1 baseline activity normalized with VL activity';
     
     figure(fCombine1); suptitle( [ tt1 CtypeTxt]); set(gcf,'PaperPositionMode','auto');
     figure(fCombine2); suptitle( [ tt2 CtypeTxt]); set(gcf,'PaperPositionMode','auto');
@@ -117,34 +117,35 @@ for p3_ii = 1 : length(PARAM3)
     
     figure(fscatterNumVL1); suptitle([ tt1 CtypeTxt]); set(gcf,'PaperPositionMode','auto');
     figure(fscatterNumVL2); suptitle([ tt2 CtypeTxt]); set(gcf,'PaperPositionMode','auto');
-    
-    
+            
+        
     if(SAVE_FIG)
-        tmpTxt = ['normVL' get_Parameters_saveText(PARAMETERS, [3], [ p3_ii]) '_' codeTxt ];
+             
+        tmpTxt = get_Parameters_saveText(PARAMETERS, [3], [ p3_ii]);
         
         fg = fCombine1;
-        figname = ['CombineM1FR_atBaselineWT' tmpTxt];
+        figname = ['normM1FR_WT' tmpTxt];
         saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
         fg = fCombine2;
-        figname = ['CombineM1FR_atBaselineKO' tmpTxt];
+        figname = ['normM1FR_KO' tmpTxt];
         saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
         fg = fContour1;
-        figname = ['ContourM1FR_atBaselineWT' tmpTxt];
+        figname = ['normM1FRcontour_WT' tmpTxt];
         saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
         fg = fContour2;
-        figname = ['ContourM1FR_atBaselineKO' tmpTxt];
+        figname = ['normM1FRcontour_KO' tmpTxt];
         saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
         fg = fCombine1numVL;
-        figname = ['CombineM1FRnumVL_atBaselineWT' tmpTxt];
+        figname = ['normM1FRnumVL_WT' tmpTxt];
         saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
         fg = fCombine2numVL;
-        figname = ['CombineM1FRnumVL_atBaselineKO' tmpTxt];
+        figname = ['normM1FRnumVL_KO' tmpTxt];
         saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
         fg = fContour1numVL;
-        figname = ['ContourM1FRnumVL_atBaselineWT' tmpTxt];
+        figname = ['normM1FRnumVLcontour_WT' tmpTxt];
         saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
         fg = fContour2numVL;
-        figname = ['ContourM1FRnumVL_atBaselineKO' tmpTxt];
+        figname = ['normM1FRnumVLcontour_KO' tmpTxt];
         saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
         
         fg = fscatterNumVL1;

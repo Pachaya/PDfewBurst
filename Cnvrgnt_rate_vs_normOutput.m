@@ -1,6 +1,7 @@
 
 %% M1 baseline activity
 dataYLeg = {CnvrgntTypes{1}.leg, CnvrgntTypes{2}.leg, CnvrgntTypes{3}.leg};
+dataYLeg2 = {CnvrgntTypes{1}.leg, CnvrgntTypes{2}.leg, CnvrgntTypes{3}.leg};
 dataY1 = cell(NumCnvrgntTypes ,1);  dataY2 = cell(NumCnvrgntTypes ,1);
 
     
@@ -22,17 +23,18 @@ dataY1 = cell(NumCnvrgntTypes ,1);  dataY2 = cell(NumCnvrgntTypes ,1);
         
         
         for p4_ii = 1 : length(PARAM4)
+%             newFgforAmp = figure; 
             for p5_ii = 1 : length(PARAM5)
                 
             for ct_ii = 1 : NumCnvrgntTypes
                 ACT_Record = CnvrgntTypes{ct_ii}.ACT_Record;
-                if ct_ii == 1
+                 if ct_ii == 1 
                     dirLoc = [PATH 'OscInput_Sim/'];
-                    dirFig = ['../OscInput_varyTCtype_Sim/' 'CompareConTypes_' num2str( PoisInputFr) 'Hz_' get_Parameters_RangeTxt( PARAMETERS,[1,2,4,5,6]) '/'];
-                else
+                    dirFig = ['../OscInput_varyTCtype_Sim/'    tmpdirFig ];    
+                 else     
                     dirLoc = [PATH 'OscInput_varyTCtype_Sim/']; % [PATH 'OscInput_Sim/']; % /OscInput_varyTCtype_Sim/
-                    dirFig = ['CompareConTypes_' num2str( PoisInputFr) 'Hz_' get_Parameters_RangeTxt( PARAMETERS,[1,2,4,5,6]) '/'];
-                end
+                    dirFig = [   tmpdirFig ];
+                 end
                 
                 tmpWTtrain_VL =  ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii,p6_ii}.VL.WT.All.spktrain;
                 tmpKOtrain_VL =  ACT_Record{p1_ii,p2_ii,p3_ii,p4_ii,p5_ii,p6_ii}.VL.KO.All.spktrain;
@@ -56,22 +58,26 @@ dataY1 = cell(NumCnvrgntTypes ,1);  dataY2 = cell(NumCnvrgntTypes ,1);
                 
                 
       cntcnt = cntcnt + 1;
+      figure; cntcnt = 1;
              xt = PARAM2; yt = round(VLperM1);
-            xl = 'Average sum of weight per cell'; yl =  'Neuron Activity at target layer(Hz)';
-            suptitleTxt = {'Rate of convergent vs. Target Activity', get_Parameters_titleText(PARAMETERS, [4:5], [ p4_ii,p5_ii])};
-            
+            xl = 'Average sum of weight per cell'; yl =  'Normalized Neuron Activity at target layer(Hz)';
+            suptitleTxt = {get_Parameters_titleText(PARAMETERS, [4:5], [ p4_ii,p5_ii])};
+          
     
-    figure(fscatterNumVL1); subplot(nR,nC,cntcnt); plot_scatter( sumW_LST, dataY1, dataYLeg, suptitleTxt ,xl,yl);
+    figure(fscatterNumVL1); subplot(nR,nC,cntcnt);  plot_scatter( sumW_LST, dataY1, dataYLeg, suptitleTxt ,xl,yl);
     figure(fscatterNumVL2); subplot(nR,nC,cntcnt);  plot_scatter( sumW_LST, dataY2, dataYLeg, suptitleTxt ,xl,yl);
+    
+    
+%      figure(newFgforAmp); plot_scatter_dotStyl( sumW_LST, dataY2, dataYLeg, suptitleTxt ,xl,yl,[ getLineStyle(p5_ii) getDotStyle(p5_ii)); hold on;
     
             end
         end
     end
     
     
-    
-    figure(fscatterNumVL1); suptitle([ tt1 CtypeTxt]); set(gcf,'PaperPositionMode','auto');
-    figure(fscatterNumVL2); suptitle([ tt2 CtypeTxt]); set(gcf,'PaperPositionMode','auto');
+    htt  = 'Rate of convergent vs. Target Activity'; 
+    figure(fscatterNumVL1); suptitle({htt, [ tt1 ', ' CtypeTxt]}); set(gcf,'PaperPositionMode','auto');
+    figure(fscatterNumVL2); suptitle({htt,[ tt2  ', ' CtypeTxt]}); set(gcf,'PaperPositionMode','auto');
     
     
     if(SAVE_FIG)
@@ -79,10 +85,10 @@ dataY1 = cell(NumCnvrgntTypes ,1);  dataY2 = cell(NumCnvrgntTypes ,1);
         
         
         fg = fscatterNumVL1;
-        figname = ['Scatter_avgSumW_M1actWT' tmpTxt];
+        figname = ['Scatter_avgSumW_normM1actWT' tmpTxt];
         saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
         fg = fscatterNumVL2;
-        figname = ['Scatter_avgSumW_M1actKO' tmpTxt];
+        figname = ['Scatter_avgSumW_normM1actKO' tmpTxt];
         saveas(fg,[dirLoc dirFig figname '.fig'],'fig'); saveas(fg,[dirLoc dirFig figname '.jpg'],'jpg');
         
     end
