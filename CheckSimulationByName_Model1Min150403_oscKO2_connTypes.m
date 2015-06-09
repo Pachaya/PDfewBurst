@@ -51,9 +51,9 @@ OSC_F_LST = [20 40 ];
 OSC_Amp_LST = [0 0.5 1];
 OSC_phase_LST = 0;
 
-Input_FR_LST = 50; %[50 100 250 450];
+Input_FR_LST = 100; %[50 100 250 450];
 
-TRIAL_NO_LST = 6;
+TRIAL_NO_LST = 1;
 
 PARAM1 = rTC_LST;
 lblTxt1 = 'Range of thalamocortical connection';
@@ -109,7 +109,7 @@ Check_Status = zeros(ACT_Rec_size);
 
 
 PATH = SetPath;
-dirLoc = [PATH  'OscInput_varyTCtype_Sim/'];  % 'OscInput_Sim/']; 
+dirLoc = [PATH  'OscInput_varyTCtype_Sim/'];  % 'OscInput_Sim/'];  %
 % dirFig = ['Fig' get_Parameters_RangeTxt( PARAMETERS,[1,2,4,5]) '/'];
 % mkdir([dirLoc dirFig])
 
@@ -127,7 +127,7 @@ for p1_ii = 1 : length(PARAM1)
                     r_ii = p1_ii; wm_ii = p2_ii;
                     la_ii = 1;  m_ii = 1; s_ii = 1; ld_ii= 1;   
                     of_ii = p4_ii; oa_ii = p5_ii; op_ii = 1;
-                    TRIAL_NO = 5;
+                    TRIAL_NO = 1;
                     fr_ii = p3_ii;
                     cell_type = 1;
 %                     for cell_type = 1 : 2
@@ -140,7 +140,7 @@ for p1_ii = 1 : length(PARAM1)
                         
                         % PDfewBurst_GPmVLmd1_rTC120_wmTC10_WT_GPmInput_Amp0.3_Dur1000_GPmVLw_m0.06_sig0.01_InGauss0.2_IGmean-0.15_IGmeanSig0_W0.0015_SpecifiedPoisSpk_sig0.00Hz_T4000_trial3
                         
-                        coreFileName =  'GPmVLmd1_0del_KO2_avgPnegExpWTC';% 'GPmVLmd1_0del_KO2_avgPWuniformTC';%  % GPmVLmd1_0del_KO2' ;
+                        coreFileName =  'GPmVLmd1_0del_KO2_avgPWuniformTC';%  'GPmVLmd1_0del_KO2_avgPnegExpWTC';%'GPmVLmd1_0del_KO2' ; %  
                         
                         InGauss_STDEV = 0; %0.2;, 0.3
                         NoiseMEAN = 0;

@@ -538,7 +538,7 @@ for TRIAL_NO = 1 , N_Trial {
 			}else{ sprint(CELLtxt,"KO") }
 			printf("\t\t Cell type #%g : %s\n", CELL_TYPE, CELLtxt)
 			TSTOP = 3000
-			PoisSpkHz = 50 // 50 100 250 450
+			PoisSpkHz = 100 // 50 100 250 450
 
 			run_simulation(PoisSpkHz,TSTOP)
 			//rasterplot()
