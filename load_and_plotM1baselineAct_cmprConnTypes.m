@@ -311,7 +311,9 @@ end
 else
     
     
-    matFile = {'Activity_gaussPgaussW_27-May-2015','Activity_avgPuniformW_27-May-2015', 'Activity_avgPnegecpW_27-May-2015'};
+
+    matFile = {'sparseActivity_gaussPgaussW05-Jun-2015','sparseActivity_avgPuniformW05-Jun-2015', 'sparseActivity_avgPnegexpW05-Jun-2015'};
+    
     for ct_ii = 1 : NumCnvrgntTypes
         CnvrgntTypes{ct_ii}.matFile = matFile{ct_ii};
         load([dirLoc dirFig matFile{ct_ii} '.mat' ]);
