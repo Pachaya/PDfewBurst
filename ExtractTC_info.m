@@ -14,6 +14,7 @@ srcVLcell = tmpData(:,1);  tarM1Cell = tmpData(:,2); connType = tmpData(:,3); co
 srcVLcell = srcVLcell +1;  tarM1Cell =  tarM1Cell - min(tarM1Cell) +1; 
 % Find the set of target cell
 [tarID_M1cell, IA, IC] = unique(tarM1Cell,'stable'); % tarID_M1cell = tarM1Cell(IA) and tarM1Cell = tarID_M1cell(IC)
+tarID_M1cell =sort(tarID_M1cell);
 
 % for each M1 cell that has got feedforward connection from VL
 TC_basedOnM1 = cell(1,length(tarID_M1cell));

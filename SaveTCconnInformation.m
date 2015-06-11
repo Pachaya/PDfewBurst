@@ -4,6 +4,7 @@
 p3_ii = 1; p6_ii = 1;
 
 for ct_ii = 1 : NumCnvrgntTypes 
+    tonetype = tic();
  ACT_Record = CnvrgntTypes{ct_ii}.ACT_Record;
      tmpdirFig =  ['CompareConTypes_' num2str( PoisInputFr) 'Hz_' get_Parameters_RangeTxt( PARAMETERS,[1,2,4,5,6]) '/'];
 %   tmpdirFig =  ['RestartAnalysisOnConnTypes/'];
@@ -38,15 +39,18 @@ for ct_ii = 1 : NumCnvrgntTypes
  CnvrgntType{ct_ii}.TC_Conn_INFO = TC_Conn_INFO; 
  
  % save 
+ f
+ 
  
     contype =   CnvrgntTypes{ct_ii}.CodeName;
 
     save([dirLoc dirFig 'TC_Conn_INFO_' contype '_' date '.mat' ], 'TC_Conn_INFO','PARAMETERS','-v7.3');
 
     disp('============================================================================================');
-    disp('                      Saved interlayer connection information;');
+    disp('                      Saved interlayer connection information');
     disp('============================================================================================');
     disp(CnvrgntTypes{ct_ii}.TitleName)
+    toc(tonetype);
     disp('============================================================================================');
     disp('============================================================================================');
 %     clear TC_Conn_INFO

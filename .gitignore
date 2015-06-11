@@ -10,6 +10,7 @@ special
 *.dll
 *.zip
 *.csv
+*.mat
 SimResult/
 x86_64/
 .DS_Store

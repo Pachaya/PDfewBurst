@@ -315,19 +315,23 @@ else
     matFile = {'sparseActivity_gaussPgaussW05-Jun-2015','sparseActivity_avgPuniformW05-Jun-2015', 'sparseActivity_avgPnegexpW05-Jun-2015'};
     
     for ct_ii = 1 : NumCnvrgntTypes
+        tload = tic();
         CnvrgntTypes{ct_ii}.matFile = matFile{ct_ii};
         load([dirLoc dirFig matFile{ct_ii} '.mat' ]);
         CnvrgntTypes{ct_ii}.ACT_Record = ACT_Record;
         disp('============================================================================================');
         disp(CnvrgntTypes{ct_ii}.TitleName)
+        toc(tload);
         disp('============================================================================================');
         
     end
 end
 %%
 % Extract Conn Info
+SAVE_allConTypes = 0;
+if(SAVE_allConTypes)
  save([dirLoc dirFig 'ActivityResult_allCnvrgntTypes_' date '.mat' ], 'CnvrgntTypes','PARAMETERS','-v7.3');
-
+end
 
 %% 
 % close all
