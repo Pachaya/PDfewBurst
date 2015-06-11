@@ -1,0 +1,40 @@
+///////////////////* Declare Position *//////////////////
+//// Download position of VL's E & I cell - use only E cells
+/////////////////////////////////////////////////////////
+//load position files
+objref posEx, posEy, posIx,posIy, posINx,posINy
+strdef POSITION_INFO, Efile, Ifile
+	
+		
+objref fin
+fin = new File()
+Efile = "Epos4600_noI_ssize3000_repmatVLpos.txt"
+fin.ropen(Efile) // E always Regular
+
+ 
+ 
+nE = fin.scanvar()
+posEx = new Vector(nE)
+posEy = new Vector(nE)
+
+for (i=0;i<nE;i=i+1){
+	posEx.x(i) = fin.scanvar()
+	posEy.x(i) = fin.scanvar()
+}
+fin.close() 
+//fin.ropen("Ipos.txt")
+
+//Regular I 
+Ifile = "Ipos_E1150_I380_Regular_VL_Sweep5Itr5000_ceil_sorted.txt"
+fin.ropen(Ifile)
+POSITION_INFO = "Regular E & I for VL layer, new gen based on control parameters, rep_deg 2, ssize = 1500, #sweep = 5, #Intr = 5000 (ceil, sorted)\n"
+sprint(POSITION_INFO, "%s\t Epos = %s\n\t Ipos = %s\n", POSITION_INFO, Efile, Ifile)
+
+nI=fin.scanvar()
+posIx = new Vector(nI)
+posIy = new Vector(nI)
+for (i=0;i<nI;i=i+1){
+	posIx.x(i) = fin.scanvar()
+	posIy.x(i) = fin.scanvar()
+}
+fin.close()
