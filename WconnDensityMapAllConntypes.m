@@ -4,7 +4,7 @@
 
 gauss = load('TC_Conn_INFO_gaussPgaussW_11-Jun-2015');
 unif = load('TC_Conn_INFO_avgPuniformW_11-Jun-2015');
-negExp = load('TC_Conn_INFO_avgPnegecpW_11-Jun-2015');
+negExp = load('TC_Conn_INFO_avgPnegexpW_11-Jun-2015');
 PARAMETERS = gauss.PARAMETERS;
 AllConnData = []; 
 AllConnData.gauss = gauss.TC_Conn_INFO;
@@ -17,7 +17,7 @@ tmp = AllConnData.gauss{1,1,1,1};
 
 % Load Cells Mosaics 
 
-% load('VL_M1_CellPosition') % Epos_VL  and Epos_M1
+load('VL_M1_CellPosition') % Epos_VL  and Epos_M1
 NNloc_VL = [zeros(length(Epos_VL),1) Epos_VL zeros(length(Epos_VL),1)];
 NNloc_M1 = [zeros(length(Epos_M1),1) Epos_M1 50*ones(length(Epos_M1),1)];
 rid = 2; wid = 3;
@@ -35,17 +35,24 @@ Build3DNetworkFigure_call
 
 title(Code)
 %% 
-rid = 2; wid = 3;
+rid = 2; wid = 3; % Range = 100 , w = 200
+
 ALLweightList = [ AllConnData.gauss{rid,wid,1,1}.TCconn_raw.connWeight;  AllConnData.unif{rid,wid,1,1}.TCconn_raw.connWeight;  AllConnData.negExp{rid,wid,1,1}.TCconn_raw.connWeight;  ];
 maxC =prctile(ALLweightList,90); 
 midC = prctile(ALLweightList,50); 
 minC =prctile(ALLweightList,10);
+
+
+AllsmoothW = [];
+m3C =prctile(AllsmoothW(:),100); 
+m2C = prctile(AllsmoothW(:),90); 
+m1C =prctile(AllsmoothW(:),80);
 %% Density plot for each connection types
 
 rid = 2; wid = 3;
 % tmp = AllConnData.gauss{rid,wid,1,1};  Code = 'Convergent connection rule : Gaussian';
 % tmp = AllConnData.unif{rid,wid,1,1};   Code = 'Convergent connection rule : Uniform';
-% tmp = AllConnData.negExp{rid,wid,1,1};   Code = 'Convergent connection rule : Negative Exponential';
+tmp = AllConnData.negExp{rid,wid,1,1};   Code = 'Convergent connection rule : Negative Exponential';
 
 srclist = tmp.TCconn_raw.srcVLcell;
 tarlist = tmp.TCconn_raw.tarM1Cell;
@@ -59,7 +66,7 @@ Range = PARAMETERS{1}.PARAM(rid);
 Rsize = ceil(Range / sqrt(2) * 4.5); 
 [X,Y] = meshgrid(-Rsize : Rsize);
 Wdense = zeros(size(X)); 
-mid = find(Y (find(X ==0)) == 0); 
+
 
 sampleM1ID = 87; 
 M1_ID = 87;
@@ -98,7 +105,3 @@ set(hcb,'YTickLabel',{'80th', '90th', '100th'})
 title(Code)
 AllsmoothW = [ AllsmoothW; smoothW ];
 %% 
-% AllsmoothW = [];
-m3C =prctile(AllsmoothW(:),100); 
-m2C = prctile(AllsmoothW(:),90); 
-m1C =prctile(AllsmoothW(:),80);
