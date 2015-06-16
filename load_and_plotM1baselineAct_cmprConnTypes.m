@@ -349,16 +349,16 @@ for ct_ii = 1 : NumCnvrgntTypes
     dirFig = [   tmpdirFig ];
  end
 %% Check Osc F and Amp of one current case
-Check_OscF_and_Amp_of_one_case
+% Check_OscF_and_Amp_of_one_case
 %%  Get info for TC convergenc --> number of VL per M1 , average maxW , average summation of weight
 Get_info_TC_convergence_numVLperM1
 
 %%
 CtypeTxt =  CnvrgntTypes{ct_ii}.TitleName;
 codeTxt =   CnvrgntTypes{ct_ii}.CodeName;
-M1_BaselineActivity_Matrix_noIndvPlot  % ---> plot raw M1 activity 
-M1_BaselineActivity_Matrix_noIndvPlot_normVL % ---> plot M1 activity  - VL activity (normalized with VL activity)
-Diff_M1act_OSC_F_AMP_oneType_normVL %--> Plot different in M1 raw activity when osc F increase or when osc amp increase
+% M1_BaselineActivity_Matrix_noIndvPlot  % ---> plot raw M1 activity 
+% M1_BaselineActivity_Matrix_noIndvPlot_normVL % ---> plot M1 activity  - VL activity (normalized with VL activity)
+% Diff_M1act_OSC_F_AMP_oneType_normVL %--> Plot different in M1 raw activity when osc F increase or when osc amp increase
 % VL_M1_spikeCorr
 end
 

@@ -31,18 +31,19 @@ box on
 %xlim([-10 110]);
 %ylim([-10 110]);
 
-NetConn = importdata(TCfile); 
-
-totalNC = NetConn(1,1); NetConn = NetConn(2:end);
-NetConn = reshape(NetConn,[5,totalNC]);
-srclist = NetConn(1,:);
-tarlist = NetConn(2,:); 
-typelist = NetConn(3,:); % EE:0 EI:1 IE:2 II:3
-weightlist = NetConn(4,:); % EE:0 EI:1 IE:2 II:3
-delaylist = NetConn(5,:); % EE:0 EI:1 IE:2 II:3
-
-srclist = srclist+1; %Because the neuron location variables (NNloc)use MATLAB indexin which start index at 1
-tarlist= tarlist-nVL*3+1; % M1 cells' ID
+% 
+% NetConn = importdata(TCfile); 
+% 
+% totalNC = NetConn(1,1); NetConn = NetConn(2:end);
+% NetConn = reshape(NetConn,[5,totalNC]);
+% srclist = NetConn(1,:);
+% tarlist = NetConn(2,:); 
+% typelist = NetConn(3,:); % EE:0 EI:1 IE:2 II:3
+% weightlist = NetConn(4,:); % EE:0 EI:1 IE:2 II:3
+% delaylist = NetConn(5,:); % EE:0 EI:1 IE:2 II:3
+% 
+% srclist = srclist+1; %Because the neuron location variables (NNloc)use MATLAB indexin which start index at 1
+% tarlist= tarlist-nVL*3+1; % M1 cells' ID
 
 % N_EE = length(find(typelist == 0))
 % EE_NC = [srclist(find(typelist == 0)) tarlist(find(typelist == 0))];
@@ -65,6 +66,7 @@ end
 tarID  = unique(tarlist);
 sampleM1ID = 87;
 sampleNC = find( tarlist == tarID(sampleM1ID));
+% sumW = 
 for i = 1 : length(sampleNC)
     nc = sampleNC(i);
         plot3([NNloc_VL(srclist(nc),2) NNloc_M1(tarlist(nc),2)],[ NNloc_VL(srclist(nc),3) NNloc_M1(tarlist(nc),3)],[ NNloc_VL(srclist(nc),4) NNloc_M1(tarlist(nc),4)],'Color','k');
