@@ -341,149 +341,237 @@ obfunc  poissonGenerator() { local tmpr,ii localobj rr, spktrain, spktime, p
  
 spkvec_list.remove_all()
 cellsFFin.remove_all()
+
+
 //objref recordseed
 //recordseed = new Vector()
 recordseed.resize(0)
 objref R_W_POISSPK, R_FR_POISSPK_VL
 
-if(INSERT_SPK_INPUT ){
-print "Called PoisSpk "
-//Generate artificial cells for input   //# = total cell
-	 // Feedforward(FF) input Poisson spikes cell
-	wFFin = W_POISSPK_VL //0.001 // weight for FF input 
-	if(VARIE_W_POISSPK){
-		
-		R_W_POISSPK = new Random()
-		R_W_POISSPK.Random123(Rand123Seed_append("VARIE_W_POISSPK"),0,RANDOM123_ID3_RUN_POISSONSPK)
-		R_W_POISSPK.normal(W_POISSPK_VL_mean, W_POISSPK_VL_sigma*W_POISSPK_VL_sigma )
-		wFFin = R_W_POISSPK.repick()
-		if(wFFin < 0) { wFFin = 0 }
+objref CorrInspk_info,srcV,tarV,wVec
+strdef FRfile
+objref fin
+fin = new File()
+
+
+if (USE_CORR_IN_SPKTRAIN){ // Download info from  CorrIn_fname 
+
+	sprint(FRfile, "CorrelatedPoissonInput_ctrlW%g_range%g.txt",ctrlW, CorrIn_Range) //   EX : CorrelatedPoissonInput_ctrlW0.001_range300.txt
+
+	fin.ropen(FRfile) 
+	nnConnL0  = fin.scanvar()
+	nnInspkCell  = fin.scanvar()
+
+	CorrInspk_info = new Vector(nnConnL0)
+
+
+	srcV = new Vector(nnConnL0)
+	tarV = new Vector(nnConnL0)
+	wVec = new Vector(nnConnL0)
+
+
+
+	for (i=0;i<nnConnL0 ;i=i+1){
+		srcV.x(i) = fin.scanvar()
+		tarV.x(i) = fin.scanvar()
+		wVec.x(i) = fin.scanvar()
 	}
-	if(VARIE_FR_POISSPK){
-		
-		R_FR_POISSPK_VL = new Random()
-		R_FR_POISSPK_VL.Random123(Rand123Seed_append("VARIE_FR_POISSPK"),0,TRIAL_NO)
-		R_FR_POISSPK_VL.normal(FR_POISSPK_VL_mean, FR_POISSPK_VL_sigma*FR_POISSPK_VL_sigma )
-		Input_spk_avg_fr = R_FR_POISSPK_VL.repick()
-		if(Input_spk_avg_fr < 0 ){ Input_spk_avg_fr = 0}
-	}
-		
+	
+	// Make Input spike Cell , since the connection already made in Matlab, not concern cell positions here	
 	str_FFin = cIDrec+1
 	FFinrec = -1
-	nFF= cellsE.count + cellsI.count //give FF input to E cell only
+	nFF = nnInspkCell
 	FFzpos = -50
-	for (i=0;i<cellsE.count + cellsI.count;i=i+1){
+	for (i=0;i < nnInspkCell; i=i+1){
 		cIDrec = cIDrec+1 
 		FFinrec=FFinrec+1
 		cell_append(new In_spk_VecStim(),0,100, FFzpos,cIDrec, FFinrec,0) // cell type = 0  for FF input
 		cellsFFin.append(cells.object(cIDrec))
 	}
 	
+	// Put Spike train to each cell to play  ( from Poisson Generator)
 	
-if (INSERT_SPK_to_E && INSERT_SPK_to_I){ // Insert spike train to both E & I cells
-
-	print "Called : both E I"
-	//seedGen(cellsE.count+cellsI.count) 
-	print "spkvec_list's size = ", spkvec_list.count
-	recordseed.resize(cellsE.count + cellsI.count)
-	//Generate Poissoin in each run by time tstop
-	for i=0, cellsFFin.count-1 {
-		if(VARIE_FR_POISSPK){
-			if (!SPECIFIED_INDV_SPK_INPUT){
-				Input_spk_avg_fr = R_FR_POISSPK_VL.repick() 
-				if(Input_spk_avg_fr < 0 ){ Input_spk_avg_fr = 0}
-			}else{
-					R_FR_POISSPK_VL.normal(Specified_Spk_Input_Fr.x(i), FR_POISSPK_VL_sigma*FR_POISSPK_VL_sigma ) // Warning : If do not specified spike input for each cell -> declare Specified_Spk_Input_Fr  as Vector in maincode first
-					Input_spk_avg_fr = R_FR_POISSPK_VL.repick()
-					if(Input_spk_avg_fr < 0 ){ Input_spk_avg_fr = 0}
-				 }
-		}
-			
-		if(MULT_TRIAL){ 
-		spkvec_list.append( poissonGenerator(cellsFFin.o(i).cID*cntTrial,steps_per_ms,tstop,Input_spk_avg_fr ))
-		recordseed.x(i) = cellsFFin.o(i).cID*cntTrial 
-		}else{
-		spkvec_list.append( poissonGenerator(cellsFFin.o(i).cID,steps_per_ms,tstop,Input_spk_avg_fr ))
-		recordseed.x(i) = cellsFFin.o(i).cID // specified ID#2 of RANDOM123 as cell ID of that input cell--> to be sure that there is no cell with same seed
-		}
-		if(VARIE_W_POISSPK){
-		wFFin = R_W_POISSPK.repick() 
-		if(wFFin < 0) { wFFin = 0 } 
-		}
-		spkvec_list.o(i).add(INSERT_SPK_INPUT_startT)
-		cellsFFin.o(i).pp.play(spkvec_list.o(i)) 
-		nc_append(str_FFin+i,str_E+i,0,wFFin,0) //srcindex, tarcelindex, synindex, weight, delay  //check the weight
-	}
-	
-	}else {
-		if (INSERT_SPK_to_E){
-			print "called INSERT_SPK_to_E only case"
-			recordseed.resize(cellsE.count)
-			//Generate Poissoin in each run by time tstop
-			for i=0, cellsE.count-1 {
-			if(VARIE_FR_POISSPK){
-			if (!SPECIFIED_INDV_SPK_INPUT){
-				Input_spk_avg_fr = R_FR_POISSPK_VL.repick() 
-				if(Input_spk_avg_fr < 0 ){ Input_spk_avg_fr = 0}
-			}else{
-					R_FR_POISSPK_VL.normal(Specified_Spk_Input_Fr.x(i), FR_POISSPK_VL_sigma*FR_POISSPK_VL_sigma )
-					Input_spk_avg_fr = R_FR_POISSPK_VL.repick()
-					if(Input_spk_avg_fr < 0 ){ Input_spk_avg_fr = 0}
-				 }
-			}
-			
-			if(MULT_TRIAL){ 
-				spkvec_list.append( poissonGenerator(cellsFFin.o(i).cID*cntTrial,steps_per_ms,tstop,Input_spk_avg_fr ))
-				recordseed.x(i) = cellsFFin.o(i).cID*cntTrial 
-			}else{
-				spkvec_list.append( poissonGenerator(cellsFFin.o(i).cID,steps_per_ms,tstop,Input_spk_avg_fr ))
-				recordseed.x(i) = cellsFFin.o(i).cID // Use cells ID as seed
-				}
-					if(VARIE_W_POISSPK){
-					wFFin = R_W_POISSPK.repick()
-					if(wFFin < 0) { wFFin = 0 }
-					}
-				spkvec_list.o(i).add(INSERT_SPK_INPUT_startT)
-				cellsFFin.o(i).pp.play(spkvec_list.o(i)) 
-				nc_append(str_FFin+i,str_E+i,0,wFFin,0) //srcindex, tarcelindex, synindex, weight, delay 
-			}
-		}else {
-			if (INSERT_SPK_to_I){
-				//seedGen(cellsI.count) 
-				recordseed.resize(cellsI.count)
-				//Generate Poissoin in each run by time tstop
-				for i=0, cellsI.count-1 {
+	// Only Insert layer0 to E of layer 1	
+	print "called INSERT_SPK_to_E only case"
+					recordseed.resize(cellsE.count)
+					//Generate Poissoin in each run by time tstop
+					for i=0, cellsE.count-1 {
+					
 					if(VARIE_FR_POISSPK){
-						if (!SPECIFIED_INDV_SPK_INPUT){
-							Input_spk_avg_fr = R_FR_POISSPK_VL.repick() 
+					if (!SPECIFIED_INDV_SPK_INPUT){
+						Input_spk_avg_fr = R_FR_POISSPK_VL.repick() 
+						if(Input_spk_avg_fr < 0 ){ Input_spk_avg_fr = 0}
+					}else{
+							R_FR_POISSPK_VL.normal(Specified_Spk_Input_Fr.x(i), FR_POISSPK_VL_sigma*FR_POISSPK_VL_sigma )
+							Input_spk_avg_fr = R_FR_POISSPK_VL.repick()
 							if(Input_spk_avg_fr < 0 ){ Input_spk_avg_fr = 0}
-						}else{
-								R_FR_POISSPK_VL.normal(Specified_Spk_Input_Fr.x(i), FR_POISSPK_VL_sigma*FR_POISSPK_VL_sigma )
-								Input_spk_avg_fr = R_FR_POISSPK_VL.repick()
-								if(Input_spk_avg_fr < 0 ){ Input_spk_avg_fr = 0}
-							 }
+						}
 					}
 					
 					if(MULT_TRIAL){ 
-						spkvec_list.append( poissonGenerator(cellsFFin.o(nE+i).cID*cntTrial,steps_per_ms,tstop,Input_spk_avg_fr ))
-						recordseed.x(i) = cellsFFin.o(nE+i).cID*cntTrial 
+						spkvec_list.append( poissonGenerator(cellsFFin.o(i).cID*cntTrial,steps_per_ms,tstop,Input_spk_avg_fr ))
+						recordseed.x(i) = cellsFFin.o(i).cID*cntTrial 
 					}else{
-					spkvec_list.append( poissonGenerator(cellsFFin.o(nE+i).cID,steps_per_ms,tstop,Input_spk_avg_fr ))
-					recordseed.x(i) = cellsFFin.o(nE+i).cID
+						spkvec_list.append( poissonGenerator(cellsFFin.o(i).cID,steps_per_ms,tstop,Input_spk_avg_fr ))
+						recordseed.x(i) = cellsFFin.o(i).cID // Use cells ID as seed
 					}
-						if(VARIE_W_POISSPK){
-						wFFin = R_W_POISSPK.repick() 
-						if(wFFin < 0) { wFFin = 0 }
-						}
-					spkvec_list.o(i).add(INSERT_SPK_INPUT_startT)
-					cellsFFin.o(nE+i).pp.play(spkvec_list.o(i)) 
-					nc_append(str_FFin+i,str_I+i,0,wFFin,0) //srcindex, tarcelindex, synindex, weight, delay 
-				}
-			}
-		}
-	}	
-}	
+					
+					if(VARIE_W_POISSPK){
+							wFFin = R_W_POISSPK.repick()
+							if(wFFin < 0) { wFFin = 0 }
+					}
+						spkvec_list.o(i).add(INSERT_SPK_INPUT_startT)
+						cellsFFin.o(i).pp.play(spkvec_list.o(i)) 
+						nc_append(str_FFin+i,str_E+i,0,wFFin,0) //srcindex, tarcelindex, synindex, weight, delay 
+					}
 	
+
+
+
+}else{ // Only for this file , Just comment all 
+
+		if(INSERT_SPK_INPUT ){
+		print "Called PoisSpk "
+		//Generate artificial cells for input   //# = total cell
+
+			 // Feedforward(FF) input Poisson spikes cell
+			wFFin = W_POISSPK_VL //0.001 // weight for FF input 
+			if(VARIE_W_POISSPK){
+				
+				R_W_POISSPK = new Random()
+				R_W_POISSPK.Random123(Rand123Seed_append("VARIE_W_POISSPK"),0,RANDOM123_ID3_RUN_POISSONSPK)
+				R_W_POISSPK.normal(W_POISSPK_VL_mean, W_POISSPK_VL_sigma*W_POISSPK_VL_sigma )
+				wFFin = R_W_POISSPK.repick()
+				if(wFFin < 0) { wFFin = 0 }
+			}
+			if(VARIE_FR_POISSPK){
+				
+				R_FR_POISSPK_VL = new Random()
+				R_FR_POISSPK_VL.Random123(Rand123Seed_append("VARIE_FR_POISSPK"),0,TRIAL_NO)
+				R_FR_POISSPK_VL.normal(FR_POISSPK_VL_mean, FR_POISSPK_VL_sigma*FR_POISSPK_VL_sigma )
+				Input_spk_avg_fr = R_FR_POISSPK_VL.repick()
+				if(Input_spk_avg_fr < 0 ){ Input_spk_avg_fr = 0}
+			}
+				
+			str_FFin = cIDrec+1
+			FFinrec = -1
+			nFF= cellsE.count + cellsI.count //give FF input to E cell only
+			FFzpos = -50
+			for (i=0;i<cellsE.count + cellsI.count;i=i+1){
+				cIDrec = cIDrec+1 
+				FFinrec=FFinrec+1
+				cell_append(new In_spk_VecStim(),0,100, FFzpos,cIDrec, FFinrec,0) // cell type = 0  for FF input
+				cellsFFin.append(cells.object(cIDrec))
+			}
+
+						
+		if (INSERT_SPK_to_E && INSERT_SPK_to_I){ // Insert spike train to both E & I cells
+
+			print "Called : both E I"
+			//seedGen(cellsE.count+cellsI.count) 
+			print "spkvec_list's size = ", spkvec_list.count
+			recordseed.resize(cellsE.count + cellsI.count)
+			//Generate Poissoin in each run by time tstop
+			for i=0, cellsFFin.count-1 {
+				if(VARIE_FR_POISSPK){
+					if (!SPECIFIED_INDV_SPK_INPUT){
+						Input_spk_avg_fr = R_FR_POISSPK_VL.repick() 
+						if(Input_spk_avg_fr < 0 ){ Input_spk_avg_fr = 0}
+					}else{
+							R_FR_POISSPK_VL.normal(Specified_Spk_Input_Fr.x(i), FR_POISSPK_VL_sigma*FR_POISSPK_VL_sigma ) // Warning : If do not specified spike input for each cell -> declare Specified_Spk_Input_Fr  as Vector in maincode first
+							Input_spk_avg_fr = R_FR_POISSPK_VL.repick()
+							if(Input_spk_avg_fr < 0 ){ Input_spk_avg_fr = 0}
+						 }
+				}
+					
+				if(MULT_TRIAL){ 
+				spkvec_list.append( poissonGenerator(cellsFFin.o(i).cID*cntTrial,steps_per_ms,tstop,Input_spk_avg_fr ))
+				recordseed.x(i) = cellsFFin.o(i).cID*cntTrial 
+				}else{
+				spkvec_list.append( poissonGenerator(cellsFFin.o(i).cID,steps_per_ms,tstop,Input_spk_avg_fr ))
+				recordseed.x(i) = cellsFFin.o(i).cID // specified ID#2 of RANDOM123 as cell ID of that input cell--> to be sure that there is no cell with same seed
+				}
+				if(VARIE_W_POISSPK){
+				wFFin = R_W_POISSPK.repick() 
+				if(wFFin < 0) { wFFin = 0 } 
+				}
+				spkvec_list.o(i).add(INSERT_SPK_INPUT_startT)
+				cellsFFin.o(i).pp.play(spkvec_list.o(i)) 
+				nc_append(str_FFin+i,str_E+i,0,wFFin,0) //srcindex, tarcelindex, synindex, weight, delay  //check the weight
+			}
+			
+			}else {
+				if (INSERT_SPK_to_E){
+					print "called INSERT_SPK_to_E only case"
+					recordseed.resize(cellsE.count)
+					//Generate Poissoin in each run by time tstop
+					for i=0, cellsE.count-1 {
+					
+					if(VARIE_FR_POISSPK){
+					if (!SPECIFIED_INDV_SPK_INPUT){
+						Input_spk_avg_fr = R_FR_POISSPK_VL.repick() 
+						if(Input_spk_avg_fr < 0 ){ Input_spk_avg_fr = 0}
+					}else{
+							R_FR_POISSPK_VL.normal(Specified_Spk_Input_Fr.x(i), FR_POISSPK_VL_sigma*FR_POISSPK_VL_sigma )
+							Input_spk_avg_fr = R_FR_POISSPK_VL.repick()
+							if(Input_spk_avg_fr < 0 ){ Input_spk_avg_fr = 0}
+						}
+					}
+					
+					if(MULT_TRIAL){ 
+						spkvec_list.append( poissonGenerator(cellsFFin.o(i).cID*cntTrial,steps_per_ms,tstop,Input_spk_avg_fr ))
+						recordseed.x(i) = cellsFFin.o(i).cID*cntTrial 
+					}else{
+						spkvec_list.append( poissonGenerator(cellsFFin.o(i).cID,steps_per_ms,tstop,Input_spk_avg_fr ))
+						recordseed.x(i) = cellsFFin.o(i).cID // Use cells ID as seed
+					}
+					
+					if(VARIE_W_POISSPK){
+							wFFin = R_W_POISSPK.repick()
+							if(wFFin < 0) { wFFin = 0 }
+					}
+						spkvec_list.o(i).add(INSERT_SPK_INPUT_startT)
+						cellsFFin.o(i).pp.play(spkvec_list.o(i)) 
+						nc_append(str_FFin+i,str_E+i,0,wFFin,0) //srcindex, tarcelindex, synindex, weight, delay 
+					}
+				}else {
+					if (INSERT_SPK_to_I){
+						//seedGen(cellsI.count) 
+						recordseed.resize(cellsI.count)
+						//Generate Poissoin in each run by time tstop
+						for i=0, cellsI.count-1 {
+							if(VARIE_FR_POISSPK){
+								if (!SPECIFIED_INDV_SPK_INPUT){
+									Input_spk_avg_fr = R_FR_POISSPK_VL.repick() 
+									if(Input_spk_avg_fr < 0 ){ Input_spk_avg_fr = 0}
+								}else{
+										R_FR_POISSPK_VL.normal(Specified_Spk_Input_Fr.x(i), FR_POISSPK_VL_sigma*FR_POISSPK_VL_sigma )
+										Input_spk_avg_fr = R_FR_POISSPK_VL.repick()
+										if(Input_spk_avg_fr < 0 ){ Input_spk_avg_fr = 0}
+									 }
+							}
+							
+							if(MULT_TRIAL){ 
+								spkvec_list.append( poissonGenerator(cellsFFin.o(nE+i).cID*cntTrial,steps_per_ms,tstop,Input_spk_avg_fr ))
+								recordseed.x(i) = cellsFFin.o(nE+i).cID*cntTrial 
+							}else{
+							spkvec_list.append( poissonGenerator(cellsFFin.o(nE+i).cID,steps_per_ms,tstop,Input_spk_avg_fr ))
+							recordseed.x(i) = cellsFFin.o(nE+i).cID
+							}
+								if(VARIE_W_POISSPK){
+								wFFin = R_W_POISSPK.repick() 
+								if(wFFin < 0) { wFFin = 0 }
+								}
+							spkvec_list.o(i).add(INSERT_SPK_INPUT_startT)
+							cellsFFin.o(nE+i).pp.play(spkvec_list.o(i)) 
+							nc_append(str_FFin+i,str_I+i,0,wFFin,0) //srcindex, tarcelindex, synindex, weight, delay 
+						}
+					}
+				}
+			}	
+		}
+	
+	}
 ////////////////////////////////////////////////////
 /////// GPm Poisson spikes input ///////
  

@@ -32,11 +32,11 @@ title({'Distribution of nearest neighbor distance', ['Mean = ' num2str(mean(nnDi
 %% get VL pos and stitch it for 4 times to make 3000 by 3000
 
 
-VLpos_j_copy = VLpos +  repmat([0 1500],[1150 1]);
-VLpos_i_copy = VLpos + repmat([1500 0],[1150 1]);
-VLpos_ij_copy = VLpos +  repmat([1500 1500],[1150 1]);
-
-repVLpos = [VLpos; VLpos_i_copy; VLpos_j_copy; VLpos_ij_copy; ];
+VLpos_q1_copy = VLpos +  repmat([750 750],[1150 1]);
+VLpos_q2_copy = VLpos + repmat([750 -750],[1150 1]);
+VLpos_q3_copy = VLpos +  repmat([-750 -750],[1150 1]);
+VLpos_q4_copy = VLpos +  repmat([-750 750],[1150 1]);
+repVLpos = [VLpos_q1_copy; VLpos_q2_copy;  VLpos_q3_copy; VLpos_q4_copy; ];
 
 
 Cellpos = repVLpos;
@@ -56,3 +56,5 @@ title({'Distribution of nearest neighbor distance', ['Mean = ' num2str(mean(nnDi
 
 %sort cell position
 layer0_Pos = sortrows(repVLpos,1);
+
+
