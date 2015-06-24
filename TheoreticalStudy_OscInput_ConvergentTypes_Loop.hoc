@@ -1,0 +1,452 @@
+////////////////////////////////////////////////////////////////////////////////////////////////////
+////////// Theoretical Study  : L1 = Poisson Generator Cells , L2 = E cells
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+load_file("nrngui.hoc") //load basics library
+T_everythng = startsw()
+load_file("ranstream.hoc") //for InGauss random seed
+load_file("PD_Parameters.hoc") //Parameters
+
+load_file("PDfb_CellsTemplate_FewBurstModel1.hoc") //load basics library  Note: Parameters for Cells template are specified inside
+load_file("PDfb_NetSpecIntf.hoc") // Network specification interface
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+////////// Parameters 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Constant
+RANDOM123_ID1_POISSONSPK = 1 // 1: feed forward input from L1 to L2
+
+
+// Simulation Setting
+CELL_TYPE = 1 // With T-type Calcium Channel
+TRIAL_NO = 1
+CONVERGENT_TYPE = 1
+strdef CnvrgentConnTypeTxt 
+
+proc get_CnvrgentConnTypeTxt() {
+
+if(CONVERGENT_TYPE ==1){ CnvrgentConnTypeTxt  = "GG"} 
+if(CONVERGENT_TYPE ==2){ CnvrgentConnTypeTxt  = "SU"} 
+if(CONVERGENT_TYPE ==3){ CnvrgentConnTypeTxt  = "SE"}
+
+} 
+get_CnvrgentConnTypeTxt()
+
+// Connection
+W_SCALE = 1e-05
+weightingFactor = 50
+range = 50
+
+
+// Pattern of Input
+OSC_F =  40
+PHASE = 0 
+OSC_rltAmp = 0// 0.1, 0.5 , 1
+Input_spk_avg_fr = 20
+
+//Initialized values
+steps_per_ms = 1    // -----------> set resolution and then use the variable in all references for unified process
+v_init = -70
+tstop = 5000
+
+// Simulation Code
+strdef SimCode
+proc getSimCode(){
+sprint(SimCode, "%s_InputFR%g_OscF%g_OscrltAmp%g_Wscale%g_W%g_range%g_Trial%g", CnvrgentConnTypeTxt, Input_spk_avg_fr, OSC_F, OSC_rltAmp, W_SCALE, weightingFactor, range,TRIAL_NO) //   
+
+}
+getSimCode()
+// NOTE : How to reuse List and Vector  Ex. --> IClamplist.remove_all(),  p.resize(0)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////  Setting Directories 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+strdef postfixTxt, dirLoc, core, hname
+
+dirLoc ="SimResult/TheoreticalSim/" 
+
+system("hostname",hname)      
+if(strcmp("user-PC\n",hname) == 0){ // Exp machine
+sprint(dirLoc,"/cygdrive/d/Pachaya/150313 Code/%s",dirLoc)
+//sprint(dirLoc,"/cygdrive/c/%s",dirLoc)
+} else{
+if (strcmp("VSlab-PC\n",hname) == 0){ // office's machine
+sprint(dirLoc,"/cygdrive/e/PDmodelFewBurst/%s",dirLoc) // or chdir("/cygdrive/e/PDmodelFewBurst/")
+}
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+////////// Download Cells Position
+////////////////////////////////////////////////////////////////////////////////////////////////////
+strdef layer1locTxt, layer2locTxt 
+layer1locTxt = "Epos_E1150_I380_Regular_VL_Sweep5Itr5000_ceil_sorted.txt"
+layer2locTxt = "ECenterpos_rTC250_E5625_I1892_ssize1500_Regular_sweep5Itr5000_ceil_sorted.txt"
+
+//load position files : Layer 1 
+objref posL1x, posL1y, posL2x, posL2y
+objref fin
+fin = new File()
+fin.ropen(layer1locTxt)  
+ 
+nL1 = fin.scanvar()
+posL1x = new Vector(nL1)
+posL1y = new Vector(nL1)
+
+for (i=0;i<nL1;i=i+1){
+	posL1x.x(i) = fin.scanvar()
+	posL1y.x(i) = fin.scanvar()
+}
+fin.close() 
+
+//load position files : Layer 2
+fin = new File()
+fin.ropen(layer2locTxt)  
+ 
+nL2 = fin.scanvar()
+posL2x = new Vector(nL2)
+posL2y = new Vector(nL2)
+
+for (i=0;i<nL2;i=i+1){
+	posL2x.x(i) = fin.scanvar()
+	posL2y.x(i) = fin.scanvar()
+}
+fin.close() 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+////////// Make Cell
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//// Make the cell in Layer 2 first (H-H model)
+objref cellsL2
+cellsL2 =  new List()
+
+cIDrec = -1
+	str_E = cIDrec+1  
+	L2rec= -1
+	for (i=0;i<nL2;i=i+1){
+		cIDrec = cIDrec+1 
+		L2rec=L2rec+1
+		if ( CELL_TYPE == 1){ // 1 = WT, 2 = KO
+		cell_append(new WT_Cell(),posL2x.x(i),posL2y.x(i), 0,cIDrec, L2rec,1)
+		}else{
+		cell_append(new KOpos_Cell(),posL2x.x(i),posL2y.x(i), 0,cIDrec, L2rec,1)
+		}
+		cellsL2.append(cells.object(cIDrec)) //cellsCN contains cored neurons (exclude input cells)
+	} //End generate L2
+
+//// Make the cell in Layer 1 , for Poisson Spike Generator 
+
+objref cellsL1
+cellsL1 = new List()
+
+	str_FFin = cIDrec+1
+	FFinrec = -1
+	nnInspkCell = nL1
+	FFzpos = -50
+	for (i=0;i < nnInspkCell; i=i+1){
+		cIDrec = cIDrec+1 
+		FFinrec=FFinrec+1
+		cell_append(new In_spk_VecStim(),posL1x.x(i),posL1y.x(i), FFzpos,cIDrec, FFinrec,0) // cell type = 0  for FF input
+		cellsL1.append(cells.object(cIDrec))
+	}
+	
+////////////////////////////////////////////////////////////////////////////////////////////////////
+////////// Specified Function for POisson Generator
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+obfunc  OscilatingInputFR() {local osc_f, phase, osc_amp, meanFR,time localobj v1
+// FR = A sin(2*pi*f + phase)
+// $1 = osc_f, $2 = phase (in rad), $3 = osc_amp, $4 = meanFR, $5 = resolution/ steps_per_ms , $6 = time = tstop 
+{ osc_f =$1  phase =$2 osc_amp=$3 meanFR=$4 }
+
+time = $6/ $5
+v1 = new Vector(time)
+v1.sin( osc_f,phase, 1/ $5) // dt = 1 ms
+v1.mul(osc_amp)
+v1.add(meanFR) 
+return v1
+// FR = A sin(2*pi*f + phase)
+} 
+
+obfunc  poissonGenerator() { local tmpr,ii localobj rr, spktrain, spktime, p
+//Return vector of spiking time (in ms)
+// $1 = seed, $2 = resolution (size of one bin in ms) = steps_per_ms, $3 = time (ms), $4 = average firing rate
+	rr = new Random()
+	rr.uniform(0,1)
+	rr.Random123(RANDOM123_ID1_POISSONSPK,$1,TRIAL_NO)
+	spktrain = new Vector($3/$2) 
+	spktime = new Vector()	
+	p = OscilatingInputFR(OSC_F, PHASE,$4*OSC_rltAmp,$4, $2, $3) // // $1 = osc_f, $2 = phase (in rad), $3 = osc_amp, $4 = meanFR, $5 = resolution/ steps_per_ms , $6 = time = tstop 
+	p.div(1000/$2) // chance of spike to happen 
+	
+	for ii =0,spktrain.size-1 {
+		tmpr = rr.repick
+		
+		if (tmpr < p.x(ii)){  //spike occur
+			spktrain.x(ii) = 1
+			spktime.append($2*ii)
+		}else{
+			spktrain.x(ii) = 0
+		}
+	}
+	p.resize(0)
+	return spktime // spkvec, 1) the multiple arrival time in one VecStim is account as the only one spike. 2) The spike time vector need to be sort ascending(less...more).
+}
+ 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+////////// Add Poisson Spike Generator to L1
+////////////////////////////////////////////////////////////////////////////////////////////////////
+objref spkvec_list
+spkvec_list = new List()
+
+objref recordseed
+recordseed = new Vector() 
+recordseed.resize(cellsL1.count)
+
+proc AddInputSpikeVector_to_L1() {
+spkvec_list.remove_all()
+
+recordseed = new Vector() 
+recordseed.resize(cellsL1.count)
+
+for i=0, cellsL1.count-1 { // Record Poisson Spike Train for each L1 cell
+
+spkvec_list.append( poissonGenerator(cellsL1.o(i).cID,steps_per_ms,tstop,Input_spk_avg_fr ))
+recordseed.x(i) = cellsL1.o(i).cID // specified ID#2 of RANDOM123 as cell ID of that input cell--> to be sure that there is no cell with same seed
+cellsL1.o(i).pp.play(spkvec_list.o(i)) 
+	
+}
+} 
+AddInputSpikeVector_to_L1()
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////  Make L1 - L2 connection
+////////////////////////////////////////////////////////////////////////////////////////////////////
+strdef  FRfile
+objref CorrInspk_info,srcV, tarV, wVec, dVec
+{CorrInspk_info = new Vector() srcV = new Vector() tarV = new Vector() wVec = new Vector()
+dVec = new Vector()}
+strdef dirInFiles
+dirInFiles = "Input/"
+proc MakeL1_L2_Conn(){local nnConnL1,nnInspkCell localobj fin
+nclist.remove_all()
+{CorrInspk_info.resize(0) srcV.resize(0)	tarV.resize(0)	wVec.resize(0)	dVec.resize(0)}
+fin = new File()
+
+// Read Connection Files 
+sprint(FRfile, "%sConvergentInput_%s_Wscale%g_W%g_range%g_Trial%g.txt", dirInFiles,CnvrgentConnTypeTxt, W_SCALE, weightingFactor, range,TRIAL_NO) //   
+//Ex : ConvergentInput_GG_Wscale1e-05_W50_range50_Trial1
+fin.ropen(FRfile) 
+nnConnL1  = fin.scanvar()
+nnInspkCell  = fin.scanvar() 
+
+
+CorrInspk_info = new Vector(nnConnL1)
+
+srcV = new Vector(nnConnL1)
+tarV = new Vector(nnConnL1)
+wVec = new Vector(nnConnL1)
+dVec = new Vector(nnConnL1)
+
+	for (i=0;i<nnConnL1 ;i=i+1){
+		srcV.x(i) = fin.scanvar()
+		tarV.x(i) = fin.scanvar()
+		wVec.x(i) = fin.scanvar()
+		dVec.x(i) = fin.scanvar()
+		
+		// Make Connection				
+		nc_append(cellsL1.o(srcV.x(i)).cID,cellsL2.o(tarV.x(i)).cID,0,wVec.x(i), dVec.x(i)) //srcindex, tarcelindex, synindex, weight, delay 
+	}
+} 
+MakeL1_L2_Conn()
+	
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////  Make Vector to record L2 cell activity 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+objref vVec_List, i_cap_List
+vVec_List= new List() 
+i_cap_List = new List() 
+
+objref vVec, i_capVec
+vVec= new Vector() 
+i_capVec= new Vector() 
+
+vVec_List.remove_all() 
+i_cap_List.remove_all() 
+
+
+//Record all V in all cells 
+for id=0, cellsL2.count-1 {
+	vVec = new Vector()
+	i_capVec = new Vector()
+	
+	vVec.record(&cellsL2.o(id).soma.v(0.5),RESOLUTION) //record soma's voltage with the resolution of 1 ms
+	i_capVec.record(&cellsL2.o(id).soma.i_cap(0.5),RESOLUTION)
+	
+	vVec_List.append(vVec)
+	i_cap_List.append(i_capVec)	
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////  Run Simulation
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+proc run_all() {
+trun = startsw()
+finitialize()
+frecord_init()
+print "Called run_all()"
+tstop = $1  
+steps_per_ms = 1   
+v_init = -70
+run()
+print "Finished run_all()"
+print "Total Run Time ", startsw() - trun
+}
+// run_all(tstop)
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////  Save Neuron Activity to files
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// save L1: spikes train for each cell, L2 : membrane potential and membrane current
+
+strdef saveVecFName
+saveVecFName = ""
+
+proc save_vectors_to_file(){local i,j localobj fout,id
+fout = new File()
+fout.wopen(saveVecFName)
+fout.printf("%g\t%g\t%g",cellsL2.count,0, tstop) //#E, #I, tstop[ms]  (E cells' ID always go first) :: L2 layer has only E cells
+for i = 0,$o1.count-4{
+	fout.printf("\t%g",0)
+}
+fout.printf("\n")
+
+id = new Vector()
+id.indgen(0, $o1.count-1,1)
+id.printf(fout,"%g\t",0,id.size-1)
+//fout.printf("%g\n",id.x(id.size-1))
+
+for i = 0, $o1.o(0).size-1{
+	for j = 0, $o1.count-2 {
+		fout.printf("%g\t",$o1.o(j).x(i))
+	}
+	fout.printf("%g\n",$o1.o($o1.count-1).x(i))
+}
+fout.close()
+}
+
+
+proc save_SPKtrain_to_file(){local i,j localobj fout,id
+
+fout = new File()
+fout.wopen(saveVecFName)
+fout.printf("%g\t%g\t%g\n",cellsL1.count,0, tstop) //#E, #I, tstop[ms]  (E cells' ID always go first)
+
+for i = 0, spkvec_list.count-1{
+	fout.printf("%g\t",i )
+	if(spkvec_list.o(i).size >0){
+	spkvec_list.o(i).printf(fout,"%g\t",0, spkvec_list.o(i).size-1)
+	}
+	fout.printf("\n")
+}
+fout.close()
+
+}
+
+
+// save file  <consider making function>
+proc save_all(){
+trun = startsw()
+
+//L1 Spikes train
+sprint(saveVecFName,"%sInputSpkTrain_%s_T%g.txt",dirLoc,SimCode,tstop) 
+save_SPKtrain_to_file()
+
+//L2 Voltage
+sprint(saveVecFName,"%sSomaVolt_%s_T%g.txt",dirLoc,SimCode,tstop) 
+save_vectors_to_file(vVec_List)
+
+//L2 i_cap
+sprint(saveVecFName,"%sSoma_i_cap_%s_T%g.txt",dirLoc,SimCode,tstop) 
+save_vectors_to_file(i_cap_List)
+print "Total Time for Saving vectors to files : ", startsw() - trun
+}
+//save_all()
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+////////// Simulation in Loop 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+proc new_Loop_Run(){
+//print " ==================================================== "
+print "SIMULATION CODE = ", SimCode
+//print " ==================================================== "
+AddInputSpikeVector_to_L1()
+MakeL1_L2_Conn()
+run_all(tstop)
+save_all()
+}
+
+objref RANGE_LST , W_LST, OSC_AMP_LST
+RANGE_LST  = new Vector()
+RANGE_LST.indgen(50, 200,10)
+//RANGE_LST.x(0) = 200 // 50 100 150 200
+
+W_LST = new Vector()
+W_LST.indgen(50,200,10)
+
+OSC_AMP_LST = new Vector(1)
+OSC_AMP_LST.x(0) = 0  //0 0.5 1
+OSC_rltAmp = OSC_AMP_LST.x(0)
+
+// Note : tstop have to specified above
+NUM_CONVERGENT_TYPE = 3
+dirInFiles = "Input/21-Jun-2015/"
+N_Trial = 3
+for TRIAL_NO = 3 , N_Trial {	
+	printf("==========================================================\n")
+	printf("\tTRIAL NO = %g\n" , TRIAL_NO)
+	printf("==========================================================\n")
+	
+	for r_ii = 0 , RANGE_LST.size-1 {
+		range = RANGE_LST.x(r_ii)
+		//printf("\t==========================================================\n")
+		printf("\t\t Range = %g\n" , range)
+		printf("\t==========================================================\n")
+		
+		for w_ii = 0 , W_LST.size-1 {
+			weightingFactor = W_LST.x(w_ii)
+			//printf("\t==========================================================\n")
+			printf("\t\t\t Weighting factor = %g\n" , weightingFactor)
+			printf("\t\t==========================================================\n")
+	
+
+			for t_ii = 1, NUM_CONVERGENT_TYPE { // Innermost
+			CONVERGENT_TYPE = t_ii
+			get_CnvrgentConnTypeTxt()
+			getSimCode()
+			printf("\t\t\t\t Convergent Connection Type  = %s\n" , CnvrgentConnTypeTxt)
+			printf("\t\t\t==========================================================\n")
+			new_Loop_Run()
+			}
+		}
+	}
+}
+
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+////////// End
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+print "Time for everything = ",  startsw() - T_everythng
+

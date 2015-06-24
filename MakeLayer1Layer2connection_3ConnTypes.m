@@ -10,22 +10,32 @@ layer1locTxt = 'Epos_E1150_I380_Regular_VL_Sweep5Itr5000_ceil_sorted';
 layer2locTxt = 'ECenterpos_rTC250_E5625_I1892_ssize1500_Regular_sweep5Itr5000_ceil_sorted';
 
 SimCode = 'Theory';
-[L1pos, L1Distmat, L1nnDist]= GetCellsDistInfo(layer1locTxt, 1);
-[L2pos, L2Distmat, L2nnDist]= GetCellsDistInfo(layer2locTxt, 1); %VL
+[L1pos, L1Distmat, L1nnDist]= GetCellsDistInfo(layer1locTxt, 0);
+[L2pos, L2Distmat, L2nnDist]= GetCellsDistInfo(layer2locTxt, 0); %VL
 DistMat = pdist2(L1pos,L2pos);
+<<<<<<< HEAD
 PLOT_FIG = 0;
+=======
+dirFile =['Input\' date '\'];
+mkdir(dirFile)
+>>>>>>> d63e322871fd875e614c4ce7bd39b816373a9982
 %%
+PLOT_FIG = 0;
 close all
 W_SCALE = 0.00001; 
-W_LST = [50:25:100]; % 50 : 25 : 100
+W_LST = [50:10:200]; % 50 : 25 : 100
 % Range_LST = [10 25:25:300];
-Range_LST = [50:50:200];
+Range_LST = [50:10:200];
 
 saveConn_g = cell(  length(Range_LST),  length(W_LST));     saveConn_u = cell(  length(Range_LST),  length(W_LST));     saveConn_e = cell(  length(Range_LST),  length(W_LST));
-rw_NumCon_g = zeros(  length(Range_LST),  length(W_LST));     rw_NumCon_u = zeros(  length(Range_LST),  length(W_LST));     rw_NumCon_e = zeros(  length(Range_LST),  length(W_LST)); 
+rw_NumCon_g = zeros(  length(Range_LST),  length(W_LST));     rw_NumCon_s = zeros(  length(Range_LST),  length(W_LST));    
 rw_sumW_g = zeros(  length(Range_LST),  length(W_LST));     rw_sumW_u = zeros(  length(Range_LST),  length(W_LST));     rw_sumW_e = zeros(  length(Range_LST),  length(W_LST));
 
+<<<<<<< HEAD
 TRIAL = 5;
+=======
+TRIAL =3;
+>>>>>>> d63e322871fd875e614c4ce7bd39b816373a9982
 rng(TRIAL)
 for rr = 1 : length(Range_LST)
     for ww = 1 : length(W_LST)
@@ -196,7 +206,11 @@ end
 
 end
 
+<<<<<<< HEAD
 if(PLOT_FIG)
+=======
+if(PLOT_FIG )
+>>>>>>> d63e322871fd875e614c4ce7bd39b816373a9982
 % Connectivity
 figure; set(gcf,'position',[   657   384   712   420]);
 subplot(121); hist(SumConnectivity_g); title(['Gaussian, mean =' num2str(mean(SumConnectivity_g)) ]); 
@@ -222,8 +236,16 @@ subplot(132); hist(SumConnStrength_u); title(['Uniform, mean =' num2str(mean(Sum
 subplot(133); hist(SumConnStrength_e); title(['Exponential, mean =' num2str(mean(SumConnStrength_e)) ]); 
 suptitle('Average summation of effective strength ( strength of connected cells)');
 end
+<<<<<<< HEAD
 %%
      
+=======
+% %%
+%     if (Range_LST(rr) == 50 && W_LST(ww) == 50)
+%         disp('theproblem!');
+%         k = waitforbuttonpress;
+%     end
+>>>>>>> d63e322871fd875e614c4ce7bd39b816373a9982
 %save
 tmpStruct.Conn_Mat = sparse(gConnMat);   tmpStruct.W_Mat = sparse(gW_Mat);  tmpStruct.Delay_Mat = sparse(gDelay_Mat); 
 saveConn_g{rr,ww} = tmpStruct;
@@ -243,9 +265,16 @@ for  m = 1: length(i)
         cnt = cnt + 1; 
         conn_list(cnt,:) =[i(m)-1 j(m)-1 gW_Mat(i(m),j(m)) gDelay_Mat(i(m),j(m))];
 end
+conn_list(any(isnan(conn_list),2),:)=[];
+% if (isnan(conn_list))
+%     pause; 
+%     disp('NaN!!!!')
+%     k =waitforbuttonpress;
+% end
+%     
 %Save to file
 fname = sprintf('ConvergentInput_GG_Wscale%g_W%g_range%g_Trial%g.txt', W_SCALE, weight_factor, range, TRIAL);
-fid = fopen(fname,'w');
+fid = fopen([dirFile fname],'w');
 fprintf( fid,'%d %d \n', size(conn_list,1),  size(gW_Mat,1)); % Total number of Conn , Total number of cells in Layer1 
 fprintf( fid,'%d %d %1.9f %g\n', conn_list' ); % SourceID TargetID Weight Delay
 fclose(fid);
@@ -258,6 +287,12 @@ for  m = 1: length(i)
         cnt = cnt + 1; 
         conn_list(cnt,:) =[i(m)-1 j(m)-1 uW_Mat(i(m),j(m)) uDelay_Mat(i(m),j(m))];
 end
+conn_list(any(isnan(conn_list),2),:)=[];
+% if (isnan(conn_list))
+%     pause; 
+%     disp('NaN!!!!')
+%     k =waitforbuttonpress;
+% end
 %Save to file
 fname = sprintf('ConvergentInput_SU_Wscale%g_W%g_range%g_Trial%g.txt', W_SCALE, weight_factor, range, TRIAL);
 fid = fopen(fname,'w');
@@ -273,7 +308,20 @@ cnt = 0;
 for  m = 1: length(i)
         cnt = cnt + 1; 
         conn_list(cnt,:) =[i(m)-1 j(m)-1 eW_Mat(i(m),j(m)) eDelay_Mat(i(m),j(m))];
+<<<<<<< HEAD
+=======
 end
+if(isnan(conn_list))
+    pause;
+>>>>>>> d63e322871fd875e614c4ce7bd39b816373a9982
+end
+conn_list(any(isnan(conn_list),2),:)=[];
+% if (isnan(conn_list))
+%     pause; 
+%     disp('NaN!!!!')
+%     k =waitforbuttonpress;
+% end
+%  
 %Save to file
 fname = sprintf('ConvergentInput_SE_Wscale%g_W%g_range%g_Trial%g.txt', W_SCALE, weight_factor, range, TRIAL);
 fid = fopen(fname,'w');
@@ -296,5 +344,10 @@ disp('==========================================================================
     end
 end
 
+<<<<<<< HEAD
 %% SAVE sim data
 % save(['NewGennConn' date '.mat'],'saveConn_g','saveConn_u','saveConn_e','W_LST','Range_LST','-v7.3')
+=======
+save([dirFile 'NewGennConn_r' num2str(Range_LST(1)) '_' num2str(Range_LST(length(Range_LST))) '_w_' num2str(W_LST(1)) '_' num2str(W_LST(length(W_LST)))  '_trial' num2str(TRIAL) '_'  date '.mat'],'saveConn_g','saveConn_u','saveConn_e','W_LST','Range_LST','-v7.3');
+disp('Save')
+>>>>>>> d63e322871fd875e614c4ce7bd39b816373a9982

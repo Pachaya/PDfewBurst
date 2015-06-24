@@ -1,3 +1,9 @@
+////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////   CAUTION : This file is not Finish Implementing yet, DO NOT USE
+////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 //////////  No I cells in VL , no local Conn in VL
 //////////  
 //////////////////* Network Generation *//////////////////
@@ -390,6 +396,8 @@ if (USE_CORR_IN_SPKTRAIN){ // Download info from  CorrIn_fname
 	}
 	
 	// Put Spike train to each cell to play  ( from Poisson Generator)
+	recordseed.resize(cellsFFin.count)
+	 
 	
 	// Only Insert layer0 to E of layer 1	
 	print "called INSERT_SPK_to_E only case"
@@ -397,6 +405,7 @@ if (USE_CORR_IN_SPKTRAIN){ // Download info from  CorrIn_fname
 					//Generate Poissoin in each run by time tstop
 					for i=0, cellsE.count-1 {
 					
+
 					if(VARIE_FR_POISSPK){
 					if (!SPECIFIED_INDV_SPK_INPUT){
 						Input_spk_avg_fr = R_FR_POISSPK_VL.repick() 
@@ -407,6 +416,7 @@ if (USE_CORR_IN_SPKTRAIN){ // Download info from  CorrIn_fname
 							if(Input_spk_avg_fr < 0 ){ Input_spk_avg_fr = 0}
 						}
 					}
+
 					
 					if(MULT_TRIAL){ 
 						spkvec_list.append( poissonGenerator(cellsFFin.o(i).cID*cntTrial,steps_per_ms,tstop,Input_spk_avg_fr ))
