@@ -179,7 +179,23 @@ if (INSERT_I_INPUT){
 }
 
 
-/////// Injected input current to single cell in network (E cell at center) ///////
+/////// Injected input ====================\n")
+	printf("\tTRIAL NO = %g\n" , TRIAL_NO)
+	printf("==========================================================\n")
+	
+	for r_ii = 0 , RANGE_LST.size-1 {
+		range = RANGE_LST.x(r_ii)
+		//printf("\t==========================================================\n")
+		printf("\t\t Range = %g\n" , range)
+		printf("\t==========================================================\n")
+		
+		for w_ii = 0 , W_LST.size-1 {
+			weightingFactor = W_LST.x(w_ii)
+			//printf("\t==========================================================\n")
+			printf("\t\t\t Weighting factor = %g\n" , weightingFactor)
+			printf("\t\t==========================================================\n")
+	
+current to single cell in network (E cell at center) ///////
 objref injIClamp_Single
 
 if (INSERT_I_to_SpecifiedE){	

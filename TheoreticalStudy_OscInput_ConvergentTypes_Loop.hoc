@@ -51,9 +51,10 @@ v_init = -70
 tstop = 5000
 
 // Simulation Code
-strdef SimCode
+strdef SimCode, SimCtrl
+SimCtrl="Initial"
 proc getSimCode(){
-sprint(SimCode, "%s_InputFR%g_OscF%g_OscrltAmp%g_Wscale%g_W%g_range%g_Trial%g", CnvrgentConnTypeTxt, Input_spk_avg_fr, OSC_F, OSC_rltAmp, W_SCALE, weightingFactor, range,TRIAL_NO) //   
+sprint(SimCode, "%s_%s_InputFR%g_OscF%g_OscrltAmp%g_Wscale%g_W%g_range%g_Trial%g_T%g", SimCtrl, CnvrgentConnTypeTxt, Input_spk_avg_fr, OSC_F, OSC_rltAmp, W_SCALE, weightingFactor, range,TRIAL_NO, tstop) //   
 
 }
 getSimCode()
@@ -63,12 +64,12 @@ getSimCode()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 strdef postfixTxt, dirLoc, core, hname
 
-dirLoc ="SimResult/TheoreticalSim/" 
+dirLoc ="SimResult/TheoreticalSim/30-Jun-2015/" 
 
 system("hostname",hname)      
 if(strcmp("user-PC\n",hname) == 0){ // Exp machine
 sprint(dirLoc,"/cygdrive/d/Pachaya/150313 Code/%s",dirLoc)
-//sprint(dirLoc,"/cygdrive/c/%s",dirLoc)
+//sprint(dirLoc,"/cygdrive/d/%s",dirLoc)
 } else{
 if (strcmp("VSlab-PC\n",hname) == 0){ // office's machine
 sprint(dirLoc,"/cygdrive/e/PDmodelFewBurst/%s",dirLoc) // or chdir("/cygdrive/e/PDmodelFewBurst/")
@@ -229,12 +230,12 @@ objref CorrInspk_info,srcV, tarV, wVec, dVec
 dVec = new Vector()}
 strdef dirInFiles
 dirInFiles = "Input/"
-proc MakeL1_L2_Conn(){local nnConnL1,nnInspkCell localobj fin
+proc MakeL1_L2_Conn(){local nnConnL1,nnInspkCell localobj fin, fout
 nclist.remove_all()
 {CorrInspk_info.resize(0) srcV.resize(0)	tarV.resize(0)	wVec.resize(0)	dVec.resize(0)}
 fin = new File()
 
-// Read Connection Files 
+// Read Connection Files  : ConvergentInput_GG_Wscale1e-05_W50_range90_Trial8
 sprint(FRfile, "%sConvergentInput_%s_Wscale%g_W%g_range%g_Trial%g.txt", dirInFiles,CnvrgentConnTypeTxt, W_SCALE, weightingFactor, range,TRIAL_NO) //   
 //Ex : ConvergentInput_GG_Wscale1e-05_W50_range50_Trial1
 fin.ropen(FRfile) 
@@ -258,8 +259,20 @@ dVec = new Vector(nnConnL1)
 		// Make Connection				
 		nc_append(cellsL1.o(srcV.x(i)).cID,cellsL2.o(tarV.x(i)).cID,0,wVec.x(i), dVec.x(i)) //srcindex, tarcelindex, synindex, weight, delay 
 	}
+fin.close(FRfile)
+	
+fout = new File()
+sprint(FRfile, "%sRecordConnList_%s.txt", dirLoc ,SimCode)
+fout.wopen(FRfile) 
+
+
+fout.printf("%g\t%g\t%g\%g\n",nL1, nL2, nclist.count, tstop) //#E, #I, tstop[ms]  (E cells' ID always go first) :: L2 layer has only E cells
+for i = 0, nclist.count-1{
+	fout.printf("%g\t%g\t%g\%g\n",srcV.x(i), tarV.x(i), wVec.x(i), dVec.x(i))	
+}
+fout.close()
 } 
-MakeL1_L2_Conn()
+//MakeL1_L2_Conn()
 	
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////  Make Vector to record L2 cell activity 
@@ -363,15 +376,16 @@ proc save_all(){
 trun = startsw()
 
 //L1 Spikes train
-sprint(saveVecFName,"%sInputSpkTrain_%s_T%g.txt",dirLoc,SimCode,tstop) 
+sprint(saveVecFName,"%sInputSpkTrain_%s.txt",dirLoc,SimCode) 
 save_SPKtrain_to_file()
 
 //L2 Voltage
-sprint(saveVecFName,"%sSomaVolt_%s_T%g.txt",dirLoc,SimCode,tstop) 
+sprint(saveVecFName,"%sSomaVolt_%s.txt",dirLoc,SimCode)
+
 save_vectors_to_file(vVec_List)
 
 //L2 i_cap
-sprint(saveVecFName,"%sSoma_i_cap_%s_T%g.txt",dirLoc,SimCode,tstop) 
+sprint(saveVecFName,"%sSoma_i_cap_%s.txt",dirLoc,SimCode) 
 save_vectors_to_file(i_cap_List)
 print "Total Time for Saving vectors to files : ", startsw() - trun
 }
@@ -395,21 +409,23 @@ save_all()
 
 objref RANGE_LST , W_LST, OSC_AMP_LST
 RANGE_LST  = new Vector()
-RANGE_LST.indgen(50, 200,10)
+RANGE_LST.indgen(50, 100,10)
 //RANGE_LST.x(0) = 200 // 50 100 150 200
 
 W_LST = new Vector()
-W_LST.indgen(50,200,10)
+W_LST.indgen(50,100,10)
 
 OSC_AMP_LST = new Vector(1)
-OSC_AMP_LST.x(0) = 0  //0 0.5 1
+OSC_AMP_LST.x(0) = 1  //0 0.5 1
 OSC_rltAmp = OSC_AMP_LST.x(0)
 
 // Note : tstop have to specified above
 NUM_CONVERGENT_TYPE = 3
-dirInFiles = "Input/21-Jun-2015/"
-N_Trial = 3
-for TRIAL_NO = 3 , N_Trial {	
+dirInFiles = "Input/30-Jun-2015/"
+N_Trial = 5
+
+SimCtrl=""
+for TRIAL_NO = N_Trial, N_Trial {	
 	printf("==========================================================\n")
 	printf("\tTRIAL NO = %g\n" , TRIAL_NO)
 	printf("==========================================================\n")
