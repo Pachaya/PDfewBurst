@@ -2,11 +2,9 @@
 % New Simulation
 
 % TRIAL_NO_LST_LST =  6:10; 
-for TRIAL_NO_LST = 6 : 10
+for TRIAL_NO_LST = 1 : 5
 
 %% PARAMETERS
-
-
 rTC_LST = [50:10:100];
 wmTC_LST = [50:10:100];
 % TRIAL_NO_LST = 5;
@@ -21,7 +19,7 @@ titleTxt1 = 'Range_T_C';
 PARAM2 = wmTC_LST;
 lblTxt2 = 'Weighting Factor';
 saveTxt2 = 'wmTC';
-titleTxt2 = 'W_T_C';
+titleTxt2 = 'W_c_o_n_n';
 PARAM3 = TRIAL_NO_LST ;
 lblTxt3 = 'Trial#';
 saveTxt3 = 'trial';
@@ -66,14 +64,15 @@ CnvrgntTypes{3}.leg = 'P:uniform, W:Exp';
 PoisInputFr = 20;
 
 PATH = SetPath;
-dirLoc = [PATH 'TheoreticalSim/']; % [PATH 'OscInput_Sim/']; % /OscInput_varyTCtype_Sim/
-dirFig = ['CompareConTypes_' num2str( PoisInputFr) 'Hz_' get_Parameters_RangeTxt( PARAMETERS,[1,2,4,5]) '/'];
-mkdir([dirLoc dirFig])
-
+dirLoc = [PATH 'TheoreticalSim/30-Jun-2015/']; % [PATH 'OscInput_Sim/']; % /OscInput_varyTCtype_Sim/
+% dirFig = ['CompareConTypes_' num2str( PoisInputFr) 'Hz_' get_Parameters_RangeTxt( PARAMETERS,[1,2,4,5]) '/'];
+% mkdir([dirLoc dirFig])
+outLoc = ['SimResult\' date '/'];
+mkdir(outLoc)
 % CheckFile = zeros(3,   4 ,    3,     1,     1,     3);
 %%   Files
 %InputSpkTrain_GG_InputFR20_OscF40_OscrltAmp0.5_Wscale1e-05_W50_range150_Trial1_T5000
-% SomaVolt_SU_InputFR20_OscF40_OscrltAmp0.5_Wscale1e-05_W75_range150_Trial1_T5000
+%SomaVolt_SU_InputFR20_OscF40_OscrltAmp0.5_Wscale1e-05_W75_range150_Trial1_T5000
 
 %%
 
@@ -105,9 +104,9 @@ if (NEVER_LOAD_DATA)
                             range = rTC_LST(r_ii);
                             
                             tstop = 5000;
+                            CtrlCode = '';
                             
-                            
-                            SimCode = sprintf( '%s_InputFR%g_OscF%g_OscrltAmp%g_Wscale%g_W%g_range%g_Trial%g_T%g', CnvrgentConnTypeTxt, Input_spk_avg_fr, OSC_F, OSC_rltAmp, W_SCALE, weightingFactor, range,TRIAL_NO,tstop) ;
+                            SimCode = sprintf( '%s_%s_InputFR%g_OscF%g_OscrltAmp%g_Wscale%g_W%g_range%g_Trial%g_T%g', CtrlCode, CnvrgentConnTypeTxt, Input_spk_avg_fr, OSC_F, OSC_rltAmp, W_SCALE, weightingFactor, range,TRIAL_NO,tstop) ;
                             disp(SimCode)
 %                             CheckFile(ct_ii,p1_ii, p2_ii, p3_ii, p4_ii,  p5_ii) = CheckFileExist( dirLoc, SimCode);
                             
@@ -133,7 +132,7 @@ if (NEVER_LOAD_DATA)
     end
 end
 
-save([ 'CnvrgntTypes_' num2str( PoisInputFr) 'Hz_' get_Parameters_RangeTxt( PARAMETERS,[1,2,3]) '_' date '.mat'], 'CnvrgntTypes', 'PARAMETERS','-v7.3');
+save([outLoc 'CnvrgntTypes_' num2str( PoisInputFr) 'Hz_' get_Parameters_RangeTxt( PARAMETERS,[1,2,3]) '_' date '.mat'], 'CnvrgntTypes', 'PARAMETERS','-v7.3');
 disp('Done & Saved')
 disp([ '**************   TRIAL_NO_LST =  ' num2str(TRIAL_NO_LST)])
 end
