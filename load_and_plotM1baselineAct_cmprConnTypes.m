@@ -26,7 +26,7 @@ avgFR_CUTTIME = 500;
 % DelayT = 0;
 % BurstRange = 100;
 % CUTTIME = avgFR_CUTTIME;
-TSTOP = 3000;
+TSTOP = 5000;
 
 CUTTIME = 500;
 PhotoInjT = 500;% 1500;

@@ -17,7 +17,8 @@ set(gca,'fontsize',11);
 xlabel(xl); ylabel(yl); colorbar();  caxis([0 caxis2]); colormap('gray')
 title(tt1);
 
-
+flag = 0;
+if(flag)
 txtshift = 0.3;
 for ii = 1 : length(yt)
     for jj = 1 : length(xt)       
@@ -28,6 +29,7 @@ for ii = 1 : length(yt)
             text(jj-txtshift,ii,tmpTxt,'Color','w','FontSize', 12)
         end
     end
+end
 end
 
 end

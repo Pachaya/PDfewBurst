@@ -1,23 +1,3 @@
-
- load('NewGennConn17-Jun-2015');
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
  
  
 %% Load_Data
@@ -40,6 +20,10 @@ tmp = AllConnData.gauss{1,1,1,1};
 load('VL_M1_CellPosition') % Epos_VL  and Epos_M1
 NNloc_VL = [zeros(length(Epos_VL),1) Epos_VL zeros(length(Epos_VL),1)];
 NNloc_M1 = [zeros(length(Epos_M1),1) Epos_M1 50*ones(length(Epos_M1),1)];
+% Plot NN loc 
+figure; scatter(NNloc_M1(:,2), NNloc_M1(:,3)); axis square; 
+rr = rand(166,2)*260;
+figure; scatter(rr(:,1), rr(:,2)); axis square; xlim([-25 260+25]); ylim([-25 260+25]); box on;
 rid = 2; wid = 3;
 tmp = AllConnData.gauss{rid,wid,1,1};  Code = 'Convergent connection rule : Gaussian';
 % tmp = AllConnData.unif{rid,wid,1,1};   Code = 'Convergent connection rule : Uniform';

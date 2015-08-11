@@ -1,0 +1,47 @@
+
+// For checking the Weight of synaptic summation 
+load_file("nrngui.hoc") //load basics library
+T_everythng = startsw()
+load_file("ranstream.hoc") //for InGauss random seed
+load_file("PD_Parameters.hoc") //Parameters
+
+load_file("PDfb_CellsTemplate_FewBurstModel1.hoc") //load basics library  Note: Parameters for Cells template are specified inside
+load_file("PDfb_NetSpecIntf.hoc") // Network specification interface
+
+
+
+
+RANDOM123_ID1_POISSONSPK = 1 // 1: feed forward input from L1 to L2
+
+
+// Simulation Setting
+CELL_TYPE = 1 // With T-type Calcium Channel
+
+objref TestCell, InSpkCell
+TestCell = new WT_Cell()
+ InSpkCell = new In_spk_VecStim()
+ 
+ W_low = 0
+ W_mid =  0.0005
+ W_high =  0.001
+ // Make Conn
+objref NetconnRecord
+NetconnRecord = InSpkCell.connect2target(TestCell.synlist.o(0)) // Excitation Connection
+{NetconnRecord.weight =  W_high   NetconnRecord.delay = 0}
+
+objref spkPlay
+spkPlay = new Vector()
+objref delT_LST 
+delT_LST  = new Vector()
+
+proc setDelT_Nspk() {
+spkPlay = new Vector($1) // How many spikes are there
+spkPlay.indgen($2) // delta T
+spkPlay.add($3) // start time 
+InSpkCell.pp.play(spkPlay)
+}
+setDelT_Nspk(2,25,100)
+tstop = 500
+
+load_file("TestDelT_W_ses.ses")
+
